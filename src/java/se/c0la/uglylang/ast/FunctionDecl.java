@@ -15,6 +15,23 @@ public class FunctionDecl extends Block
         this.stmts = stmts;
     }
 
+    public String getType() { return type; }
+
+    @Override
+    public void accept(Visitor visitor)
+    {
+        int funcAddr = visitor.getCurrentAddr();
+
+        visitor.visit(this);
+        for (Node node : stmts) {
+            node.accept(visitor);
+        }
+
+        // implicit return
+        Node retStmt = new EndFunctionStatement(funcAddr);
+        retStmt.accept(visitor);
+    }
+
     @Override
     public String toString()
     {
@@ -44,4 +61,3 @@ public class FunctionDecl extends Block
         return buf.toString();
     }
 }
-

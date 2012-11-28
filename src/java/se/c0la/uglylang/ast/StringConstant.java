@@ -1,15 +1,15 @@
 package se.c0la.uglylang.ast;
 
-public class Variable extends Node
+public class StringConstant extends BaseObject
 {
-    private String name;
+    private String value;
 
-    public Variable(String name)
+    public StringConstant(String value)
     {
-        this.name = name;
+        this.value = value;
     }
 
-    public String getName() { return name; }
+    public String getValue() { return value; }
 
     @Override
     public void accept(Visitor visitor)
@@ -20,7 +20,7 @@ public class Variable extends Node
     @Override
     public String toString()
     {
-        return "var:" + this.name;
+        return this.value;
     }
 }
 

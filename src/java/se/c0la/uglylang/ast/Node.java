@@ -13,5 +13,6 @@ public abstract class Node
 
         return b.toString();
     }
-}
 
+    public abstract void accept(Visitor visitor);
+}

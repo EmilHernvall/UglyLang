@@ -10,15 +10,17 @@ import java.util.*;
 
 import se.c0la.uglylang.ast.*;
 
-public class Parser 
+public class Parser
 {
     public static void main( String[] args )
     throws ParseException, TokenMgrError {
         Parser parser = new Parser(System.in);
         List<Node> nodes = parser.parse();
 
+        Visitor visitor = new CodeGenerationVisitor();
         for (Node node : nodes) {
-            System.out.println(node);
+            //System.out.println(node);
+            node.accept(visitor);
         }
     }
 }
@@ -53,6 +55,7 @@ TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
 TOKEN : { < #w : (<wc>)* > }
 
 TOKEN : { < IFSTMT : "if" > }
+TOKEN : { < RETURNSTMT : "return" > }
 TOKEN : { < EQ : "==" > }
 TOKEN : { < ASSIGN : "=" > }
 TOKEN : { < ADD : "+" > }
@@ -102,6 +105,32 @@ Node Statement() :
     (
         LOOKAHEAD(<IFSTMT>)
             n = IfStatement()
+        |
+        LOOKAHEAD(<RETURNSTMT>)
+            <RETURNSTMT>
+            (<S>)+
+            n = Expression()
+            <STMTBREAK>
+            (<S>)*
+            { n = new ReturnStatement(n); }
+        |
+        LOOKAHEAD (<IDENT>(<S>)+<ASSIGN>)
+            t = <IDENT>
+            (<S>)+
+            { n = new Variable(t.image); }
+            <ASSIGN>
+            (<S>)*
+            (
+                LOOKAHEAD(Function())
+                (
+                    n2 = Function()
+                )
+                |
+                    n2 = Expression()
+            )
+            { n = new AssignNode(n, n2); }
+            <STMTBREAK>
+            (<S>)*
         |
         LOOKAHEAD(Declaration() <ASSIGN>)
             n = Declaration()
@@ -185,6 +214,7 @@ Node Function() :
     t = <IDENT>
     { type = t.image; }
     <LPAR>
+    [
         d = Declaration()
         { params.add(d); }
         (
@@ -193,6 +223,7 @@ Node Function() :
             d = Declaration()
             { params.add(d); }
         )*
+    ]
     <RPAR>
     (<S>)*
     <LCLAUSE>
@@ -204,9 +235,9 @@ Node Function() :
     <RCLAUSE>
     (<S>)*
 
-    { 
+    {
         n = new FunctionDecl(type, params, statements);
-        return n; 
+        return n;
     }
 }
 
@@ -221,7 +252,7 @@ Node Expression() :
         <EQ>
         (<S>)*
         n2 = Expression2()
-        { n = new EqualNode(n, n2); } 
+        { n = new EqualNode(n, n2); }
     )*
 
     { return n; }
@@ -239,12 +270,12 @@ Node Expression2() :
                 <ADD>
                 (<S>)*
                 n2 = Expression3()
-                { n = new AddNode(n, n2); } 
+                { n = new AddNode(n, n2); }
             |
                 <SUB>
                 (<S>)*
                 n2 = Expression3()
-                { n = new SubNode(n, n2); } 
+                { n = new SubNode(n, n2); }
         )*
     )
 
@@ -263,12 +294,12 @@ Node Expression3() :
                 <MUL>
                 (<S>)*
                 n2 = Expression4()
-                { n = new MulNode(n, n2); } 
+                { n = new MulNode(n, n2); }
             |
                 <DIV>
                 (<S>)*
                 n2 = Expression4()
-                { n = new DivNode(n, n2); } 
+                { n = new DivNode(n, n2); }
         )*
     )
 
@@ -283,6 +314,11 @@ Node Expression4() :
 }
 {
     (
+        LOOKAHEAD( Function() )
+        (
+            n = Function()
+        )
+        |
         LOOKAHEAD( <IDENT> <LPAR> )
         (
             t = <IDENT>
@@ -290,16 +326,18 @@ Node Expression4() :
             (<S>)*
             { params = new ArrayList<Node>(); }
 
-            n2 = Expression() 
+            [
+            n2 = Expression()
             { params.add(n2); }
             (
                 <LISTSEP>
                 (<S>)*
-                n2 = Expression() 
+                n2 = Expression()
                 { params.add(n2); }
             )*
+            ]
             <RPAR>
-            { n = new FunctionObject(t.image, params); }
+            { n = new FunctionCall(t.image, params); }
         )
         |
             <LPAR>
@@ -311,13 +349,12 @@ Node Expression4() :
             { n = new Variable(t.image); }
         |
             t = <NUMBER>
-            { n = new IntegerObject(t.image); }
+            { n = new IntegerConstant(t.image); }
         |
             t = <STRING>
-            { n = new StringObject(t.image); }
+            { n = new StringConstant(t.image); }
     )
     (<S>)*
 
     { return n; }
 }
-

@@ -12,6 +12,14 @@ public class MulNode extends Node
     }
 
     @Override
+    public void accept(Visitor visitor)
+    {
+        a.accept(visitor);
+        b.accept(visitor);
+        visitor.visit(this);
+    }
+
+    @Override
     public String toString()
     {
         return "(" + a + " * " + b + ")";

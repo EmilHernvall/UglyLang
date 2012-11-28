@@ -3,27 +3,34 @@ builtin data types:
     func
     string
     int
-    fixed 
+    fixed
     boolean
 */
 
 int a = 2;
 int b = 3 ;
 string c = "emil";
-int d = pow( 2, 8 );
-int e = 1 * ( 2 + 3 ) - 4 / ( 5 + 6 ) - 7;
 bool f = a == b;
 
-1*2+3;
+a = pow( 2, 8 );
+b = 1 * ( 2 + 3 ) - 4 / ( 5 + 6 ) - 7;
 
-func foo = int(int a, int b) {
-    int test = 1;
+func foo =
+    int(int a, int b) {
+        int c = 1;
 
-    if a == b {
-        print("foo");
-        print("bar");
-    }
-};
+        if a == b {
+            print("equal");
+        }
 
-print(foo(a,b)+bar(d,e));
+        return a*b*c;
+    };
+
+func bar =
+    int(func m, int a, int b) {
+        return m(a, b);
+    };
+
+print(foo(a,b));
+print(bar(foo, a, b));
 

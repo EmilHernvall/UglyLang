@@ -1,0 +1,14 @@
+func double =
+    int(int a) {
+        return 2*a;
+    };
+
+int val = readInt();
+
+int a = val / 2;
+
+if val / 2 == 0 {
+    a = double(val + 1);
+}
+
+print(a);

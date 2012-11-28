@@ -14,6 +14,22 @@ public class IfStatement extends Block
     }
 
     @Override
+    public void accept(Visitor visitor)
+    {
+        cond.accept(visitor);
+
+        String endIfLbl = "EndIf_" + visitor.getCurrentAddr();
+
+        visitor.visit(this);
+        for (Node node : stmts) {
+            node.accept(visitor);
+        }
+
+        Node endIf = new EndIfStatement(endIfLbl);
+        endIf.accept(visitor);
+    }
+
+    @Override
     public String toString()
     {
         StringBuilder buf = new StringBuilder();
@@ -35,4 +51,3 @@ public class IfStatement extends Block
         return buf.toString();
     }
 }
-

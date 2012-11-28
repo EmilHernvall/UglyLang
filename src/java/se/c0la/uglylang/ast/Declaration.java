@@ -11,6 +11,15 @@ public class Declaration extends Node
         this.name = name;
     }
 
+    public String getType() { return type; }
+    public String getName() { return name; }
+
+    @Override
+    public void accept(Visitor visitor)
+    {
+        visitor.visit(this);
+    }
+
     @Override
     public String toString()
     {
