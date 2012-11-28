@@ -1,0 +1,29 @@
+/*
+builtin data types:
+    func
+    string
+    int
+    fixed 
+    boolean
+*/
+
+int a = 2;
+int b = 3 ;
+string c = "emil";
+int d = pow( 2, 8 );
+int e = 1 * ( 2 + 3 ) - 4 / ( 5 + 6 ) - 7;
+bool f = a == b;
+
+1*2+3;
+
+func foo = int(int a, int b) {
+    int test = 1;
+
+    if a == b {
+        print("foo");
+        print("bar");
+    }
+};
+
+print(foo(a,b)+bar(d,e));
+

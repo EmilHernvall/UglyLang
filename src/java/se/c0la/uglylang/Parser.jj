@@ -1,0 +1,323 @@
+options {
+    STATIC = false ;
+    UNICODE_INPUT = true ;
+}
+
+PARSER_BEGIN(Parser)
+package se.c0la.uglylang;
+
+import java.util.*;
+
+import se.c0la.uglylang.ast.*;
+
+public class Parser 
+{
+    public static void main( String[] args )
+    throws ParseException, TokenMgrError {
+        Parser parser = new Parser(System.in);
+        List<Node> nodes = parser.parse();
+
+        for (Node node : nodes) {
+            System.out.println(node);
+        }
+    }
+}
+PARSER_END(Parser)
+
+SKIP :
+{
+  "/*" : WithinComment
+}
+<WithinComment> SKIP :
+{
+  "*/" : DEFAULT
+}
+<WithinComment> MORE :
+{
+  <~[]>
+}
+
+TOKEN : { < #ident : ("-")? <nmstart> (<nmchar>)* > }
+TOKEN : { < #name : (<nmchar>)+ > }
+TOKEN : { < #nmstart : ["a"-"z","A"-"Z"] | "_" | <nonascii> | <escape> > }
+TOKEN : { < #nonascii : ["\u0080"-"\uD7FF","\uE000"-"\uFFFD"] > }
+TOKEN : { < #unicode : "\\" (["a"-"f","A"-"F","0"-"9"]){1,6} (<wc>)? > }
+TOKEN : { < #escape : <unicode> | "\\" ["\u0020"-"\u007E","\u0080"-"\uD7FF","\uE000"-"\uFFFD"] > }
+TOKEN : { < #nmchar : ["a"-"z","A"-"Z","0"-"9"] | "-" | "_" | <nonascii> | <escape> > }
+TOKEN : { < #num : (["0"-"9"])+ | (["0"-"9"])* "." (["0"-"9"])+ > }
+TOKEN : { < #string : "\"" (<stringchar> | "'")* "\"" | "'" (<urlchar> | "\"")* "'" > }
+TOKEN : { < #stringchar : <urlchar> | "\u0020" | "\\" <nl> > }
+TOKEN : { < #urlchar : ["\u0009","\u0021","\u0023"-"\u0026","\u0028"-"\u007E"] | <nonascii> | <escape> > }
+TOKEN : { < #nl : "\n" | "\r" "\n" | "\r" | "\u000C" > }
+TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
+TOKEN : { < #w : (<wc>)* > }
+
+TOKEN : { < IFSTMT : "if" > }
+TOKEN : { < EQ : "==" > }
+TOKEN : { < ASSIGN : "=" > }
+TOKEN : { < ADD : "+" > }
+TOKEN : { < SUB : "-" > }
+TOKEN : { < MUL : "*" > }
+TOKEN : { < DIV : "/" > }
+TOKEN : { < LPAR : "(" > }
+TOKEN : { < RPAR : ")" > }
+TOKEN : { < LCLAUSE : "{" > }
+TOKEN : { < RCLAUSE : "}" > }
+TOKEN : { < STMTBREAK : ";" > }
+TOKEN : { < LISTSEP : "," > }
+TOKEN : { < IDENT : <ident> > }
+TOKEN : { < STRING : <string> > }
+TOKEN : { < NUMBER : <num> > }
+TOKEN : { < S : (<wc>)+ > }
+
+/*
+ * rule for whitespace:
+ * a rule consumes all the trailing whitespace, but no
+ * whitespace ahead.
+ */
+
+List<Node> parse() :
+{
+    Token t ;
+    Node n ;
+    List<Node> nodes ;
+}
+{
+    { nodes = new ArrayList<Node>(); }
+    (<S>)*
+    (
+        n = Statement()
+        { nodes.add(n); }
+    )*
+
+    { return nodes; }
+}
+
+Node Statement() :
+{
+    Token t ;
+    Node n, n2 ;
+}
+{
+    (
+        LOOKAHEAD(<IFSTMT>)
+            n = IfStatement()
+        |
+        LOOKAHEAD(Declaration() <ASSIGN>)
+            n = Declaration()
+            <ASSIGN>
+            (<S>)*
+            (
+                LOOKAHEAD(Function())
+                (
+                    n2 = Function()
+                )
+                |
+                    n2 = Expression()
+            )
+            { n = new AssignNode(n, n2); }
+            <STMTBREAK>
+            (<S>)*
+        |
+            n = Expression()
+            <STMTBREAK>
+            (<S>)*
+    )
+
+    { return n; }
+}
+
+Node IfStatement() :
+{
+    Token t ;
+    Node n, n2 ;
+    List<Node> stmts;
+}
+{
+    { stmts = new ArrayList<Node>(); }
+    <IFSTMT>
+    (<S>)*
+    n = Expression()
+    <LCLAUSE>
+    (<S>)*
+    (
+        n2 = Statement()
+        { stmts.add(n2); }
+    )*
+    <RCLAUSE>
+    (<S>)*
+
+     { return new IfStatement(n, stmts); }
+}
+
+Declaration Declaration() :
+{
+    Token t ;
+    String type, name ;
+    Node value ;
+    Declaration d ;
+}
+{
+    t = <IDENT>
+    (<S>)*
+    { type = t.image; }
+    t = <IDENT>
+    { name = t.image; }
+    { d = new Declaration(type, name); }
+    (<S>)*
+
+    { return d; }
+}
+
+Node Function() :
+{
+    Token t ;
+    Node n ;
+    Declaration d ;
+    FunctionDecl f ;
+    String type ;
+    List<Declaration> params ;
+    List<Node> statements ;
+}
+{
+    { params = new ArrayList<Declaration>(); }
+    { statements = new ArrayList<Node>(); }
+    t = <IDENT>
+    { type = t.image; }
+    <LPAR>
+        d = Declaration()
+        { params.add(d); }
+        (
+            ","
+            (<S>)*
+            d = Declaration()
+            { params.add(d); }
+        )*
+    <RPAR>
+    (<S>)*
+    <LCLAUSE>
+        (<S>)*
+        (
+            n = Statement()
+            { statements.add(n); }
+        )*
+    <RCLAUSE>
+    (<S>)*
+
+    { 
+        n = new FunctionDecl(type, params, statements);
+        return n; 
+    }
+}
+
+Node Expression() :
+{
+    Token t ;
+    Node n, n2 ;
+}
+{
+    n = Expression2()
+    (
+        <EQ>
+        (<S>)*
+        n2 = Expression2()
+        { n = new EqualNode(n, n2); } 
+    )*
+
+    { return n; }
+}
+
+Node Expression2() :
+{
+    Token t ;
+    Node n, n2 ;
+}
+{
+    (
+        n = Expression3()
+        (
+                <ADD>
+                (<S>)*
+                n2 = Expression3()
+                { n = new AddNode(n, n2); } 
+            |
+                <SUB>
+                (<S>)*
+                n2 = Expression3()
+                { n = new SubNode(n, n2); } 
+        )*
+    )
+
+    { return n; }
+}
+
+Node Expression3() :
+{
+    Token t ;
+    Node n, n2 ;
+}
+{
+    (
+        n = Expression4()
+        (
+                <MUL>
+                (<S>)*
+                n2 = Expression4()
+                { n = new MulNode(n, n2); } 
+            |
+                <DIV>
+                (<S>)*
+                n2 = Expression4()
+                { n = new DivNode(n, n2); } 
+        )*
+    )
+
+    { return n; }
+}
+
+Node Expression4() :
+{
+    Token t ;
+    Node n, n2 ;
+    List<Node> params ;
+}
+{
+    (
+        LOOKAHEAD( <IDENT> <LPAR> )
+        (
+            t = <IDENT>
+            <LPAR>
+            (<S>)*
+            { params = new ArrayList<Node>(); }
+
+            n2 = Expression() 
+            { params.add(n2); }
+            (
+                <LISTSEP>
+                (<S>)*
+                n2 = Expression() 
+                { params.add(n2); }
+            )*
+            <RPAR>
+            { n = new FunctionObject(t.image, params); }
+        )
+        |
+            <LPAR>
+            (<S>)*
+            n = Expression()
+            <RPAR>
+        |
+            t = <IDENT>
+            { n = new Variable(t.image); }
+        |
+            t = <NUMBER>
+            { n = new IntegerObject(t.image); }
+        |
+            t = <STRING>
+            { n = new StringObject(t.image); }
+    )
+    (<S>)*
+
+    { return n; }
+}
+
