@@ -1,17 +1,19 @@
 package se.c0la.uglylang.ast;
 
+import se.c0la.uglylang.Type;
+
 public class Declaration extends Node
 {
-    private String type;
+    private Type type;
     private String name;
 
-    public Declaration(String type, String name)
+    public Declaration(Type type, String name)
     {
         this.type = type;
         this.name = name;
     }
 
-    public String getType() { return type; }
+    public Type getType() { return type; }
     public String getName() { return name; }
 
     @Override

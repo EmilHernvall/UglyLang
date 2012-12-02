@@ -15,7 +15,7 @@ bool f = a == b;
 a = pow( 2, 8 );
 b = 1 * ( 2 + 3 ) - 4 / ( 5 + 6 ) - 7;
 
-func foo =
+(int)(int,int) foo =
     int(int a, int b) {
         int c = 1;
 
@@ -27,8 +27,11 @@ func foo =
     };
 
 func bar =
-    int(func m, int a, int b) {
-        return m(a, b);
+    (int)(int)((int)(int,int) m, int a) {
+        return
+            int(int b) {
+                m(a, b);
+            };
     };
 
 print(foo(a,b));

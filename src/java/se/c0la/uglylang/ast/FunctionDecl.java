@@ -2,20 +2,32 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
+import se.c0la.uglylang.Type;
+import se.c0la.uglylang.FunctionType;
+
 public class FunctionDecl extends Block
 {
-    private String type;
+    private Type returnType;
     private List<Declaration> params;
     private List<Node> stmts;
 
-    public FunctionDecl(String type, List<Declaration> params, List<Node> stmts)
+    public FunctionDecl(Type returnType, List<Declaration> params, List<Node> stmts)
     {
-        this.type = type;
+        this.returnType = returnType;
         this.params = params;
         this.stmts = stmts;
     }
 
-    public String getType() { return type; }
+    public List<Declaration> getParams() { return params; }
+
+    public Type getType()
+    {
+        List<Type> paramTypes = new ArrayList<Type>();
+        for (Declaration param : params) {
+            paramTypes.add(param.getType());
+        }
+        return new FunctionType(returnType, paramTypes);
+    }
 
     @Override
     public void accept(Visitor visitor)
@@ -36,7 +48,7 @@ public class FunctionDecl extends Block
     public String toString()
     {
         StringBuilder buf = new StringBuilder();
-        buf.append(type);
+        buf.append(returnType.getName());
         buf.append("(");
 
         String delim = "";

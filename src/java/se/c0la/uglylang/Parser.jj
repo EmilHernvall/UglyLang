@@ -17,11 +17,13 @@ public class Parser
         Parser parser = new Parser(System.in);
         List<Node> nodes = parser.parse();
 
-        Visitor visitor = new CodeGenerationVisitor();
+        CodeGenerationVisitor visitor = new CodeGenerationVisitor();
         for (Node node : nodes) {
             //System.out.println(node);
             node.accept(visitor);
         }
+
+        visitor.dumpScope();
     }
 }
 PARSER_END(Parser)
@@ -96,6 +98,45 @@ List<Node> parse() :
     { return nodes; }
 }
 
+Type Type() :
+{
+    Token t ;
+    Type type, type2 ;
+    List<Type> params ;
+}
+{
+    (
+        LOOKAHEAD ( <LPAR> )
+        (
+            { params = new ArrayList<Type>(); }
+            <LPAR>
+            type = Type()
+            <RPAR>
+            <LPAR>
+            [
+                type2 = Type()
+                { params.add(type2); }
+                (
+                    ","
+                    (<S>)*
+                    type2 = Type()
+                    { params.add(type2); }
+                )*
+            ]
+            <RPAR>
+            { type = new FunctionType(type, params); }
+        )
+        |
+        (
+            t = <IDENT>
+            { type = new PlaceholderType(t.image); }
+        )
+    )
+    (<S>)*
+
+    { return type; }
+}
+
 Node Statement() :
 {
     Token t ;
@@ -120,14 +161,7 @@ Node Statement() :
             { n = new Variable(t.image); }
             <ASSIGN>
             (<S>)*
-            (
-                LOOKAHEAD(Function())
-                (
-                    n2 = Function()
-                )
-                |
-                    n2 = Expression()
-            )
+            n2 = Expression()
             { n = new AssignNode(n, n2); }
             <STMTBREAK>
             (<S>)*
@@ -136,14 +170,7 @@ Node Statement() :
             n = Declaration()
             <ASSIGN>
             (<S>)*
-            (
-                LOOKAHEAD(Function())
-                (
-                    n2 = Function()
-                )
-                |
-                    n2 = Expression()
-            )
+            n2 = Expression()
             { n = new AssignNode(n, n2); }
             <STMTBREAK>
             (<S>)*
@@ -182,14 +209,13 @@ Node IfStatement() :
 Declaration Declaration() :
 {
     Token t ;
-    String type, name ;
+    Type type ;
+    String name ;
     Node value ;
     Declaration d ;
 }
 {
-    t = <IDENT>
-    (<S>)*
-    { type = t.image; }
+    type = Type()
     t = <IDENT>
     { name = t.image; }
     { d = new Declaration(type, name); }
@@ -201,18 +227,17 @@ Declaration Declaration() :
 Node Function() :
 {
     Token t ;
+    Type type ;
     Node n ;
     Declaration d ;
     FunctionDecl f ;
-    String type ;
     List<Declaration> params ;
     List<Node> statements ;
 }
 {
     { params = new ArrayList<Declaration>(); }
     { statements = new ArrayList<Node>(); }
-    t = <IDENT>
-    { type = t.image; }
+    type = Type()
     <LPAR>
     [
         d = Declaration()
