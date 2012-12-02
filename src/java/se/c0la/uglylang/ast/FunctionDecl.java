@@ -4,6 +4,7 @@ import java.util.*;
 
 import se.c0la.uglylang.Type;
 import se.c0la.uglylang.FunctionType;
+import se.c0la.uglylang.Symbol;
 
 public class FunctionDecl extends Block
 {
@@ -20,7 +21,7 @@ public class FunctionDecl extends Block
 
     public List<Declaration> getParams() { return params; }
 
-    public Type getType()
+    public FunctionType getType()
     {
         List<Type> paramTypes = new ArrayList<Type>();
         for (Declaration param : params) {
@@ -35,12 +36,19 @@ public class FunctionDecl extends Block
         int funcAddr = visitor.getCurrentAddr();
 
         visitor.visit(this);
+
+        Map<String, Symbol> paramSymbols = new LinkedHashMap<String, Symbol>();
+        for (Declaration decl : params) {
+            decl.accept(visitor);
+            paramSymbols.put(decl.getName(), decl.getSymbol());
+            System.out.println("param: " + decl.getName() + " = " + decl.getSymbol());
+        }
+
         for (Node node : stmts) {
             node.accept(visitor);
         }
 
-        // implicit return
-        Node retStmt = new EndFunctionStatement(funcAddr);
+        Node retStmt = new EndFunctionStatement(getType(), funcAddr, paramSymbols);
         retStmt.accept(visitor);
     }
 

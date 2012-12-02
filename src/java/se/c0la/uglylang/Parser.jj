@@ -19,11 +19,10 @@ public class Parser
 
         CodeGenerationVisitor visitor = new CodeGenerationVisitor();
         for (Node node : nodes) {
-            //System.out.println(node);
             node.accept(visitor);
         }
 
-        visitor.dumpScope();
+        visitor.dump();
     }
 }
 PARSER_END(Parser)
@@ -47,7 +46,7 @@ TOKEN : { < #nmstart : ["a"-"z","A"-"Z"] | "_" | <nonascii> | <escape> > }
 TOKEN : { < #nonascii : ["\u0080"-"\uD7FF","\uE000"-"\uFFFD"] > }
 TOKEN : { < #unicode : "\\" (["a"-"f","A"-"F","0"-"9"]){1,6} (<wc>)? > }
 TOKEN : { < #escape : <unicode> | "\\" ["\u0020"-"\u007E","\u0080"-"\uD7FF","\uE000"-"\uFFFD"] > }
-TOKEN : { < #nmchar : ["a"-"z","A"-"Z","0"-"9"] | "-" | "_" | <nonascii> | <escape> > }
+TOKEN : { < #nmchar : ["a"-"z","A"-"Z","0"-"9"] | "_" | <nonascii> | <escape> > }
 TOKEN : { < #num : (["0"-"9"])+ | (["0"-"9"])* "." (["0"-"9"])+ > }
 TOKEN : { < #string : "\"" (<stringchar> | "'")* "\"" | "'" (<urlchar> | "\"")* "'" > }
 TOKEN : { < #stringchar : <urlchar> | "\u0020" | "\\" <nl> > }
@@ -158,7 +157,7 @@ Node Statement() :
         LOOKAHEAD (<IDENT>(<S>)+<ASSIGN>)
             t = <IDENT>
             (<S>)+
-            { n = new Variable(t.image); }
+            { n = new Variable(t.image, true); }
             <ASSIGN>
             (<S>)*
             n2 = Expression()
@@ -371,7 +370,7 @@ Node Expression4() :
             <RPAR>
         |
             t = <IDENT>
-            { n = new Variable(t.image); }
+            { n = new Variable(t.image, false); }
         |
             t = <NUMBER>
             { n = new IntegerConstant(t.image); }

@@ -1,0 +1,18 @@
+(int)(int,int) exp =
+    int(int num, int pow) {
+        if (pow == 1) {
+            return num;
+        }
+        return num*exp(num, pow - 1);
+    };
+
+func factorial =
+    int(int num) {
+        if (num == 1) {
+            return num;
+        }
+        return num*factorial(num-1);
+    };
+
+exp(2, 4);
+factorial(5);

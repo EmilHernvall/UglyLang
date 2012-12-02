@@ -1,11 +1,13 @@
 package se.c0la.uglylang.ast;
 
 import se.c0la.uglylang.Type;
+import se.c0la.uglylang.Symbol;
 
 public class Declaration extends Node
 {
     private Type type;
     private String name;
+    private Symbol symbol;
 
     public Declaration(Type type, String name)
     {
@@ -15,6 +17,9 @@ public class Declaration extends Node
 
     public Type getType() { return type; }
     public String getName() { return name; }
+
+    public Symbol getSymbol() { return symbol; }
+    public void setSymbol(Symbol v) { this.symbol = v; }
 
     @Override
     public void accept(Visitor visitor)

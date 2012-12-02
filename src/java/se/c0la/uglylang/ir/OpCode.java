@@ -6,6 +6,7 @@ public enum OpCode
     RETURN,
     LOAD,
     STORE,
+    PUSH,
     JUMP,
     JUMPONFALSE,
     ADD,
