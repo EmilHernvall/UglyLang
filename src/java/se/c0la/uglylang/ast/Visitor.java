@@ -15,14 +15,25 @@ public interface Visitor
     // assignment
     void visit(AssignNode node);
 
+    // logic
+    void visit(AndNode node);
+    void visit(OrNode node);
+    void visit(XorNode node);
+
     // arithmetic
     void visit(AddNode node);
     void visit(SubNode node);
     void visit(MulNode node);
     void visit(DivNode node);
+    void visit(ModNode node);
 
     // conditionals
     void visit(EqualNode node);
+    void visit(NotEqualNode node);
+    void visit(LtNode node);
+    void visit(GtNode node);
+    void visit(LtEqNode node);
+    void visit(GtEqNode node);
 
     // values
     void visit(Variable node);

@@ -232,6 +232,21 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void visit(AndNode node)
+    {
+    }
+
+    @Override
+    public void visit(OrNode node)
+    {
+    }
+
+    @Override
+    public void visit(XorNode node)
+    {
+    }
+
+    @Override
     public void visit(AddNode node)
     {
         System.out.printf("%d Add\n", getCurrentAddr());
@@ -264,11 +279,59 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void visit(ModNode node)
+    {
+        System.out.printf("%d Mod\n", getCurrentAddr());
+
+        instructions.add(new ModInstruction());
+    }
+
+    @Override
     public void visit(EqualNode node)
     {
         System.out.printf("%d Equal\n", getCurrentAddr());
 
         instructions.add(new EqualInstruction());
+    }
+
+    @Override
+    public void visit(NotEqualNode node)
+    {
+        System.out.printf("%d NotEqual\n", getCurrentAddr());
+
+        instructions.add(new NotEqualInstruction());
+    }
+
+    @Override
+    public void visit(LtNode node)
+    {
+        System.out.printf("%d Lt\n", getCurrentAddr());
+
+        instructions.add(new LtInstruction());
+    }
+
+    @Override
+    public void visit(GtNode node)
+    {
+        System.out.printf("%d Gt\n", getCurrentAddr());
+
+        instructions.add(new GtInstruction());
+    }
+
+    @Override
+    public void visit(LtEqNode node)
+    {
+        System.out.printf("%d LtEq\n", getCurrentAddr());
+
+        instructions.add(new LtEqInstruction());
+    }
+
+    @Override
+    public void visit(GtEqNode node)
+    {
+        System.out.printf("%d GtEq\n", getCurrentAddr());
+
+        instructions.add(new GtEqInstruction());
     }
 
     @Override

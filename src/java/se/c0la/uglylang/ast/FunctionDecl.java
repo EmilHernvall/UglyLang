@@ -41,7 +41,6 @@ public class FunctionDecl extends Block
         for (Declaration decl : params) {
             decl.accept(visitor);
             paramSymbols.put(decl.getName(), decl.getSymbol());
-            System.out.println("param: " + decl.getName() + " = " + decl.getSymbol());
         }
 
         for (Node node : stmts) {

@@ -1,6 +1,6 @@
 package se.c0la.uglylang;
 
-public class BooleanValue implements Value<BooleanType>
+public class BooleanValue extends AbstractValue<BooleanType>
 {
     public final static BooleanType TYPE = new BooleanType();
 
@@ -12,30 +12,6 @@ public class BooleanValue implements Value<BooleanType>
     }
 
     public boolean getBoolean() { return val; }
-
-    @Override
-    public Value addOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value subOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value mulOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value divOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public Value equalOp(Value b)

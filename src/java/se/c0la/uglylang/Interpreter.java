@@ -7,12 +7,13 @@ import se.c0la.uglylang.ir.*;
 
 public class Interpreter
 {
-    private int programCounter = 0;
-    private Stack<Value> stack = new Stack<Value>();
-    private Map<Symbol, Value> values = new HashMap<Symbol, Value>();
+    private int programCounter;
+    private Stack<Value> stack;
+    private Map<Symbol, Value> values;
 
     public Interpreter()
     {
+        values = new HashMap<Symbol, Value>();
     }
 
     public void dumpStack()
@@ -26,6 +27,8 @@ public class Interpreter
 
     public void run(List<Instruction> instructions)
     {
+        programCounter = 0;
+        stack = new Stack<Value>();
         while (true) {
             if (programCounter >= instructions.size()) {
                 System.out.println("Execution halted.");
@@ -34,7 +37,6 @@ public class Interpreter
 
             Instruction inst = instructions.get(programCounter);
             System.out.println(programCounter + " " + inst);
-            dumpStack();
             switch (inst.getOpCode()) {
                 case CALL:
                 {
@@ -48,7 +50,7 @@ public class Interpreter
                                 + " not found!");
                     }
 
-                    try {
+                    if (value instanceof FunctionValue) {
                         FunctionValue func = (FunctionValue)value;
                         programCounter = func.getAddr();
 
@@ -64,8 +66,19 @@ public class Interpreter
                             values.put(sym, arg);
                         }
                     }
-                    catch (ClassCastException e) {
-                        throw new RuntimeException(e);
+                    else if (value instanceof NativeFunctionValue) {
+                        NativeFunctionValue funcValue = (NativeFunctionValue)value;
+                        NativeFunction func = funcValue.getFunction();
+                        FunctionType funcType = funcValue.getType();
+                        List<Type> params = funcType.getParameters();
+
+                        Value[] args = new Value[params.size()];
+                        for (int i = 0; i < params.size(); i++) {
+                            args[i] = stack.pop();
+                        }
+
+                        Value ret = func.execute(args);
+                        stack.push(ret);
                     }
 
                     stack.push(new ReturnAddressValue(retAddr));
@@ -179,6 +192,16 @@ public class Interpreter
                     Value first = stack.pop();
                     Value second = stack.pop();
                     Value newValue = first.divOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case MOD:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.modOp(second);
                     stack.push(newValue);
                     programCounter++;
                     continue;

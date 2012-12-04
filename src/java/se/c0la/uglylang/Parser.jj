@@ -55,14 +55,25 @@ TOKEN : { < #nl : "\n" | "\r" "\n" | "\r" | "\u000C" > }
 TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
 TOKEN : { < #w : (<wc>)* > }
 
+TOKEN : { < AND : "and" > }
+TOKEN : { < OR : "or" > }
+TOKEN : { < NOT : "not" > }
+TOKEN : { < XOR : "xor" > }
 TOKEN : { < IFSTMT : "if" > }
 TOKEN : { < RETURNSTMT : "return" > }
 TOKEN : { < EQ : "==" > }
+TOKEN : { < NOTEQ : "!=" > }
+TOKEN : { < GT : ">" > }
+TOKEN : { < GTEQ : ">=" > }
+TOKEN : { < LT : "<" > }
+TOKEN : { < LTEQ : "<=" > }
 TOKEN : { < ASSIGN : "=" > }
 TOKEN : { < ADD : "+" > }
 TOKEN : { < SUB : "-" > }
 TOKEN : { < MUL : "*" > }
 TOKEN : { < DIV : "/" > }
+TOKEN : { < MOD : "%" > }
+TOKEN : { < EXP : "^" > }
 TOKEN : { < LPAR : "(" > }
 TOKEN : { < RPAR : ")" > }
 TOKEN : { < LCLAUSE : "{" > }
@@ -273,10 +284,20 @@ Node Expression() :
 {
     n = Expression2()
     (
-        <EQ>
-        (<S>)*
-        n2 = Expression2()
-        { n = new EqualNode(n, n2); }
+            <AND>
+            (<S>)*
+            n2 = Expression2()
+            { n = new AndNode(n, n2); }
+        |
+            <OR>
+            (<S>)*
+            n2 = Expression2()
+            { n = new OrNode(n, n2); }
+        |
+            <XOR>
+            (<S>)*
+            n2 = Expression2()
+            { n = new XorNode(n, n2); }
     )*
 
     { return n; }
@@ -288,20 +309,38 @@ Node Expression2() :
     Node n, n2 ;
 }
 {
+    n = Expression3()
     (
-        n = Expression3()
-        (
-                <ADD>
-                (<S>)*
-                n2 = Expression3()
-                { n = new AddNode(n, n2); }
-            |
-                <SUB>
-                (<S>)*
-                n2 = Expression3()
-                { n = new SubNode(n, n2); }
-        )*
-    )
+            <EQ>
+            (<S>)*
+            n2 = Expression3()
+            { n = new EqualNode(n, n2); }
+        |
+            <NOTEQ>
+            (<S>)*
+            n2 = Expression3()
+            { n = new NotEqualNode(n, n2); }
+        |
+            <LT>
+            (<S>)*
+            n2 = Expression3()
+            { n = new LtNode(n, n2); }
+        |
+            <GT>
+            (<S>)*
+            n2 = Expression3()
+            { n = new GtNode(n, n2); }
+        |
+            <LTEQ>
+            (<S>)*
+            n2 = Expression3()
+            { n = new LtEqNode(n, n2); }
+        |
+            <GTEQ>
+            (<S>)*
+            n2 = Expression3()
+            { n = new GtEqNode(n, n2); }
+    )*
 
     { return n; }
 }
@@ -315,15 +354,15 @@ Node Expression3() :
     (
         n = Expression4()
         (
-                <MUL>
+                <ADD>
                 (<S>)*
                 n2 = Expression4()
-                { n = new MulNode(n, n2); }
+                { n = new AddNode(n, n2); }
             |
-                <DIV>
+                <SUB>
                 (<S>)*
                 n2 = Expression4()
-                { n = new DivNode(n, n2); }
+                { n = new SubNode(n, n2); }
         )*
     )
 
@@ -331,6 +370,35 @@ Node Expression3() :
 }
 
 Node Expression4() :
+{
+    Token t ;
+    Node n, n2 ;
+}
+{
+    (
+        n = Expression5()
+        (
+                <MUL>
+                (<S>)*
+                n2 = Expression5()
+                { n = new MulNode(n, n2); }
+            |
+                <DIV>
+                (<S>)*
+                n2 = Expression5()
+                { n = new DivNode(n, n2); }
+            |
+                <MOD>
+                (<S>)*
+                n2 = Expression5()
+                { n = new ModNode(n, n2); }
+        )*
+    )
+
+    { return n; }
+}
+
+Node Expression5() :
 {
     Token t ;
     Node n, n2 ;
@@ -362,23 +430,27 @@ Node Expression4() :
             ]
             <RPAR>
             { n = new FunctionCall(t.image, params); }
+            (<S>)*
         )
         |
             <LPAR>
             (<S>)*
             n = Expression()
             <RPAR>
+            (<S>)*
         |
             t = <IDENT>
+            (<S>)*
             { n = new Variable(t.image, false); }
         |
             t = <NUMBER>
+            (<S>)*
             { n = new IntegerConstant(t.image); }
         |
             t = <STRING>
+            (<S>)*
             { n = new StringConstant(t.image); }
     )
-    (<S>)*
 
     { return n; }
 }

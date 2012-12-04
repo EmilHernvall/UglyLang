@@ -1,6 +1,6 @@
 package se.c0la.uglylang;
 
-public class ReturnAddressValue implements Value<IntegerType>
+public class ReturnAddressValue extends AbstractValue<IntegerType>
 {
     public final static IntegerType TYPE = new IntegerType();
 
@@ -12,36 +12,6 @@ public class ReturnAddressValue implements Value<IntegerType>
     }
 
     public int getAddr() { return addr; }
-
-    @Override
-    public Value addOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value subOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value mulOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value divOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value equalOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public IntegerType getType() { return TYPE; }

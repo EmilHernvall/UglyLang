@@ -7,11 +7,20 @@ public enum OpCode
     LOAD,
     STORE,
     PUSH,
+
     JUMP,
     JUMPONFALSE,
+
     ADD,
     SUB,
     MUL,
     DIV,
-    EQUAL;
+    MOD,
+
+    EQUAL,
+    NOTEQUAL,
+    GT,
+    LT,
+    GTEQ,
+    LTEQ;
 }

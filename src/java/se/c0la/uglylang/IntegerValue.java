@@ -1,6 +1,6 @@
 package se.c0la.uglylang;
 
-public class IntegerValue implements Value<IntegerType>
+public class IntegerValue extends AbstractValue<IntegerType>
 {
     public final static IntegerType TYPE = new IntegerType();
 
@@ -39,6 +39,13 @@ public class IntegerValue implements Value<IntegerType>
     {
         IntegerValue intVal = (IntegerValue)b;
         return new IntegerValue(intVal.val / val);
+    }
+
+    @Override
+    public Value modOp(Value b)
+    {
+        IntegerValue intVal = (IntegerValue)b;
+        return new IntegerValue(intVal.val % val);
     }
 
     @Override

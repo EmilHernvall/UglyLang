@@ -2,7 +2,7 @@ package se.c0la.uglylang;
 
 import java.util.*;
 
-public class FunctionValue implements Value<FunctionType>
+public class FunctionValue extends AbstractValue<FunctionType>
 {
     private FunctionType type;
 
@@ -18,36 +18,6 @@ public class FunctionValue implements Value<FunctionType>
 
     public int getAddr() { return addr; }
     public Map<String, Symbol> getSymbolMap() { return symbolMap; }
-
-    @Override
-    public Value addOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value subOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value mulOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value divOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Value equalOp(Value b)
-    {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public FunctionType getType() { return type; }
