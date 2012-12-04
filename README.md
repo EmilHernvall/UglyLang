@@ -23,10 +23,8 @@ Built-in types:
  * fixed
  * boolean
  * array
- * tuples (haskell-like)
-
-All types are objects. Types can take type parameters. These are remembered at
-runtime.
+ * tuples (haskell-like), mutable and unmutable
+ * named tuples
 
 Statements:
 
@@ -73,12 +71,50 @@ Priority:
 
     ()
 
+Arrays
+------
+
+Arrays can be defined for any type by appending [].
+
+    int[] arr = [ 2,3,5,7,11 ];
+
+An empty array of specified size can be created using:
+
+    int[] arr = array(100);
+
+An automatically growing array can be created using:
+
+    int[] arr = autoarray();
+
+Values can be set and retrieved using the subscript operator:
+
+    arr[0] = 7;
+    int foo = arr[0];
+
+Tuples and named tuples
+-----------------------
+
+Tuples have a type signature which consists of a list of subtypes surrounded
+by paranthesis. They are declared and initialized like this:
+
+    (string, int, int) myTuple = ("foo", 7, 11);
+
+A named tuple is defined like this:
+
+    (name:string, age:int, height:int) myNamedTuple =
+        (name:"emil", age:26, height:188);
+
+Both tuples and named tuples are dereferences using the subscript operator:
+
+    string val1 = myTuple[0];
+    string val2 = myTuple["emil"];
+
 Functions
 ---------
 
 A function signature looks like this:
 
-return-type(param-type param-name, ...)
+(return-type)(param-type param-name, ...)
 
 Functions are always stored in a variable. When first declaring a function, the
 "func" type indicator can be used. In any other case the full signature has
@@ -86,77 +122,47 @@ to be used.
 
 For example:
 
-    func map =
-        iter<int>(iter<int> l, int(int) f) {
-            iter<int> out = list<int>();
-            for i in l {
-                out.add(f(i));
+    (int)(int,int) fastexp =
+        int(int num, int pow) {
+            if (pow == 1) {
+                return num;
             }
-            return i;
+            if (pow % 2 == 0) {
+                return fastexp(num*num, pow/2);
+            }
+            return num*fastexp(num*num, (pow - 1)/2);
         };
 
-    iter<int> nums = range(1, 10);
-    iter<int> doubled =
-        map(nums,
-            int(int a) {
-                return 2*a;
-            });
+    func factorial =
+        int(int num) {
+            if (num == 1) {
+                return num;
+            }
+            return num*factorial(num-1);
+        };
 
-Classes
--------
+Type aliases
+------------
 
-Methods and member variables can be public or private, which are separated into
-sections. Only one public and one private section are allowed. The public
-section _has_ to be present.
+A type can be given a name using type aliases:
 
-Static methods are not supported.
+    type MyFunc (string)(string, int, int)
+    type MyFuncArr MyFunc[]
 
-Classes can accept type parameters. These are kept at runtime.
+Control structures
+------------------
 
-Classes _cannot_ be nested.
+    if a == b {
+        /* code */
+    } else {
+        /* code */
+    }
 
-Class syntax example:
+    while (a < len) {
+        /* code */
+    }
 
-    class arraylist<e>(list<e>, subscriptable<e>)
-    {
-    public:
-        // init is a reserved name for the constructor. The return type must always
-        // equal the class name.
-        func init =
-            List() {
-                // ...
-            };
-
-        func add =
-            void(ref e add) {
-                // ...
-            };
-
-        func get =
-            e(int idx) {
-                // ...
-            };
-
-        func size =
-            int() {
-                // ...
-            };
-
-    private:
-        int size;
-    };
-
-Interface syntax example:
-
-    interface list<e>(iter<e>)
-    {
-        void(e) add;
-        e(int) get;
-        int() size;
-    };
-
-Usage example:
-
-    list<int> intList = arraylist<int>();
-    intList.add(123);
-    int foo = intList.get(0);
+    int[] arr = [1,2,3];
+    for (int a : arr) {
+        /* code */
+    }
