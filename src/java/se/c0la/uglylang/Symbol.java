@@ -1,5 +1,7 @@
 package se.c0la.uglylang;
 
+import se.c0la.uglylang.type.Type;
+
 public class Symbol
 {
     private Type type;

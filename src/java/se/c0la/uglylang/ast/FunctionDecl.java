@@ -2,8 +2,8 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.Type;
-import se.c0la.uglylang.FunctionType;
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.FunctionType;
 import se.c0la.uglylang.Symbol;
 
 public class FunctionDecl extends Block

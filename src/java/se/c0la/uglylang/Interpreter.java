@@ -4,6 +4,8 @@ import java.util.*;
 
 import se.c0la.uglylang.ast.*;
 import se.c0la.uglylang.ir.*;
+import se.c0la.uglylang.type.*;
+import se.c0la.uglylang.nativefunc.*;
 
 public class Interpreter
 {
@@ -25,18 +27,27 @@ public class Interpreter
         System.out.println();
     }
 
+    public void registerNativeFunction(Symbol symbol, NativeFunction func)
+    {
+        values.put(symbol, new NativeFunctionValue(func.getType(), func));
+    }
+
     public void run(List<Instruction> instructions)
     {
         programCounter = 0;
         stack = new Stack<Value>();
+        int instrCount = 0;
         while (true) {
+            instrCount++;
+
             if (programCounter >= instructions.size()) {
-                System.out.println("Execution halted.");
+                System.out.println("Execution halted after " + instrCount +
+                        " instructions.");
                 return;
             }
 
             Instruction inst = instructions.get(programCounter);
-            System.out.println(programCounter + " " + inst);
+            //System.out.println(programCounter + " " + inst);
             switch (inst.getOpCode()) {
                 case CALL:
                 {
@@ -65,6 +76,8 @@ public class Interpreter
                             Value arg = stack.pop();
                             values.put(sym, arg);
                         }
+
+                        stack.push(new ReturnAddressValue(retAddr));
                     }
                     else if (value instanceof NativeFunctionValue) {
                         NativeFunctionValue funcValue = (NativeFunctionValue)value;
@@ -78,10 +91,12 @@ public class Interpreter
                         }
 
                         Value ret = func.execute(args);
-                        stack.push(ret);
-                    }
+                        if (ret != null) {
+                            stack.push(ret);
+                        }
 
-                    stack.push(new ReturnAddressValue(retAddr));
+                        programCounter++;
+                    }
 
                     continue;
                 }
@@ -216,6 +231,36 @@ public class Interpreter
                     programCounter++;
                     continue;
                 }
+
+                case AND:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.andOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case OR:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.orOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case XOR:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.xorOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
             }
 
             break;
@@ -226,24 +271,37 @@ public class Interpreter
     throws Exception
     {
         Parser parser = new Parser(System.in);
+        CodeGenerationVisitor visitor = new CodeGenerationVisitor();
+        Interpreter interpreter = new Interpreter();
+
+        // register native functions
+        {
+            NativeFunction func = new PrintFunction();
+            Symbol sym = visitor.registerNativeFunction(func);
+            interpreter.registerNativeFunction(sym, func);
+        }
+
+        {
+            NativeFunction func = new IntToStrFunction();
+            Symbol sym = visitor.registerNativeFunction(func);
+            interpreter.registerNativeFunction(sym, func);
+        }
+
+        // parse
         List<Node> nodes = parser.parse();
 
-        CodeGenerationVisitor visitor = new CodeGenerationVisitor();
+        // generate instructions
         for (Node node : nodes) {
             node.accept(visitor);
         }
 
-        System.out.println();
-        System.out.println("Executing:");
-
-        Interpreter interpreter = new Interpreter();
+        // execute
         try {
             interpreter.run(visitor.getInstructions());
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println();
+            interpreter.dumpStack();
         }
-
-        System.out.println();
-        interpreter.dumpStack();
     }
 }

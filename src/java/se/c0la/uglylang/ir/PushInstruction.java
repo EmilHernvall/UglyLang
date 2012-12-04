@@ -1,7 +1,7 @@
 package se.c0la.uglylang.ir;
 
 import se.c0la.uglylang.Symbol;
-import se.c0la.uglylang.Value;
+import se.c0la.uglylang.type.Value;
 
 public class PushInstruction implements Instruction
 {

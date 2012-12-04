@@ -1,4 +1,4 @@
-package se.c0la.uglylang;
+package se.c0la.uglylang.type;
 
 public interface Value<E extends Type>
 {
@@ -16,4 +16,8 @@ public interface Value<E extends Type>
     public Value gtOp(Value b);
     public Value ltEqOp(Value b);
     public Value gtEqOp(Value b);
+
+    public Value andOp(Value b);
+    public Value orOp(Value b);
+    public Value xorOp(Value b);
 }

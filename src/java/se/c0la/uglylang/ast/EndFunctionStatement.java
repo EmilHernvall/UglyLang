@@ -2,7 +2,7 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.FunctionType;
+import se.c0la.uglylang.type.FunctionType;
 import se.c0la.uglylang.Symbol;
 
 public class EndFunctionStatement extends Node

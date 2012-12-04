@@ -1,4 +1,4 @@
-package se.c0la.uglylang;
+package se.c0la.uglylang.type;
 
 public abstract class AbstractValue<E extends Type> implements Value<E>
 {
@@ -66,6 +66,24 @@ public abstract class AbstractValue<E extends Type> implements Value<E>
 
     @Override
     public Value gtEqOp(Value b)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Value andOp(Value b)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Value orOp(Value b)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Value xorOp(Value b)
     {
         throw new UnsupportedOperationException();
     }

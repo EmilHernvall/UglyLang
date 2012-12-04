@@ -1,39 +1,40 @@
-/*
-builtin data types:
-    func
-    string
-    int
-    fixed
-    boolean
-*/
-
-int a = 2;
-int b = 3 ;
-string c = "emil";
-bool f = a == b;
-
-a = pow( 2, 8 );
-b = 1 * ( 2 + 3 ) - 4 / ( 5 + 6 ) - 7;
-
-(int)(int,int) foo =
-    int(int a, int b) {
-        int c = 1;
-
-        if a == b {
-            print("equal");
+(int)(int,int) exp =
+    (int)(int num, int pow) {
+        if (pow == 1) {
+            return num;
         }
-
-        return a*b*c;
+        return num*exp(num, pow - 1);
     };
 
-func bar =
-    (int)(int)((int)(int,int) m, int a) {
-        return
-            int(int b) {
-                m(a, b);
-            };
+(int)(int,int) fastexp =
+    (int)(int num, int pow) {
+        if (pow == 1) {
+            return num;
+        }
+        if (pow % 2 == 0) {
+            return fastexp(num*num, pow/2);
+        }
+        return num*fastexp(num*num, (pow - 1)/2);
     };
 
-print(foo(a,b));
-print(bar(foo, a, b));
+func factorial =
+    (int)(int num) {
+        if (num == 1) {
+            return num;
+        }
+        return num*factorial(num-1);
+    };
 
+int testBase = 2;
+int testExp = 16;
+int testFactorial = 7;
+
+if testBase == 2 and testExp % 8 == 0 {
+    print("by eight!");
+}
+
+int res1 = fastexp(testBase, testExp);
+int res2 = factorial(testFactorial);
+
+print(intToStr(testBase) + "^" + intToStr(testExp) + " = " + intToStr(res1));
+print(intToStr(testFactorial) + "! = " + intToStr(res2));

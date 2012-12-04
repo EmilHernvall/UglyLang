@@ -1,4 +1,4 @@
-package se.c0la.uglylang;
+package se.c0la.uglylang.type;
 
 public interface Type
 {

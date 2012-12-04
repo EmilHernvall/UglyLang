@@ -104,6 +104,9 @@ A named tuple is defined like this:
     (name:string, age:int, height:int) myNamedTuple =
         (name:"emil", age:26, height:188);
 
+Not all keys of a named tuple has to be declared in the type signature, but all
+keys in the type signature has to be present in the instance of the tuple.
+
 Both tuples and named tuples are dereferences using the subscript operator:
 
     string val1 = myTuple[0];
@@ -166,3 +169,29 @@ Control structures
     for (int a : arr) {
         /* code */
     }
+
+Classes
+-------
+
+Named tuples are used to construct classes. A class is a named tuple with
+fields containing functions. All other fields of the tuple can be accessed from
+within it. Externally only the keys specified in the type signature will be
+available.
+
+    type Greeter (name:string, new:(Greeter)(string), greet:(void)())
+
+    Greeter greeterImpl =
+        (
+            name: "",
+            new: (Greeter)(string name) {
+                 Greeter newGreeter = self.copy();
+                 newGreeter.name = name;
+            },
+            greet: (void)() {
+                print "Hello, " + name + "!";
+            }
+        );
+
+    Greeter myGreeter = greeterImpl.new();
+    myGreeter["name"] = "Emil";
+    myGreeter["greet"]();

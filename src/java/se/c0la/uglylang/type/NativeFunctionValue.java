@@ -1,6 +1,8 @@
-package se.c0la.uglylang;
+package se.c0la.uglylang.type;
 
 import java.util.*;
+
+import se.c0la.uglylang.nativefunc.NativeFunction;
 
 public class NativeFunctionValue extends AbstractValue<FunctionType>
 {

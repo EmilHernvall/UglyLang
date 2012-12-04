@@ -1,6 +1,6 @@
 package se.c0la.uglylang.ast;
 
-import se.c0la.uglylang.Type;
+import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.Symbol;
 
 public class Declaration extends Node

@@ -1,4 +1,4 @@
-package se.c0la.uglylang;
+package se.c0la.uglylang.type;
 
 public class BooleanValue extends AbstractValue<BooleanType>
 {
@@ -18,6 +18,28 @@ public class BooleanValue extends AbstractValue<BooleanType>
     {
         BooleanValue bool = (BooleanValue)b;
         return new BooleanValue(bool.val == val);
+    }
+
+
+    @Override
+    public Value andOp(Value b)
+    {
+        BooleanValue bool = (BooleanValue)b;
+        return new BooleanValue(bool.val && val);
+    }
+
+    @Override
+    public Value orOp(Value b)
+    {
+        BooleanValue bool = (BooleanValue)b;
+        return new BooleanValue(bool.val || val);
+    }
+
+    @Override
+    public Value xorOp(Value b)
+    {
+        BooleanValue bool = (BooleanValue)b;
+        return new BooleanValue(bool.val ^ val);
     }
 
     @Override

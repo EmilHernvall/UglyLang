@@ -9,6 +9,7 @@ package se.c0la.uglylang;
 import java.util.*;
 
 import se.c0la.uglylang.ast.*;
+import se.c0la.uglylang.type.*;
 
 public class Parser
 {
@@ -247,7 +248,9 @@ Node Function() :
 {
     { params = new ArrayList<Declaration>(); }
     { statements = new ArrayList<Node>(); }
+    <LPAR>
     type = Type()
+    <RPAR>
     <LPAR>
     [
         d = Declaration()
@@ -449,7 +452,7 @@ Node Expression5() :
         |
             t = <STRING>
             (<S>)*
-            { n = new StringConstant(t.image); }
+            { n = new StringConstant(t.image.substring(1, t.image.length()-1)); }
     )
 
     { return n; }

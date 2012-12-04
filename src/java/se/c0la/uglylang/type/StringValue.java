@@ -1,4 +1,4 @@
-package se.c0la.uglylang;
+package se.c0la.uglylang.type;
 
 public class StringValue extends AbstractValue<StringType>
 {
@@ -12,6 +12,13 @@ public class StringValue extends AbstractValue<StringType>
     }
 
     public String getString() { return str; }
+
+    @Override
+    public Value addOp(Value b)
+    {
+        StringValue val = (StringValue)b;
+        return new StringValue(val.str + str);
+    }
 
     @Override
     public StringType getType() { return TYPE; }

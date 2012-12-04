@@ -17,6 +17,10 @@ public enum OpCode
     DIV,
     MOD,
 
+    AND,
+    OR,
+    XOR,
+
     EQUAL,
     NOTEQUAL,
     GT,

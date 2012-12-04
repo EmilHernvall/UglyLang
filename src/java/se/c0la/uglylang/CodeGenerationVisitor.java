@@ -4,6 +4,8 @@ import java.util.*;
 
 import se.c0la.uglylang.ast.*;
 import se.c0la.uglylang.ir.*;
+import se.c0la.uglylang.type.*;
+import se.c0la.uglylang.nativefunc.NativeFunction;
 
 public class CodeGenerationVisitor implements Visitor
 {
@@ -48,6 +50,8 @@ public class CodeGenerationVisitor implements Visitor
         public Symbol getTargetSymbol() { return targetSymbol; }
     }
 
+    private static boolean DEBUG = false;
+
     private Scope rootScope = null;
     private Scope currentScope = null;
 
@@ -61,34 +65,14 @@ public class CodeGenerationVisitor implements Visitor
 
         rootScope = new Scope();
 
-        {
-            Type type = new FunctionType(new IntegerType(), new ArrayList<Type>());
-            rootScope.addSymbol(new Symbol(type, "readInt"));
-        }
-
-        {
-            List<Type> params = new ArrayList<Type>();
-            params.add(new IntegerType());
-            params.add(new IntegerType());
-            Type type = new FunctionType(new IntegerType(), params);
-            rootScope.addSymbol(new Symbol(type, "pow"));
-        }
-
-        {
-            List<Type> params = new ArrayList<Type>();
-            params.add(new IntegerType());
-            Type type = new FunctionType(new StringType(), params);
-            rootScope.addSymbol(new Symbol(type, "intToStr"));
-        }
-
-        {
-            List<Type> params = new ArrayList<Type>();
-            params.add(new StringType());
-            Type type = new FunctionType(new VoidType(), params);
-            rootScope.addSymbol(new Symbol(type, "print"));
-        }
-
         currentScope = rootScope;
+    }
+
+    public Symbol registerNativeFunction(NativeFunction func)
+    {
+        Symbol symbol = new Symbol(func.getType(), func.getName());
+        rootScope.addSymbol(symbol);
+        return symbol;
     }
 
     public List<Instruction> getInstructions()
@@ -122,8 +106,10 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(Declaration node)
     {
-        System.out.printf("%d Declaration: type=%s, name=%s\n",
-                getCurrentAddr(), node.getType(), node.getName());
+        if (DEBUG) {
+            System.out.printf("%d Declaration: type=%s, name=%s\n",
+                    getCurrentAddr(), node.getType(), node.getName());
+        }
 
         Symbol sym = new Symbol(node.getType(), node.getName());
         node.setSymbol(sym);
@@ -140,9 +126,11 @@ public class CodeGenerationVisitor implements Visitor
 
         currentScope = subScope;
 
-        System.out.println();
-        System.out.println("Entering new scope");
-        System.out.printf("%d Function: type=%s\n", getCurrentAddr(), node.getType());
+        if (DEBUG) {
+            System.out.println();
+            System.out.println("Entering new scope");
+            System.out.printf("%d Function: type=%s\n", getCurrentAddr(), node.getType());
+        }
 
         instructions.add(new JumpInstruction("func" + getCurrentAddr()));
     }
@@ -150,7 +138,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(ReturnStatement node)
     {
-        System.out.printf("%d Return\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Return\n", getCurrentAddr());
+        }
 
         instructions.add(new ReturnInstruction());
     }
@@ -158,14 +148,16 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(EndFunctionStatement node)
     {
-        System.out.printf("%d EndFunctionStatement: funcAddr=%d\n",
-                getCurrentAddr(), node.getFuncAddr());
-        System.out.println("Leaving scope");
-        System.out.println("Symbols:");
-        for (Symbol symbol : currentScope.getSymbols()) {
-            System.out.println(symbol.getType() + " " + symbol.getName());
+        if (DEBUG) {
+            System.out.printf("%d EndFunctionStatement: funcAddr=%d\n",
+                    getCurrentAddr(), node.getFuncAddr());
+            System.out.println("Leaving scope");
+            System.out.println("Symbols:");
+            for (Symbol symbol : currentScope.getSymbols()) {
+                System.out.println(symbol.getType() + " " + symbol.getName());
+            }
+            System.out.println();
         }
-        System.out.println();
 
         currentScope = currentScope.getParentScope();
 
@@ -195,7 +187,9 @@ public class CodeGenerationVisitor implements Visitor
     public void visit(IfStatement node)
     {
         String label = "EndIf_" + getCurrentAddr();
-        System.out.printf("%d JumpOnFalse %s\n", getCurrentAddr(), label);
+        if (DEBUG) {
+            System.out.printf("%d JumpOnFalse %s\n", getCurrentAddr(), label);
+        }
 
         instructions.add(new JumpOnFalseInstruction(label));
     }
@@ -204,7 +198,9 @@ public class CodeGenerationVisitor implements Visitor
     public void visit(EndIfStatement node)
     {
         labels.put(node.getLabel(), getCurrentAddr());
-        System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
+        if (DEBUG) {
+            System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
+        }
 
         for (Instruction inst : instructions) {
             if (inst.getOpCode() != OpCode.JUMPONFALSE) {
@@ -223,8 +219,10 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(AssignNode node)
     {
-        System.out.printf("%d Assigning to %s\n", getCurrentAddr(),
-                currentScope.getTargetSymbol().getName());
+        if (DEBUG) {
+            System.out.printf("%d Assigning to %s\n", getCurrentAddr(),
+                    currentScope.getTargetSymbol().getName());
+        }
 
         instructions.add(new StoreInstruction(currentScope.getTargetSymbol()));
 
@@ -234,22 +232,39 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(AndNode node)
     {
+        if (DEBUG) {
+            System.out.printf("%d And\n", getCurrentAddr());
+        }
+
+        instructions.add(new AndInstruction());
     }
 
     @Override
     public void visit(OrNode node)
     {
+        if (DEBUG) {
+            System.out.printf("%d Or\n", getCurrentAddr());
+        }
+
+        instructions.add(new OrInstruction());
     }
 
     @Override
     public void visit(XorNode node)
     {
+        if (DEBUG) {
+            System.out.printf("%d Xor\n", getCurrentAddr());
+        }
+
+        instructions.add(new XorInstruction());
     }
 
     @Override
     public void visit(AddNode node)
     {
-        System.out.printf("%d Add\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Add\n", getCurrentAddr());
+        }
 
         instructions.add(new AddInstruction());
     }
@@ -257,7 +272,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(SubNode node)
     {
-        System.out.printf("%d Sub\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Sub\n", getCurrentAddr());
+        }
 
         instructions.add(new SubInstruction());
     }
@@ -265,7 +282,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(MulNode node)
     {
-        System.out.printf("%d Mul\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Mul\n", getCurrentAddr());
+        }
 
         instructions.add(new MulInstruction());
     }
@@ -273,7 +292,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(DivNode node)
     {
-        System.out.printf("%d Div\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Div\n", getCurrentAddr());
+        }
 
         instructions.add(new DivInstruction());
     }
@@ -281,7 +302,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(ModNode node)
     {
-        System.out.printf("%d Mod\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Mod\n", getCurrentAddr());
+        }
 
         instructions.add(new ModInstruction());
     }
@@ -289,7 +312,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(EqualNode node)
     {
-        System.out.printf("%d Equal\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Equal\n", getCurrentAddr());
+        }
 
         instructions.add(new EqualInstruction());
     }
@@ -297,7 +322,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(NotEqualNode node)
     {
-        System.out.printf("%d NotEqual\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d NotEqual\n", getCurrentAddr());
+        }
 
         instructions.add(new NotEqualInstruction());
     }
@@ -305,7 +332,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(LtNode node)
     {
-        System.out.printf("%d Lt\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Lt\n", getCurrentAddr());
+        }
 
         instructions.add(new LtInstruction());
     }
@@ -313,7 +342,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(GtNode node)
     {
-        System.out.printf("%d Gt\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d Gt\n", getCurrentAddr());
+        }
 
         instructions.add(new GtInstruction());
     }
@@ -321,7 +352,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(LtEqNode node)
     {
-        System.out.printf("%d LtEq\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d LtEq\n", getCurrentAddr());
+        }
 
         instructions.add(new LtEqInstruction());
     }
@@ -329,7 +362,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(GtEqNode node)
     {
-        System.out.printf("%d GtEq\n", getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d GtEq\n", getCurrentAddr());
+        }
 
         instructions.add(new GtEqInstruction());
     }
@@ -341,8 +376,11 @@ public class CodeGenerationVisitor implements Visitor
         if (sym == null) {
             throw new RuntimeException("Symbol not found: " + node.getName());
         }
-        System.out.printf("%d Variable: name=%s, type=%s\n", getCurrentAddr(),
-                node.getName(), sym.getType());
+
+        if (DEBUG) {
+            System.out.printf("%d Variable: name=%s, type=%s\n", getCurrentAddr(),
+                    node.getName(), sym.getType());
+        }
 
         // TODO: This is wrong if the variable is the target of an assignment
         instructions.add(new LoadInstruction(sym));
@@ -355,7 +393,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(StringConstant node)
     {
-        System.out.printf("%d String: value=%s\n", getCurrentAddr(), node.getValue());
+        if (DEBUG) {
+            System.out.printf("%d String: value=%s\n", getCurrentAddr(), node.getValue());
+        }
 
         StringValue value = new StringValue(node.getValue());
         instructions.add(new PushInstruction(value));
@@ -364,7 +404,9 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(IntegerConstant node)
     {
-        System.out.printf("%d Integer: value=%d\n", getCurrentAddr(), node.getValue());
+        if (DEBUG) {
+            System.out.printf("%d Integer: value=%d\n", getCurrentAddr(), node.getValue());
+        }
 
         IntegerValue value = new IntegerValue(node.getValue());
         instructions.add(new PushInstruction(value));
@@ -379,8 +421,10 @@ public class CodeGenerationVisitor implements Visitor
                     node.getFunctionName());
         }
 
-        System.out.printf("%d CALL FunctionCall: function=%s, type=%s\n", getCurrentAddr(),
-                node.getFunctionName(), sym.getType());
+        if (DEBUG) {
+            System.out.printf("%d CALL FunctionCall: function=%s, type=%s\n", getCurrentAddr(),
+                    node.getFunctionName(), sym.getType());
+        }
 
         instructions.add(new CallInstruction(sym));
     }
