@@ -56,6 +56,7 @@ TOKEN : { < #nl : "\n" | "\r" "\n" | "\r" | "\u000C" > }
 TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
 TOKEN : { < #w : (<wc>)* > }
 
+TOKEN : { < SUBSCRIPT : "." > }
 TOKEN : { < AND : "and" > }
 TOKEN : { < OR : "or" > }
 TOKEN : { < NOT : "not" > }
@@ -79,6 +80,8 @@ TOKEN : { < LPAR : "(" > }
 TOKEN : { < RPAR : ")" > }
 TOKEN : { < LCLAUSE : "{" > }
 TOKEN : { < RCLAUSE : "}" > }
+TOKEN : { < LBRACKET : "[" > }
+TOKEN : { < RBRACKET : "]" > }
 TOKEN : { < STMTBREAK : ";" > }
 TOKEN : { < LISTSEP : "," > }
 TOKEN : { < IDENT : <ident> > }
@@ -109,6 +112,88 @@ List<Node> parse() :
     { return nodes; }
 }
 
+Type FunctionType() :
+{
+    Type type, type2 ;
+    List<Type> params ;
+}
+{
+    { params = new ArrayList<Type>(); }
+    <LPAR>
+    type = Type()
+    <RPAR>
+    <LPAR>
+    [
+        type2 = Type()
+        { params.add(type2); }
+        (
+            ","
+            (<S>)*
+            type2 = Type()
+            { params.add(type2); }
+        )*
+    ]
+    <RPAR>
+    { type = new FunctionType(type, params); }
+
+    { return type; }
+}
+
+Type TupleType() :
+{
+    Type type, type2 ;
+    List<Type> params ;
+}
+{
+    { params = new ArrayList<Type>(); }
+    <LPAR>
+    [
+        type2 = Type()
+        { params.add(type2); }
+        (
+            ","
+            (<S>)*
+            type2 = Type()
+            { params.add(type2); }
+        )*
+    ]
+    <RPAR>
+    { type = new TupleType(params); }
+
+    { return type; }
+}
+
+Type NamedTupleType() :
+{
+    Token t ;
+    Type type, type2 ;
+    Map<String, Type> params ;
+}
+{
+    { params = new HashMap<String, Type>(); }
+    <LPAR>
+    [
+        t = <IDENT>
+        ":"
+        (<S>)*
+        type2 = Type()
+        { params.put(t.image, type2); }
+        (
+            ","
+            (<S>)*
+            t = <IDENT>
+            ":"
+            (<S>)*
+            type2 = Type()
+            { params.put(t.image, type2); }
+        )*
+    ]
+    <RPAR>
+    { type = new NamedTupleType(params); }
+
+    { return type; }
+}
+
 Type Type() :
 {
     Token t ;
@@ -117,32 +202,25 @@ Type Type() :
 }
 {
     (
-        LOOKAHEAD ( <LPAR> )
-        (
-            { params = new ArrayList<Type>(); }
-            <LPAR>
-            type = Type()
-            <RPAR>
-            <LPAR>
-            [
-                type2 = Type()
-                { params.add(type2); }
-                (
-                    ","
-                    (<S>)*
-                    type2 = Type()
-                    { params.add(type2); }
-                )*
-            ]
-            <RPAR>
-            { type = new FunctionType(type, params); }
-        )
+        LOOKAHEAD ( FunctionType() )
+        type = FunctionType()
+        |
+        LOOKAHEAD ( TupleType() )
+        type = TupleType()
+        |
+        LOOKAHEAD ( NamedTupleType() )
+        type = NamedTupleType()
         |
         (
             t = <IDENT>
             { type = new PlaceholderType(t.image); }
         )
     )
+    (
+        <LBRACKET>
+        <RBRACKET>
+        { type = new ArrayType(type); }
+    )*
     (<S>)*
 
     { return type; }
@@ -233,6 +311,82 @@ Declaration Declaration() :
     (<S>)*
 
     { return d; }
+}
+
+Node Tuple() :
+{
+    List<Node> nodes ;
+    Node n ;
+}
+{
+    { nodes = new ArrayList<Node>(); }
+    <LPAR>
+    (<S>)*
+    n = Expression()
+    { nodes.add(n); }
+    (
+        ","
+        (<S>)*
+        n = Expression()
+        { nodes.add(n); }
+    )*
+    <RPAR>
+    (<S>)*
+
+    { return new TupleNode(nodes); }
+}
+
+Node NamedTuple() :
+{
+    Map<String, Node> nodes ;
+    Token t ;
+    Node n ;
+}
+{
+    { nodes = new HashMap<String, Node>(); }
+    <LPAR>
+    (<S>)*
+    t = <IDENT>
+    ":"
+    (<S>)*
+    n = Expression()
+    { nodes.put(t.image, n); }
+    (
+        ","
+        (<S>)*
+        t = <IDENT>
+        ":"
+        (<S>)*
+        n = Expression()
+        { nodes.put(t.image, n); }
+    )*
+    <RPAR>
+    (<S>)*
+
+    { return new NamedTupleNode(nodes); }
+}
+
+Node Array() :
+{
+    List<Node> nodes ;
+    Node n ;
+}
+{
+    { nodes = new ArrayList<Node>(); }
+    <LBRACKET>
+    (<S>)*
+    n = Expression()
+    { nodes.add(n); }
+    (
+        ","
+        (<S>)*
+        n = Expression()
+        { nodes.add(n); }
+    )*
+    <RBRACKET>
+    (<S>)*
+
+    { return new ArrayNode(nodes); }
 }
 
 Node Function() :
@@ -403,16 +557,37 @@ Node Expression4() :
 
 Node Expression5() :
 {
-    Token t ;
+    Token t, t2 ;
     Node n, n2 ;
     List<Node> params ;
 }
 {
     (
         LOOKAHEAD( Function() )
-        (
             n = Function()
-        )
+        |
+        LOOKAHEAD( Tuple() )
+            n = Tuple()
+        |
+        LOOKAHEAD( NamedTuple() )
+            n = NamedTuple()
+        |
+        LOOKAHEAD( Array() )
+            n = Array()
+        |
+        LOOKAHEAD( <IDENT> <SUBSCRIPT> )
+            t = <IDENT>
+            <SUBSCRIPT>
+            t2 = <IDENT>
+            { n = new SubscriptNode(t.image, t2.image, false); }
+        |
+        LOOKAHEAD( <IDENT> <LBRACKET> )
+            t = <IDENT>
+            <LBRACKET>
+            n = Expression()
+            <RBRACKET>
+            (<S>)*
+            { n = new IndexNode(t.image, n, false); }
         |
         LOOKAHEAD( <IDENT> <LPAR> )
         (
@@ -422,14 +597,14 @@ Node Expression5() :
             { params = new ArrayList<Node>(); }
 
             [
-            n2 = Expression()
-            { params.add(n2); }
-            (
-                <LISTSEP>
-                (<S>)*
                 n2 = Expression()
                 { params.add(n2); }
-            )*
+                (
+                    <LISTSEP>
+                    (<S>)*
+                    n2 = Expression()
+                    { params.add(n2); }
+                )*
             ]
             <RPAR>
             { n = new FunctionCall(t.image, params); }

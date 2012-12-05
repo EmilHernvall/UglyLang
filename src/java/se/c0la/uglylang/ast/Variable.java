@@ -26,4 +26,3 @@ public class Variable extends Node
         return "var:" + this.name;
     }
 }
-

@@ -297,7 +297,10 @@ public class Interpreter
 
         // execute
         try {
+            long start = System.currentTimeMillis();
             interpreter.run(visitor.getInstructions());
+            System.out.println("Execution finished in " +
+                    (System.currentTimeMillis() - start) + "ms");
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println();

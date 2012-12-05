@@ -23,7 +23,7 @@ Built-in types:
  * fixed
  * boolean
  * array
- * tuples (haskell-like), mutable and unmutable
+ * tuples (haskell-like)
  * named tuples
 
 Statements:
@@ -110,7 +110,11 @@ keys in the type signature has to be present in the instance of the tuple.
 Both tuples and named tuples are dereferences using the subscript operator:
 
     string val1 = myTuple[0];
-    string val2 = myTuple["emil"];
+    string val2 = myTuple.name;
+
+Note that tuples cannot be dynamically dereferenced since this would make it
+impossible to determine the type at compile time. This is however possible for
+arrays.
 
 Functions
 ---------
@@ -220,6 +224,6 @@ available. The named tuple type is thus the object interface.
             }
         );
 
-    Greeter myGreeter = greeterImpl["new"]();
-    myGreeter["name"] = "Emil";
-    myGreeter["greet"]();
+    Greeter myGreeter = greeterImpl.new();
+    myGreeter.name = "Emil";
+    myGreeter.greet();

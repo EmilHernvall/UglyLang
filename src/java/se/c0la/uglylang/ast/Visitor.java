@@ -11,6 +11,9 @@ public interface Visitor
     void visit(EndFunctionStatement node);
     void visit(IfStatement node);
     void visit(EndIfStatement node);
+    void visit(TupleNode node);
+    void visit(NamedTupleNode node);
+    void visit(ArrayNode node);
 
     // assignment
     void visit(AssignNode node);
@@ -36,6 +39,8 @@ public interface Visitor
     void visit(GtEqNode node);
 
     // values
+    void visit(SubscriptNode node);
+    void visit(IndexNode node);
     void visit(Variable node);
     void visit(StringConstant node);
     void visit(IntegerConstant node);

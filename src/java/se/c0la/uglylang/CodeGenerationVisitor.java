@@ -50,7 +50,7 @@ public class CodeGenerationVisitor implements Visitor
         public Symbol getTargetSymbol() { return targetSymbol; }
     }
 
-    private static boolean DEBUG = false;
+    private static boolean DEBUG = true;
 
     private Scope rootScope = null;
     private Scope currentScope = null;
@@ -213,6 +213,30 @@ public class CodeGenerationVisitor implements Visitor
             }
 
             jumpOnFalse.setAddr(getCurrentAddr());
+        }
+    }
+
+    @Override
+    public void visit(TupleNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Tuple %s\n", getCurrentAddr(), node.toString());
+        }
+    }
+
+    @Override
+    public void visit(NamedTupleNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d NamedTuple %s\n", getCurrentAddr(), node.toString());
+        }
+    }
+
+    @Override
+    public void visit(ArrayNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Array %s\n", getCurrentAddr(), node.toString());
         }
     }
 
@@ -387,6 +411,22 @@ public class CodeGenerationVisitor implements Visitor
 
         if (node.isAssignTarget()) {
             currentScope.setTargetSymbol(sym);
+        }
+    }
+
+    @Override
+    public void visit(SubscriptNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Subscript %s\n", getCurrentAddr(), node.toString());
+        }
+    }
+
+    @Override
+    public void visit(IndexNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Index %s\n", getCurrentAddr(), node.toString());
         }
     }
 

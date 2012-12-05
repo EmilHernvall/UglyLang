@@ -16,4 +16,10 @@ public class ReturnStatement extends Node
 
         visitor.visit(this);
     }
+
+    @Override
+    public String toString()
+    {
+        return "return " + expression;
+    }
 }
