@@ -8,7 +8,7 @@ Features:
 
  * Static typing
  * First-class functions
- * Class-based objects
+ * Prototype-based objects
    * No implementation inheritence
    * Explicit interfaces
    * Built-in delegation
@@ -117,7 +117,7 @@ Functions
 
 A function signature looks like this:
 
-(return-type)(param-type param-name, ...)
+    (return-type)(param-type param-name, ...)
 
 Functions are always stored in a variable. When first declaring a function, the
 "func" type indicator can be used. In any other case the full signature has
@@ -126,7 +126,7 @@ to be used.
 For example:
 
     (int)(int,int) fastexp =
-        int(int num, int pow) {
+        (int)(int num, int pow) {
             if (pow == 1) {
                 return num;
             }
@@ -137,12 +137,31 @@ For example:
         };
 
     func factorial =
-        int(int num) {
+        (int)(int num) {
             if (num == 1) {
                 return num;
             }
             return num*factorial(num-1);
         };
+
+func is only a valid type when a function is first declared, and will be
+substituted for the full type.
+
+Overloading of functions can be achived by using an array. The return type must
+be the same for all the overloaded functions.
+
+    func testFunc =
+        [
+            (string)(int a) {
+                return intToStr(a);
+            },
+            (string)(string a) {
+                return a;
+            }
+        ];
+
+    string foo = testFunc(77);
+    string bar = testFunc("hello");
 
 Type aliases
 ------------
@@ -155,43 +174,52 @@ A type can be given a name using type aliases:
 Control structures
 ------------------
 
+If statements:
+
     if a == b {
+        /* code */
+    } elif a == c {
         /* code */
     } else {
         /* code */
     }
 
+While statements:
+
     while (a < len) {
         /* code */
     }
 
+An each loop can be applied to name tuples defining the get:(type)(int) and
+size:(int)() methods.
+
     int[] arr = [1,2,3];
-    for (int a : arr) {
+    each (int a : arr) {
         /* code */
     }
 
 Classes
 -------
 
-Named tuples are used to construct classes. A class is a named tuple with
+Named tuples are used to construct objects. An object is a named tuple with
 fields containing functions. All other fields of the tuple can be accessed from
 within it. Externally only the keys specified in the type signature will be
-available.
+available. The named tuple type is thus the object interface.
 
-    type Greeter (name:string, new:(Greeter)(string), greet:(void)())
+    type Greeter (name:string, new:(Greeter)(string), greet:(void)());
 
     Greeter greeterImpl =
         (
             name: "",
             new: (Greeter)(string name) {
-                 Greeter newGreeter = self.copy();
-                 newGreeter.name = name;
+                 Greeter newGreeter = copy(self);
+                 newGreeter["name"] = name;
             },
             greet: (void)() {
                 print "Hello, " + name + "!";
             }
         );
 
-    Greeter myGreeter = greeterImpl.new();
+    Greeter myGreeter = greeterImpl["new"]();
     myGreeter["name"] = "Emil";
     myGreeter["greet"]();
