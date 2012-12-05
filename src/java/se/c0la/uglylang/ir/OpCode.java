@@ -8,6 +8,10 @@ public enum OpCode
     STORE,
     PUSH,
 
+    ARRAY_ALLOCATE,
+    ARRAY_GET,
+    ARRAY_SET,
+
     JUMP,
     JUMPONFALSE,
 

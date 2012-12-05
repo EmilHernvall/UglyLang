@@ -2,30 +2,31 @@ package se.c0la.uglylang.ast;
 
 public class SubscriptNode extends Node
 {
-    private String tuple;
+    private Node var;
     private String key;
     private boolean assignTarget;
 
-    public SubscriptNode(String tuple, String key, boolean assignTarget)
+    public SubscriptNode(Node var, String key, boolean assignTarget)
     {
-        this.tuple = tuple;
+        this.var = var;
         this.key = key;
         this.assignTarget = assignTarget;
     }
 
-    public String getTuple() { return tuple; }
+    public Node getVar() { return var; }
     public String getKey() { return key; }
     public boolean isAssignTarget() { return assignTarget; }
 
     @Override
     public void accept(Visitor visitor)
     {
+        var.accept(visitor);
         visitor.visit(this);
     }
 
     @Override
     public String toString()
     {
-        return this.tuple + "." + this.key;
+        return this.var + "." + this.key;
     }
 }

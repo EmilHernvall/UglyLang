@@ -14,6 +14,8 @@ public interface Visitor
     void visit(TupleNode node);
     void visit(NamedTupleNode node);
     void visit(ArrayNode node);
+    void visit(ArraySetNode node);
+    void visit(ArrayEndNode node);
 
     // assignment
     void visit(AssignNode node);

@@ -1,13 +1,14 @@
-(int, int, string) testTuple = (1, 2, "test");
-(name:string, age:int, testFunc:(int)()) testNamedTuple =
+int[] arr = [ 1, 2, 3 ];
+/*(int, int, string) testTuple = (1, 2, "test");*/
+/*(name:string, age:int, testFunc:(int)()) testNamedTuple =
     (
         name:"Emil",
         age:26-1,
         testFunc:(int)() {
             return 1;
         }
-    );
-int[] arr = [ 1, 2, 3 ];
+    );*/
 
-int num = testTuple[1+2];
+/*int num = testTuple[1+2];
 string test = testNamedTuple.name;
+int test2 = testNamedTuple.testFunc();*/

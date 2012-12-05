@@ -222,22 +222,56 @@ public class CodeGenerationVisitor implements Visitor
         if (DEBUG) {
             System.out.printf("%d Tuple %s\n", getCurrentAddr(), node.toString());
         }
+
+        // TODO: Implement
     }
 
     @Override
     public void visit(NamedTupleNode node)
     {
         if (DEBUG) {
-            System.out.printf("%d NamedTuple %s\n", getCurrentAddr(), node.toString());
+            System.out.printf("%d NamedTuple\n", getCurrentAddr());
         }
+
+        /*Scope subScope = new Scope();
+        subScope.setParentScope(currentScope);
+        currentScope.addSubScope(subScope);
+
+        currentScope = subScope;*/
+
+        // TODO: Implement
     }
 
     @Override
     public void visit(ArrayNode node)
     {
         if (DEBUG) {
-            System.out.printf("%d Array %s\n", getCurrentAddr(), node.toString());
+            System.out.printf("%d Array: size=%d\n", getCurrentAddr(),
+                    node.getSize());
         }
+
+        // TODO: Implement
+    }
+
+    @Override
+    public void visit(ArraySetNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d ArraySet: idx=%d\n", getCurrentAddr(),
+                    node.getIndex());
+        }
+
+        // TODO: Implement
+    }
+
+    @Override
+    public void visit(ArrayEndNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d ArrayEnd\n", getCurrentAddr());
+        }
+
+        // TODO: Implement
     }
 
     @Override

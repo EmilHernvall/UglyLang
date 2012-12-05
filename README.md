@@ -80,11 +80,15 @@ Arrays can be defined for any type by appending [].
 
 An empty array of specified size can be created using:
 
-    int[] arr = array(100);
+    int[] arr = array(100, 0);
+
+In this case 100 is the size, and 0 is the default value.
 
 An automatically growing array can be created using:
 
-    int[] arr = autoarray();
+    int[] arr = autoarray(0);
+
+0 is the default value.
 
 Values can be set and retrieved using the subscript operator:
 
@@ -202,7 +206,7 @@ size:(int)() methods.
         /* code */
     }
 
-Classes
+Objects
 -------
 
 Named tuples are used to construct objects. An object is a named tuple with

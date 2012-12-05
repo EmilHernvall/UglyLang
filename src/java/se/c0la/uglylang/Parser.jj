@@ -343,7 +343,7 @@ Node NamedTuple() :
     Node n ;
 }
 {
-    { nodes = new HashMap<String, Node>(); }
+    { nodes = new LinkedHashMap<String, Node>(); }
     <LPAR>
     (<S>)*
     t = <IDENT>
@@ -575,20 +575,6 @@ Node Expression5() :
         LOOKAHEAD( Array() )
             n = Array()
         |
-        LOOKAHEAD( <IDENT> <SUBSCRIPT> )
-            t = <IDENT>
-            <SUBSCRIPT>
-            t2 = <IDENT>
-            { n = new SubscriptNode(t.image, t2.image, false); }
-        |
-        LOOKAHEAD( <IDENT> <LBRACKET> )
-            t = <IDENT>
-            <LBRACKET>
-            n = Expression()
-            <RBRACKET>
-            (<S>)*
-            { n = new IndexNode(t.image, n, false); }
-        |
         LOOKAHEAD( <IDENT> <LPAR> )
         (
             t = <IDENT>
@@ -629,6 +615,19 @@ Node Expression5() :
             (<S>)*
             { n = new StringConstant(t.image.substring(1, t.image.length()-1)); }
     )
+
+    [
+            <SUBSCRIPT>
+            t = <IDENT>
+            (<S>)*
+            { n = new SubscriptNode(n, t.image, false); }
+        |
+            <LBRACKET>
+            n2 = Expression()
+            <RBRACKET>
+            (<S>)*
+            { n = new IndexNode(n, n2, false); }
+    ]
 
     { return n; }
 }

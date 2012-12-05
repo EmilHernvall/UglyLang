@@ -11,14 +11,24 @@ public class ArrayNode extends Node
         this.values = values;
     }
 
+    public int getSize() { return values.size(); }
+
     @Override
     public void accept(Visitor visitor)
     {
+        visitor.visit(this);
+
+        int i = 0;
+        ArraySetNode setNode = null;
         for (Node node : values) {
+            setNode = new ArraySetNode(i);
             node.accept(visitor);
+            setNode.accept(visitor);
+            i++;
         }
 
-        visitor.visit(this);
+        ArrayEndNode endNode = new ArrayEndNode();
+        endNode.accept(visitor);
     }
 
     @Override
