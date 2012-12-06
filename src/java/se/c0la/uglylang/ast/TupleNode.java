@@ -2,13 +2,23 @@ package se.c0la.uglylang.ast;
 
 import java.util.List;
 
-public class TupleNode extends Node
-{
-    private List<Node> values;
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
 
-    public TupleNode(List<Node> values)
+public class TupleNode implements Expression
+{
+    private List<Expression> values;
+
+    public TupleNode(List<Expression> values)
     {
         this.values = values;
+    }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -27,7 +37,7 @@ public class TupleNode extends Node
         StringBuilder buf = new StringBuilder();
         buf.append("(");
         String delim = "";
-        for (Node node : values) {
+        for (Expression node : values) {
             buf.append(delim);
             buf.append(node.toString());
             delim = ", ";

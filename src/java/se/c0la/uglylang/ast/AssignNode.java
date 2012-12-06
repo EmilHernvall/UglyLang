@@ -1,6 +1,6 @@
 package se.c0la.uglylang.ast;
 
-public class AssignNode extends Node
+public class AssignNode implements Node
 {
     private Node a;
     private Node b;

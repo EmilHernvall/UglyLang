@@ -1,12 +1,15 @@
 package se.c0la.uglylang.ast;
 
-public class IndexNode extends Node
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
+
+public class IndexNode implements Expression
 {
-    private Node var;
-    private Node index;
+    private Expression var;
+    private Expression index;
     private boolean assignTarget;
 
-    public IndexNode(Node var, Node index, boolean assignTarget)
+    public IndexNode(Expression var, Expression index, boolean assignTarget)
     {
         this.var = var;
         this.index = index;
@@ -16,6 +19,13 @@ public class IndexNode extends Node
     public Node getVariable() { return var; }
     public Node getIndex() { return index; }
     public boolean isAssignTarget() { return assignTarget; }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void accept(Visitor visitor)

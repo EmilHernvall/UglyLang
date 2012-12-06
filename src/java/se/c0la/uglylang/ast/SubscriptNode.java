@@ -1,21 +1,31 @@
 package se.c0la.uglylang.ast;
 
-public class SubscriptNode extends Node
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
+
+public class SubscriptNode implements Expression
 {
-    private Node var;
+    private Expression var;
     private String key;
     private boolean assignTarget;
 
-    public SubscriptNode(Node var, String key, boolean assignTarget)
+    public SubscriptNode(Expression var, String key, boolean assignTarget)
     {
         this.var = var;
         this.key = key;
         this.assignTarget = assignTarget;
     }
 
-    public Node getVar() { return var; }
+    public Expression getVar() { return var; }
     public String getKey() { return key; }
     public boolean isAssignTarget() { return assignTarget; }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void accept(Visitor visitor)

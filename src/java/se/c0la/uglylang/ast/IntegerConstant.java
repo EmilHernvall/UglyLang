@@ -1,6 +1,10 @@
 package se.c0la.uglylang.ast;
 
-public class IntegerConstant extends BaseObject
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.IntegerType;
+import se.c0la.uglylang.type.TypeException;
+
+public class IntegerConstant implements Expression
 {
     private int value;
 
@@ -10,6 +14,13 @@ public class IntegerConstant extends BaseObject
     }
 
     public int getValue() { return value; }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        return new IntegerType();
+    }
 
     @Override
     public void accept(Visitor visitor)

@@ -2,7 +2,7 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-public class EndIfStatement extends Block
+public class EndIfStatement implements Node, Block
 {
     private String lbl;
 

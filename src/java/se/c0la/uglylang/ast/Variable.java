@@ -1,6 +1,9 @@
 package se.c0la.uglylang.ast;
 
-public class Variable extends Node
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
+
+public class Variable implements Expression
 {
     private String name;
     private boolean assignTarget;
@@ -13,6 +16,13 @@ public class Variable extends Node
 
     public String getName() { return name; }
     public boolean isAssignTarget() { return assignTarget; }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void accept(Visitor visitor)

@@ -47,7 +47,8 @@ public class Interpreter
             }
 
             Instruction inst = instructions.get(programCounter);
-            //System.out.println(programCounter + " " + inst);
+            System.out.println(programCounter + " " + inst);
+            //dumpStack();
             switch (inst.getOpCode()) {
                 case CALL:
                 {
@@ -165,6 +166,55 @@ public class Interpreter
                         } else {
                             programCounter = jumpOnFalse.getAddr();
                         }
+                    }
+                    catch (ClassCastException e) {
+                        throw new RuntimeException(e);
+                    }
+                    continue;
+                }
+
+                case ARRAY_ALLOCATE:
+                {
+                    try {
+                        IntegerValue size = (IntegerValue)stack.pop();
+                        stack.push(new ArrayValue(new ArrayType(new PlaceholderType("type")),
+                                    size.getInt()));
+                        programCounter++;
+                    }
+                    catch (ClassCastException e) {
+                        throw new RuntimeException(e);
+                    }
+                    continue;
+                }
+
+                case ARRAY_SET:
+                {
+                    try {
+                        IntegerValue index = (IntegerValue)stack.pop();
+                        Value value = stack.pop();
+                        ArrayValue arr = (ArrayValue)stack.pop();
+
+                        arr.set(index.getInt(), value);
+
+                        stack.push(arr);
+
+                        programCounter++;
+                    }
+                    catch (ClassCastException e) {
+                        throw new RuntimeException(e);
+                    }
+                    continue;
+                }
+
+                case ARRAY_GET:
+                {
+                    try {
+                        IntegerValue index = (IntegerValue)stack.pop();
+                        ArrayValue arr = (ArrayValue)stack.pop();
+
+                        stack.push(arr.get(index.getInt()));
+
+                        programCounter++;
                     }
                     catch (ClassCastException e) {
                         throw new RuntimeException(e);

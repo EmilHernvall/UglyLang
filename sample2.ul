@@ -9,6 +9,9 @@ int[] arr = [ 1, 2, 3 ];
         }
     );*/
 
+int typeTest = 1+2*3;
+int typeTest2 = "foo" + "bar";
+int num = arr[2*2-3];
 /*int num = testTuple[1+2];
 string test = testNamedTuple.name;
 int test2 = testNamedTuple.testFunc();*/

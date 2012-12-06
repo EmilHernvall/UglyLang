@@ -1,6 +1,10 @@
 package se.c0la.uglylang.ast;
 
-public class StringConstant extends BaseObject
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.StringType;
+import se.c0la.uglylang.type.TypeException;
+
+public class StringConstant implements Expression
 {
     private String value;
 
@@ -10,6 +14,13 @@ public class StringConstant extends BaseObject
     }
 
     public String getValue() { return value; }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        return new StringType();
+    }
 
     @Override
     public void accept(Visitor visitor)

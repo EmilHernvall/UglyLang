@@ -15,6 +15,6 @@ public class ArrayGetInstruction implements Instruction
     @Override
     public String toString()
     {
-        return null;
+        return getOpCode().toString();
     }
 }

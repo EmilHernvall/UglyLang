@@ -2,7 +2,10 @@ package se.c0la.uglylang.ast;
 
 import java.util.List;
 
-public class ArrayNode extends Node
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
+
+public class ArrayNode implements Expression
 {
     private List<Node> values;
 
@@ -12,6 +15,13 @@ public class ArrayNode extends Node
     }
 
     public int getSize() { return values.size(); }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void accept(Visitor visitor)

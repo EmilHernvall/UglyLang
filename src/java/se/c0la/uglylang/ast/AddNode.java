@@ -1,14 +1,32 @@
 package se.c0la.uglylang.ast;
 
-public class AddNode extends Node
-{
-    private Node a;
-    private Node b;
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
 
-    public AddNode(Node a, Node b)
+public class AddNode implements Expression
+{
+    private Expression a;
+    private Expression b;
+
+    public AddNode(Expression a, Expression b)
     {
         this.a = a;
         this.b = b;
+    }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        Type fst = a.inferType();
+        Type snd = b.inferType();
+
+        if (!fst.getName().equals(snd.getName())) {
+            throw new TypeException("Types " + fst.getName() + " and " +
+                    snd.getName() + " does not match.");
+        }
+
+        return fst;
     }
 
     @Override

@@ -250,7 +250,8 @@ public class CodeGenerationVisitor implements Visitor
                     node.getSize());
         }
 
-        // TODO: Implement
+        instructions.add(new PushInstruction(new IntegerValue(node.getSize())));
+        instructions.add(new ArrayAllocateInstruction());
     }
 
     @Override
@@ -261,7 +262,8 @@ public class CodeGenerationVisitor implements Visitor
                     node.getIndex());
         }
 
-        // TODO: Implement
+        instructions.add(new PushInstruction(new IntegerValue(node.getIndex())));
+        instructions.add(new ArraySetInstruction());
     }
 
     @Override
@@ -454,6 +456,8 @@ public class CodeGenerationVisitor implements Visitor
         if (DEBUG) {
             System.out.printf("%d Subscript %s\n", getCurrentAddr(), node.toString());
         }
+
+        // TODO: Implement
     }
 
     @Override
@@ -462,6 +466,8 @@ public class CodeGenerationVisitor implements Visitor
         if (DEBUG) {
             System.out.printf("%d Index %s\n", getCurrentAddr(), node.toString());
         }
+
+        instructions.add(new ArrayGetInstruction());
     }
 
     @Override

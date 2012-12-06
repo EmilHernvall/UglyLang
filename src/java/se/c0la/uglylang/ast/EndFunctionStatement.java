@@ -5,7 +5,7 @@ import java.util.*;
 import se.c0la.uglylang.type.FunctionType;
 import se.c0la.uglylang.Symbol;
 
-public class EndFunctionStatement extends Node
+public class EndFunctionStatement implements Node
 {
     private FunctionType type;
     private int funcAddr;

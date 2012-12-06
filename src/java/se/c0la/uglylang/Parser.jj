@@ -230,6 +230,7 @@ Node Statement() :
 {
     Token t ;
     Node n, n2 ;
+    Expression expr ;
 }
 {
     (
@@ -239,10 +240,10 @@ Node Statement() :
         LOOKAHEAD(<RETURNSTMT>)
             <RETURNSTMT>
             (<S>)+
-            n = Expression()
+            expr = Expression()
             <STMTBREAK>
             (<S>)*
-            { n = new ReturnStatement(n); }
+            { n = new ReturnStatement(expr); }
         |
         LOOKAHEAD (<IDENT>(<S>)+<ASSIGN>)
             t = <IDENT>
@@ -250,8 +251,8 @@ Node Statement() :
             { n = new Variable(t.image, true); }
             <ASSIGN>
             (<S>)*
-            n2 = Expression()
-            { n = new AssignNode(n, n2); }
+            expr = Expression()
+            { n = new AssignNode(n, expr); }
             <STMTBREAK>
             (<S>)*
         |
@@ -259,8 +260,8 @@ Node Statement() :
             n = Declaration()
             <ASSIGN>
             (<S>)*
-            n2 = Expression()
-            { n = new AssignNode(n, n2); }
+            expr = Expression()
+            { n = new AssignNode(n, expr); }
             <STMTBREAK>
             (<S>)*
         |
@@ -313,13 +314,13 @@ Declaration Declaration() :
     { return d; }
 }
 
-Node Tuple() :
+TupleNode Tuple() :
 {
-    List<Node> nodes ;
-    Node n ;
+    List<Expression> nodes ;
+    Expression n ;
 }
 {
-    { nodes = new ArrayList<Node>(); }
+    { nodes = new ArrayList<Expression>(); }
     <LPAR>
     (<S>)*
     n = Expression()
@@ -336,14 +337,14 @@ Node Tuple() :
     { return new TupleNode(nodes); }
 }
 
-Node NamedTuple() :
+NamedTupleNode NamedTuple() :
 {
-    Map<String, Node> nodes ;
+    Map<String, Expression> nodes ;
     Token t ;
-    Node n ;
+    Expression n ;
 }
 {
-    { nodes = new LinkedHashMap<String, Node>(); }
+    { nodes = new LinkedHashMap<String, Expression>(); }
     <LPAR>
     (<S>)*
     t = <IDENT>
@@ -366,7 +367,7 @@ Node NamedTuple() :
     { return new NamedTupleNode(nodes); }
 }
 
-Node Array() :
+ArrayNode Array() :
 {
     List<Node> nodes ;
     Node n ;
@@ -389,7 +390,7 @@ Node Array() :
     { return new ArrayNode(nodes); }
 }
 
-Node Function() :
+FunctionDecl Function() :
 {
     Token t ;
     Type type ;
@@ -427,16 +428,13 @@ Node Function() :
     <RCLAUSE>
     (<S>)*
 
-    {
-        n = new FunctionDecl(type, params, statements);
-        return n;
-    }
+    { return new FunctionDecl(type, params, statements); }
 }
 
-Node Expression() :
+Expression Expression() :
 {
     Token t ;
-    Node n, n2 ;
+    Expression n, n2 ;
 }
 {
     n = Expression2()
@@ -460,10 +458,10 @@ Node Expression() :
     { return n; }
 }
 
-Node Expression2() :
+Expression Expression2() :
 {
     Token t ;
-    Node n, n2 ;
+    Expression n, n2 ;
 }
 {
     n = Expression3()
@@ -502,10 +500,10 @@ Node Expression2() :
     { return n; }
 }
 
-Node Expression3() :
+Expression Expression3() :
 {
     Token t ;
-    Node n, n2 ;
+    Expression n, n2 ;
 }
 {
     (
@@ -526,10 +524,10 @@ Node Expression3() :
     { return n; }
 }
 
-Node Expression4() :
+Expression Expression4() :
 {
     Token t ;
-    Node n, n2 ;
+    Expression n, n2 ;
 }
 {
     (
@@ -555,11 +553,11 @@ Node Expression4() :
     { return n; }
 }
 
-Node Expression5() :
+Expression Expression5() :
 {
     Token t, t2 ;
-    Node n, n2 ;
-    List<Node> params ;
+    Expression n, n2 ;
+    List<Expression> params ;
 }
 {
     (
@@ -580,7 +578,7 @@ Node Expression5() :
             t = <IDENT>
             <LPAR>
             (<S>)*
-            { params = new ArrayList<Node>(); }
+            { params = new ArrayList<Expression>(); }
 
             [
                 n2 = Expression()

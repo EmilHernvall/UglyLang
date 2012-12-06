@@ -1,6 +1,6 @@
 package se.c0la.uglylang.ast;
 
-public class ReturnStatement extends Node
+public class ReturnStatement implements Node
 {
     private Node expression;
 

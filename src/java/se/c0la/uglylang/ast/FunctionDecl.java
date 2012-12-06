@@ -4,9 +4,10 @@ import java.util.*;
 
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.FunctionType;
+import se.c0la.uglylang.type.TypeException;
 import se.c0la.uglylang.Symbol;
 
-public class FunctionDecl extends Block
+public class FunctionDecl implements Expression, Block
 {
     private Type returnType;
     private List<Declaration> params;
@@ -28,6 +29,13 @@ public class FunctionDecl extends Block
             paramTypes.add(param.getType());
         }
         return new FunctionType(returnType, paramTypes);
+    }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -64,18 +72,7 @@ public class FunctionDecl extends Block
             buf.append(node.toString());
             delim = ", ";
         }
-        buf.append(") ");
-        buf.append("{\n");
-        for (Node n : stmts) {
-            if (n instanceof Block) {
-                buf.append(indent(n.toString()));
-            } else {
-                buf.append("\t");
-                buf.append(n.toString());
-                buf.append(";\n");
-            }
-        }
-        buf.append("}\n");
+        buf.append(")");
 
         return buf.toString();
     }

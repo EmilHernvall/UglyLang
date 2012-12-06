@@ -2,12 +2,15 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-public class FunctionCall extends BaseObject
+import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TypeException;
+
+public class FunctionCall implements Expression
 {
     private String name;
-    private List<Node> params;
+    private List<Expression> params;
 
-    public FunctionCall(String name, List<Node> params)
+    public FunctionCall(String name, List<Expression> params)
     {
         this.name = name;
         this.params = params;
@@ -15,6 +18,13 @@ public class FunctionCall extends BaseObject
 
     public String getFunctionName() { return name; }
     public int getParamCount() { return params.size(); }
+
+    @Override
+    public Type inferType()
+    throws TypeException
+    {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void accept(Visitor visitor)
