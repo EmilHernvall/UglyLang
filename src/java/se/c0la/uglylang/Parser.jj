@@ -13,18 +13,7 @@ import se.c0la.uglylang.type.*;
 
 public class Parser
 {
-    public static void main( String[] args )
-    throws ParseException, TokenMgrError {
-        Parser parser = new Parser(System.in);
-        List<Node> nodes = parser.parse();
-
-        CodeGenerationVisitor visitor = new CodeGenerationVisitor();
-        for (Node node : nodes) {
-            node.accept(visitor);
-        }
-
-        visitor.dump();
-    }
+    private Map<String, Type> types = null;
 }
 PARSER_END(Parser)
 
@@ -102,7 +91,15 @@ List<Node> parse() :
     List<Node> nodes ;
 }
 {
-    { nodes = new ArrayList<Node>(); }
+    {
+        nodes = new ArrayList<Node>();
+
+        types = new HashMap<String, Type>();
+        types.put("int", new IntegerType());
+        types.put("string", new StringType());
+        types.put("bool", new BooleanType());
+        types.put("void", new VoidType());
+    }
     (<S>)*
     (
         n = Statement()
@@ -213,7 +210,12 @@ Type Type() :
         |
         (
             t = <IDENT>
-            { type = new PlaceholderType(t.image); }
+            {
+                type = types.get(t.image);
+                if (type == null) {
+                    throw new ParseException("Type " + t.image + " not found.");
+                }
+            }
         )
     )
     (
@@ -323,14 +325,12 @@ TupleNode Tuple() :
     { nodes = new ArrayList<Expression>(); }
     <LPAR>
     (<S>)*
-    n = Expression()
-    { nodes.add(n); }
     (
-        ","
-        (<S>)*
         n = Expression()
         { nodes.add(n); }
-    )*
+        ","
+        (<S>)*
+    )+
     <RPAR>
     (<S>)*
 
@@ -573,28 +573,6 @@ Expression Expression5() :
         LOOKAHEAD( Array() )
             n = Array()
         |
-        LOOKAHEAD( <IDENT> <LPAR> )
-        (
-            t = <IDENT>
-            <LPAR>
-            (<S>)*
-            { params = new ArrayList<Expression>(); }
-
-            [
-                n2 = Expression()
-                { params.add(n2); }
-                (
-                    <LISTSEP>
-                    (<S>)*
-                    n2 = Expression()
-                    { params.add(n2); }
-                )*
-            ]
-            <RPAR>
-            { n = new FunctionCall(t.image, params); }
-            (<S>)*
-        )
-        |
             <LPAR>
             (<S>)*
             n = Expression()
@@ -625,6 +603,24 @@ Expression Expression5() :
             <RBRACKET>
             (<S>)*
             { n = new IndexNode(n, n2, false); }
+        |
+            <LPAR>
+            (<S>)*
+            { params = new ArrayList<Expression>(); }
+
+            [
+                n2 = Expression()
+                { params.add(n2); }
+                (
+                    <LISTSEP>
+                    (<S>)*
+                    n2 = Expression()
+                    { params.add(n2); }
+                )*
+            ]
+            <RPAR>
+            (<S>)*
+            { n = new FunctionCall(n, params); }
     ]
 
     { return n; }

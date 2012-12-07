@@ -47,7 +47,7 @@ public class Interpreter
             }
 
             Instruction inst = instructions.get(programCounter);
-            System.out.println(programCounter + " " + inst);
+            //System.out.println(programCounter + " " + inst);
             //dumpStack();
             switch (inst.getOpCode()) {
                 case CALL:
@@ -55,12 +55,7 @@ public class Interpreter
                     CallInstruction call = (CallInstruction)inst;
                     int retAddr = programCounter+1;
 
-                    Symbol symbol = call.getFunctionSymbol();
-                    Value value = values.get(symbol);
-                    if (value == null) {
-                        throw new RuntimeException("Function " + symbol.getName()
-                                + " not found!");
-                    }
+                    Value value = stack.pop();
 
                     if (value instanceof FunctionValue) {
                         FunctionValue func = (FunctionValue)value;
@@ -320,6 +315,11 @@ public class Interpreter
     public static void main(String[] args)
     throws Exception
     {
+        String mode = "run";
+        if (args.length == 1 && args[0].equals("-parse")) {
+            mode = "parse";
+        }
+
         Parser parser = new Parser(System.in);
         CodeGenerationVisitor visitor = new CodeGenerationVisitor();
         Interpreter interpreter = new Interpreter();
@@ -345,16 +345,21 @@ public class Interpreter
             node.accept(visitor);
         }
 
-        // execute
-        try {
-            long start = System.currentTimeMillis();
-            interpreter.run(visitor.getInstructions());
-            System.out.println("Execution finished in " +
-                    (System.currentTimeMillis() - start) + "ms");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println();
-            interpreter.dumpStack();
+        if ("run".equals(mode)) {
+            // execute
+            try {
+                long start = System.currentTimeMillis();
+                interpreter.run(visitor.getInstructions());
+                System.out.println("Execution finished in " +
+                        (System.currentTimeMillis() - start) + "ms");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println();
+                interpreter.dumpStack();
+            }
+        }
+        else if ("parse".equals(mode)) {
+            visitor.dump();
         }
     }
 }

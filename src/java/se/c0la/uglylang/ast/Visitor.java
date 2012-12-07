@@ -12,10 +12,10 @@ public interface Visitor
     void visit(IfStatement node);
     void visit(EndIfStatement node);
     void visit(TupleNode node);
+    void visit(TupleSetNode node);
     void visit(NamedTupleNode node);
     void visit(ArrayNode node);
     void visit(ArraySetNode node);
-    void visit(ArrayEndNode node);
 
     // assignment
     void visit(AssignNode node);

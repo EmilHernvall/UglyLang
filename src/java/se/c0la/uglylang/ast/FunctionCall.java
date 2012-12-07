@@ -3,27 +3,43 @@ package se.c0la.uglylang.ast;
 import java.util.*;
 
 import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.FunctionType;
 import se.c0la.uglylang.type.TypeException;
 
 public class FunctionCall implements Expression
 {
-    private String name;
+    private Expression var;
     private List<Expression> params;
 
-    public FunctionCall(String name, List<Expression> params)
+    public FunctionCall(Expression var, List<Expression> params)
     {
-        this.name = name;
+        this.var = var;
         this.params = params;
     }
 
-    public String getFunctionName() { return name; }
     public int getParamCount() { return params.size(); }
+
+    public FunctionType getFunctionType()
+    throws TypeException
+    {
+        List<Type> sig = new ArrayList<Type>();
+        for (Expression expr : params) {
+            sig.add(expr.inferType());
+        }
+        return new FunctionType(inferType(), sig);
+    }
 
     @Override
     public Type inferType()
     throws TypeException
     {
-        throw new UnsupportedOperationException();
+        Type type = var.inferType();
+        if (!(type instanceof FunctionType)) {
+            throw new TypeException("Call to non function of type " + type);
+        }
+
+        FunctionType funcType = (FunctionType)type;
+        return funcType.getReturnType();
     }
 
     @Override
@@ -33,6 +49,7 @@ public class FunctionCall implements Expression
             node.accept(visitor);
         }
 
+        var.accept(visitor);
         visitor.visit(this);
     }
 
@@ -40,7 +57,7 @@ public class FunctionCall implements Expression
     public String toString()
     {
         StringBuilder buffer = new StringBuilder();
-        buffer.append(name);
+        buffer.append(var.toString());
         buffer.append("(");
 
         String delim = "";
@@ -54,4 +71,3 @@ public class FunctionCall implements Expression
         return buffer.toString();
     }
 }
-

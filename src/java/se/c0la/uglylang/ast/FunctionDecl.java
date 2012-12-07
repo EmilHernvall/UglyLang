@@ -35,7 +35,7 @@ public class FunctionDecl implements Expression, Block
     public Type inferType()
     throws TypeException
     {
-        throw new UnsupportedOperationException();
+        return getType();
     }
 
     @Override

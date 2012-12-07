@@ -3,13 +3,7 @@ package se.c0la.uglylang.ir;
 import se.c0la.uglylang.Symbol;
 
 /**
- * Pops three values of the stack in the following order:
- * 1. index
- * 2. value
- * 3. array
- *
- * The index position of array is set to value. The array is
- * pushed back on the stack.
+ * Pops an integer of the stack and pushes an array of that size.
  **/
 public class ArrayAllocateInstruction implements Instruction
 {

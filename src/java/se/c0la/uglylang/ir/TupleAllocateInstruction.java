@@ -2,14 +2,14 @@ package se.c0la.uglylang.ir;
 
 import se.c0la.uglylang.Symbol;
 
-public class CallInstruction implements Instruction
+public class TupleAllocateInstruction implements Instruction
 {
-    public CallInstruction()
+    public TupleAllocateInstruction()
     {
     }
 
     @Override
-    public OpCode getOpCode() { return OpCode.CALL; }
+    public OpCode getOpCode() { return OpCode.TUPLE_ALLOCATE; }
 
     @Override
     public String toString()

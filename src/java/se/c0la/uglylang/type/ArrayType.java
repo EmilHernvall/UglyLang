@@ -16,7 +16,7 @@ public class ArrayType implements Type
     @Override
     public String getName()
     {
-        return type + "[]";
+        return type.getName() + "[]";
     }
 
     @Override

@@ -17,7 +17,7 @@
         return num*fastexp(num*num, (pow - 1)/2);
     };
 
-func factorial =
+(int)(int) factorial =
     (int)(int num) {
         if (num == 1) {
             return num;

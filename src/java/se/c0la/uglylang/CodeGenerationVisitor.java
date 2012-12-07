@@ -5,7 +5,7 @@ import java.util.*;
 import se.c0la.uglylang.ast.*;
 import se.c0la.uglylang.ir.*;
 import se.c0la.uglylang.type.*;
-import se.c0la.uglylang.nativefunc.NativeFunction;
+import se.c0la.uglylang.nativefunc.*;
 
 public class CodeGenerationVisitor implements Visitor
 {
@@ -85,7 +85,7 @@ public class CodeGenerationVisitor implements Visitor
         System.out.println();
         System.out.println("Root Scope Symbols:");
         for (Symbol symbol : rootScope.getSymbols()) {
-            System.out.println(symbol.getType() + " " + symbol.getName());
+            System.out.println(symbol.getType().getName() + " " + symbol.getName());
         }
 
         System.out.println();
@@ -108,7 +108,7 @@ public class CodeGenerationVisitor implements Visitor
     {
         if (DEBUG) {
             System.out.printf("%d Declaration: type=%s, name=%s\n",
-                    getCurrentAddr(), node.getType(), node.getName());
+                    getCurrentAddr(), node.getType().getName(), node.getName());
         }
 
         Symbol sym = new Symbol(node.getType(), node.getName());
@@ -154,7 +154,7 @@ public class CodeGenerationVisitor implements Visitor
             System.out.println("Leaving scope");
             System.out.println("Symbols:");
             for (Symbol symbol : currentScope.getSymbols()) {
-                System.out.println(symbol.getType() + " " + symbol.getName());
+                System.out.println(symbol.getType().getName() + " " + symbol.getName());
             }
             System.out.println();
         }
@@ -220,10 +220,22 @@ public class CodeGenerationVisitor implements Visitor
     public void visit(TupleNode node)
     {
         if (DEBUG) {
-            System.out.printf("%d Tuple %s\n", getCurrentAddr(), node.toString());
+            System.out.printf("%d Tuple %d\n", getCurrentAddr(), node.getValueCount());
         }
 
-        // TODO: Implement
+        instructions.add(new PushInstruction(new IntegerValue(node.getValueCount())));
+        instructions.add(new TupleAllocateInstruction());
+    }
+
+    @Override
+    public void visit(TupleSetNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d TupleSet %d\n", getCurrentAddr(), node.getIndex());
+        }
+
+        instructions.add(new PushInstruction(new IntegerValue(node.getIndex())));
+        instructions.add(new TupleSetInstruction());
     }
 
     @Override
@@ -267,21 +279,24 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
-    public void visit(ArrayEndNode node)
-    {
-        if (DEBUG) {
-            System.out.printf("%d ArrayEnd\n", getCurrentAddr());
-        }
-
-        // TODO: Implement
-    }
-
-    @Override
     public void visit(AssignNode node)
     {
+        Type exprType;
+        try {
+            exprType = node.getExprType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }
+
+        Symbol targetSym = currentScope.getTargetSymbol();
         if (DEBUG) {
-            System.out.printf("%d Assigning to %s\n", getCurrentAddr(),
-                    currentScope.getTargetSymbol().getName());
+            System.out.printf("%d Assigning to %s to %s of type %s\n",
+                    getCurrentAddr(), exprType.getName(),
+                    targetSym.getName(), targetSym.getType().getName());
+        }
+
+        if (!exprType.getName().equals(targetSym.getType().getName())) {
+            throw new RuntimeException("Type mismatch in assignment.");
         }
 
         instructions.add(new StoreInstruction(currentScope.getTargetSymbol()));
@@ -437,9 +452,11 @@ public class CodeGenerationVisitor implements Visitor
             throw new RuntimeException("Symbol not found: " + node.getName());
         }
 
+        node.setSymbol(sym);
+
         if (DEBUG) {
             System.out.printf("%d Variable: name=%s, type=%s\n", getCurrentAddr(),
-                    node.getName(), sym.getType());
+                    node.getName(), sym.getType().getName());
         }
 
         // TODO: This is wrong if the variable is the target of an assignment
@@ -495,17 +512,19 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(FunctionCall node)
     {
-        Symbol sym = currentScope.findSymbol(node.getFunctionName());
-        if (sym == null) {
-            throw new RuntimeException("Symbol not found: " +
-                    node.getFunctionName());
+        Type type = null;
+        try {
+            type = node.getFunctionType();
+        }
+        catch (TypeException e) {
+            throw new RuntimeException(e);
         }
 
         if (DEBUG) {
-            System.out.printf("%d CALL FunctionCall: function=%s, type=%s\n", getCurrentAddr(),
-                    node.getFunctionName(), sym.getType());
+            System.out.printf("%d CALL FunctionCall: type=%s\n", getCurrentAddr(),
+                    type.getName());
         }
 
-        instructions.add(new CallInstruction(sym));
+        instructions.add(new CallInstruction());
     }
 }

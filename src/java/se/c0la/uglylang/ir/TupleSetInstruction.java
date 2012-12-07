@@ -6,19 +6,19 @@ import se.c0la.uglylang.Symbol;
  * Pops three values of the stack in the following order:
  * 1. index
  * 2. value
- * 3. array
+ * 3. tuple
  *
- * The index position of array is set to value. The array is
+ * The index position of tuple is set to value. The tuple is
  * pushed back on the stack.
  **/
-public class ArraySetInstruction implements Instruction
+public class TupleSetInstruction implements Instruction
 {
-    public ArraySetInstruction()
+    public TupleSetInstruction()
     {
     }
 
     @Override
-    public OpCode getOpCode() { return OpCode.ARRAY_SET; }
+    public OpCode getOpCode() { return OpCode.TUPLE_SET; }
 
     @Override
     public String toString()

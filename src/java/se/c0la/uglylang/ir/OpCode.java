@@ -12,6 +12,10 @@ public enum OpCode
     ARRAY_GET,
     ARRAY_SET,
 
+    TUPLE_ALLOCATE,
+    TUPLE_GET,
+    TUPLE_SET,
+
     JUMP,
     JUMPONFALSE,
 

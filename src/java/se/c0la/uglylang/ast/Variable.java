@@ -1,12 +1,14 @@
 package se.c0la.uglylang.ast;
 
+import se.c0la.uglylang.Symbol;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
 public class Variable implements Expression
 {
-    private String name;
-    private boolean assignTarget;
+    private String name = null;
+    private boolean assignTarget = false;
+    private Symbol symbol = null;
 
     public Variable(String name, boolean assignTarget)
     {
@@ -17,11 +19,18 @@ public class Variable implements Expression
     public String getName() { return name; }
     public boolean isAssignTarget() { return assignTarget; }
 
+    public void setSymbol(Symbol sym) { this.symbol = sym; }
+    public Symbol getSymbol() { return symbol; }
+
     @Override
     public Type inferType()
     throws TypeException
     {
-        throw new UnsupportedOperationException();
+        if (symbol == null) {
+            throw new IllegalStateException();
+        }
+
+        return symbol.getType();
     }
 
     @Override

@@ -3,13 +3,14 @@ package se.c0la.uglylang.ast;
 import java.util.List;
 
 import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.ArrayType;
 import se.c0la.uglylang.type.TypeException;
 
 public class ArrayNode implements Expression
 {
-    private List<Node> values;
+    private List<Expression> values;
 
-    public ArrayNode(List<Node> values)
+    public ArrayNode(List<Expression> values)
     {
         this.values = values;
     }
@@ -20,7 +21,20 @@ public class ArrayNode implements Expression
     public Type inferType()
     throws TypeException
     {
-        throw new UnsupportedOperationException();
+        Type type = null;
+        for (Expression expr : values) {
+            Type cmp = expr.inferType();
+            if (type == null) {
+                type = cmp;
+                continue;
+            }
+
+            if (!type.getName().equals(cmp.getName())) {
+                throw new TypeException("All values in array must have same type.");
+            }
+        }
+
+        return new ArrayType(type);
     }
 
     @Override
@@ -36,9 +50,6 @@ public class ArrayNode implements Expression
             setNode.accept(visitor);
             i++;
         }
-
-        ArrayEndNode endNode = new ArrayEndNode();
-        endNode.accept(visitor);
     }
 
     @Override

@@ -1,8 +1,10 @@
 package se.c0la.uglylang.ast;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.TupleType;
 import se.c0la.uglylang.type.TypeException;
 
 public class TupleNode implements Expression
@@ -14,21 +16,35 @@ public class TupleNode implements Expression
         this.values = values;
     }
 
+    public int getValueCount() { return values.size(); }
+
     @Override
     public Type inferType()
     throws TypeException
     {
-        throw new UnsupportedOperationException();
+        List<Type> parameters = new ArrayList<Type>();
+        for (Expression expr : values) {
+            parameters.add(expr.inferType());
+        }
+
+        return new TupleType(parameters);
     }
 
     @Override
     public void accept(Visitor visitor)
     {
+        visitor.visit(this);
+
+        int i = 0;
+        TupleSetNode setNode = null;
         for (Node node : values) {
             node.accept(visitor);
-        }
 
-        visitor.visit(this);
+            setNode = new TupleSetNode(i);
+            setNode.accept(visitor);
+
+            i++;
+        }
     }
 
     @Override

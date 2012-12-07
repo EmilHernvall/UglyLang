@@ -2,11 +2,16 @@ package se.c0la.uglylang.ast;
 
 import java.util.List;
 
-public class ArrayEndNode implements Node
+public class TupleSetNode implements Node
 {
-    public ArrayEndNode()
+    private int idx;
+
+    public TupleSetNode(int idx)
     {
+        this.idx = idx;
     }
+
+    public int getIndex() { return idx; }
 
     @Override
     public void accept(Visitor visitor)
@@ -17,6 +22,6 @@ public class ArrayEndNode implements Node
     @Override
     public String toString()
     {
-        return "ArrayEnd";
+        return "tuple set idx=" + idx;
     }
 }
