@@ -167,7 +167,7 @@ Type NamedTupleType() :
     Map<String, Type> params ;
 }
 {
-    { params = new HashMap<String, Type>(); }
+    { params = new LinkedHashMap<String, Type>(); }
     <LPAR>
     [
         t = <IDENT>
@@ -369,11 +369,11 @@ NamedTupleNode NamedTuple() :
 
 ArrayNode Array() :
 {
-    List<Node> nodes ;
-    Node n ;
+    List<Expression> nodes ;
+    Expression n ;
 }
 {
-    { nodes = new ArrayList<Node>(); }
+    { nodes = new ArrayList<Expression>(); }
     <LBRACKET>
     (<S>)*
     n = Expression()
@@ -564,9 +564,9 @@ Expression Expression5() :
         LOOKAHEAD( Function() )
             n = Function()
         |
-        LOOKAHEAD( Tuple() )
+        /*LOOKAHEAD( Tuple() )
             n = Tuple()
-        |
+        |*/
         LOOKAHEAD( NamedTuple() )
             n = NamedTuple()
         |
@@ -593,34 +593,38 @@ Expression Expression5() :
     )
 
     [
-            <SUBSCRIPT>
-            t = <IDENT>
-            (<S>)*
-            { n = new SubscriptNode(n, t.image, false); }
-        |
-            <LBRACKET>
-            n2 = Expression()
-            <RBRACKET>
-            (<S>)*
-            { n = new IndexNode(n, n2, false); }
-        |
-            <LPAR>
-            (<S>)*
-            { params = new ArrayList<Expression>(); }
+        <SUBSCRIPT>
+        t = <IDENT>
+        (<S>)*
+        { n = new SubscriptNode(n, t.image, false); }
+    ]
 
-            [
+    [
+        <LBRACKET>
+        n2 = Expression()
+        <RBRACKET>
+        (<S>)*
+        { n = new IndexNode(n, n2, false); }
+    ]
+
+    [
+        <LPAR>
+        (<S>)*
+        { params = new ArrayList<Expression>(); }
+
+        [
+            n2 = Expression()
+            { params.add(n2); }
+            (
+                <LISTSEP>
+                (<S>)*
                 n2 = Expression()
                 { params.add(n2); }
-                (
-                    <LISTSEP>
-                    (<S>)*
-                    n2 = Expression()
-                    { params.add(n2); }
-                )*
-            ]
-            <RPAR>
-            (<S>)*
-            { n = new FunctionCall(n, params); }
+            )*
+        ]
+        <RPAR>
+        (<S>)*
+        { n = new FunctionCall(n, params); }
     ]
 
     { return n; }

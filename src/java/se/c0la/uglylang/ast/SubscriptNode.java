@@ -1,6 +1,7 @@
 package se.c0la.uglylang.ast;
 
 import se.c0la.uglylang.type.Type;
+import se.c0la.uglylang.type.NamedTupleType;
 import se.c0la.uglylang.type.TypeException;
 
 public class SubscriptNode implements Expression
@@ -20,11 +21,29 @@ public class SubscriptNode implements Expression
     public String getKey() { return key; }
     public boolean isAssignTarget() { return assignTarget; }
 
+    public NamedTupleType getType()
+    throws TypeException
+    {
+        Type exprType = var.inferType();
+        if (!(exprType instanceof NamedTupleType)) {
+            throw new RuntimeException("Only named tuples can be subscripted.");
+        }
+
+        return (NamedTupleType)exprType;
+    }
+
     @Override
     public Type inferType()
     throws TypeException
     {
-        throw new UnsupportedOperationException();
+        NamedTupleType namedTupleType = getType();
+        Type fieldType = namedTupleType.getParameters().get(key);
+        if (fieldType == null) {
+            throw new TypeException(namedTupleType.getName() + " does not have " +
+                    "a field called " + key + ".");
+        }
+
+        return fieldType;
     }
 
     @Override

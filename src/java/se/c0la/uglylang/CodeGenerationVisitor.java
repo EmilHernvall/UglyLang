@@ -245,13 +245,38 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d NamedTuple\n", getCurrentAddr());
         }
 
-        /*Scope subScope = new Scope();
+        Scope subScope = new Scope();
         subScope.setParentScope(currentScope);
         currentScope.addSubScope(subScope);
 
-        currentScope = subScope;*/
+        currentScope = subScope;
 
-        // TODO: Implement
+        instructions.add(new NamedTupleAllocateInstruction());
+    }
+
+    @Override
+    public void visit(NamedTupleSetNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d NamedTupleSet: field=%s type=%s\n",
+                    getCurrentAddr(), node.getField(), node.getType().getName());
+        }
+
+        Symbol sym = new Symbol(node.getType(), node.getField());
+        currentScope.addSymbol(sym);
+
+        instructions.add(new StoreInstruction(sym));
+    }
+
+    @Override
+    public void visit(NamedTupleEndNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d NamedTupleEnd: type=%s\n", getCurrentAddr(),
+                    node.getType().getName());
+        }
+
+        currentScope = currentScope.getParentScope();
     }
 
     @Override
@@ -470,11 +495,21 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(SubscriptNode node)
     {
-        if (DEBUG) {
-            System.out.printf("%d Subscript %s\n", getCurrentAddr(), node.toString());
+        NamedTupleType type = null;
+        try {
+            type = node.getType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
         }
 
-        // TODO: Implement
+        int idx = type.getFieldIndex(node.getKey());
+
+        if (DEBUG) {
+            System.out.printf("%d Subscript %s\n", getCurrentAddr(),
+                    node.toString());
+        }
+
+        instructions.add(new NamedTupleGetInstruction(idx));
     }
 
     @Override

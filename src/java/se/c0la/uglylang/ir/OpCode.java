@@ -16,6 +16,10 @@ public enum OpCode
     TUPLE_GET,
     TUPLE_SET,
 
+    NTUPLE_ALLOCATE,
+    NTUPLE_GET,
+    NTUPLE_SET,
+
     JUMP,
     JUMPONFALSE,
 

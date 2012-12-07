@@ -39,4 +39,3 @@ public class ArrayValue extends AbstractValue<ArrayType>
         return "array " + type + " of size " + arr.length;
     }
 }
-

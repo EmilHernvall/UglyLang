@@ -13,6 +13,19 @@ public class NamedTupleType implements Type
 
     public Map<String, Type> getParameters() { return parameters; }
 
+    public int getFieldIndex(String name)
+    {
+        int i = 0;
+        for (String field : parameters.keySet()) {
+            if (name.equals(field)) {
+                return i;
+            }
+            i++;
+        }
+
+        return -1;
+    }
+
     @Override
     public String getName()
     {
@@ -26,7 +39,7 @@ public class NamedTupleType implements Type
             buf.append(delim);
             buf.append(key);
             buf.append(":");
-            buf.append(param);
+            buf.append(param.getName());
             delim = ",";
         }
         buf.append(")");
