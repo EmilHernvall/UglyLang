@@ -4,23 +4,23 @@ UglyLang
 Toy programming language. Work in progress. Most of what's in this document is
 not yet implemented.
 
-Features:
+Planned Features:
 
  * Static typing
  * First-class functions
  * Prototype-based objects
    * No implementation inheritence
    * Explicit interfaces
-   * Built-in delegation
- * Overloadable operators
- * Call-by-value with copy-on-write, unless ref keyword is used
+   * Built-in delegation (unimplemented)
+ * Overloadable operators (unimplemented)
+ * Call-by-value with copy-on-write, unless ref keyword is used (unimplemented)
 
 Built-in types:
 
- * func
+ * func (alias when declaring)
  * string
  * int
- * fixed
+ * fixed (for decimal)
  * boolean
  * array
  * tuples (haskell-like)
@@ -30,7 +30,9 @@ Statements:
 
  * declarations
  * if
- * for
+ * for (unimplemented)
+ * each (unimplemented)
+ * type (unimplemented)
 
 Operators
 ---------
@@ -63,9 +65,10 @@ short-circuit for booleans, while they are bit-wise operators for integers.
     not
     xor
 
-Subscript:
+Subscript and indexing:
 
     []
+    .
 
 Priority:
 
@@ -155,18 +158,17 @@ For example:
 func is only a valid type when a function is first declared, and will be
 substituted for the full type.
 
-Overloading of functions can be achived by using an array. The return type must
-be the same for all the overloaded functions.
+Overloading of functions can be achived by "adding" multiple functions. The 
+return type must be the same for all the overloaded functions.
 
     func testFunc =
-        [
             (string)(int a) {
                 return intToStr(a);
-            },
+            } 
+            +
             (string)(string a) {
                 return a;
-            }
-        ];
+            };
 
     string foo = testFunc(77);
     string bar = testFunc("hello");
@@ -176,8 +178,8 @@ Type aliases
 
 A type can be given a name using type aliases:
 
-    type MyFunc (string)(string, int, int)
-    type MyFuncArr MyFunc[]
+    type MyFunc (string)(string, int, int);
+    type MyFuncArr MyFunc[];
 
 Control structures
 ------------------
