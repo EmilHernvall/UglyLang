@@ -17,6 +17,34 @@ public class FunctionType implements Type
     public List<Type> getParameters() { return parameters; }
 
     @Override
+    public boolean isCompatible(Type other)
+    {
+        if (!(other instanceof FunctionType)) {
+            return false;
+        }
+
+        FunctionType otherFunc = (FunctionType)other;
+
+        if (!returnType.isCompatible(otherFunc.returnType)) {
+            return false;
+        }
+
+        if (parameters.size() != otherFunc.parameters.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < parameters.size(); i++) {
+            Type a = parameters.get(i);
+            Type b = otherFunc.parameters.get(i);
+            if (!a.isCompatible(b)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     public String getName()
     {
         StringBuilder buf = new StringBuilder();

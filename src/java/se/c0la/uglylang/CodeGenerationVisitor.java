@@ -250,8 +250,6 @@ public class CodeGenerationVisitor implements Visitor
         currentScope.addSubScope(subScope);
 
         currentScope = subScope;
-
-        instructions.add(new NamedTupleAllocateInstruction());
     }
 
     @Override
@@ -276,7 +274,21 @@ public class CodeGenerationVisitor implements Visitor
                     node.getType().getName());
         }
 
+        Map<String, Symbol> symMap = new HashMap<String, Symbol>();
+        for (Symbol sym : currentScope.getSymbols()) {
+            symMap.put(sym.getName(), sym);
+        }
+
         currentScope = currentScope.getParentScope();
+
+        /*NamedTupleType type = null;
+        try {
+            type = node.inferType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }*/
+
+        instructions.add(new NamedTupleAllocateInstruction(node.getType(), symMap));
     }
 
     @Override
@@ -320,7 +332,7 @@ public class CodeGenerationVisitor implements Visitor
                     targetSym.getName(), targetSym.getType().getName());
         }
 
-        if (!exprType.getName().equals(targetSym.getType().getName())) {
+        if (!targetSym.getType().isCompatible(exprType)) {
             throw new RuntimeException("Type mismatch in assignment.");
         }
 
@@ -502,14 +514,17 @@ public class CodeGenerationVisitor implements Visitor
             throw new RuntimeException(e);
         }
 
-        int idx = type.getFieldIndex(node.getKey());
+        if (!type.hasField(node.getKey())) {
+            throw new RuntimeException("Field " + node.getKey() + " was " +
+                    "not found in " + type.getName() + ".");
+        }
 
         if (DEBUG) {
             System.out.printf("%d Subscript %s\n", getCurrentAddr(),
                     node.toString());
         }
 
-        instructions.add(new NamedTupleGetInstruction(idx));
+        instructions.add(new NamedTupleGetInstruction(node.getKey()));
     }
 
     @Override

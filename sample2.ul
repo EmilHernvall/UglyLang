@@ -1,22 +1,19 @@
 /*int[] arr = [ 1, 2, 3 ];*/
 
-/*(int, int, string) testTuple = (1, 2, "test");*/
-
-(name:string, age:int, testFunc:(int)()) testNamedTuple =
+(name:string, greet:(int)()) greeter =
     (
         name:"Emil",
-        age:26-1,
-        testFunc:(int)() {
-            print(name);
-            return 1;
+        age: 2012-1986,
+        greet:(int)() {
+            print("Hello " + name + "! You are " + intToStr(age) + " this year.");
+            return 0;
         }
     );
 
 /*int typeTest = 1+2*3;
 int num = arr[2*2-3];*/
 
-/*int num = testTuple[1+2];*/
+/*print(intToStr(greeter.age));*/
+print(greeter.name);
 
-string test = testNamedTuple.name;
-int test2 = testNamedTuple.testFunc();
-(int)() test3 = testNamedTuple.testFunc;
+greeter.greet();

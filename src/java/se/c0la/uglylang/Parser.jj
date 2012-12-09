@@ -236,10 +236,10 @@ Node Statement() :
 }
 {
     (
-        LOOKAHEAD(<IFSTMT>)
+        LOOKAHEAD( <IFSTMT> )
             n = IfStatement()
         |
-        LOOKAHEAD(<RETURNSTMT>)
+        LOOKAHEAD( <RETURNSTMT> )
             <RETURNSTMT>
             (<S>)+
             expr = Expression()
@@ -247,10 +247,8 @@ Node Statement() :
             (<S>)*
             { n = new ReturnStatement(expr); }
         |
-        LOOKAHEAD (<IDENT>(<S>)+<ASSIGN>)
-            t = <IDENT>
-            (<S>)+
-            { n = new Variable(t.image, true); }
+        LOOKAHEAD( Expression5() <ASSIGN>)
+            n = Expression5()
             <ASSIGN>
             (<S>)*
             expr = Expression()
@@ -258,7 +256,7 @@ Node Statement() :
             <STMTBREAK>
             (<S>)*
         |
-        LOOKAHEAD(Declaration() <ASSIGN>)
+        LOOKAHEAD( Declaration() <ASSIGN> )
             n = Declaration()
             <ASSIGN>
             (<S>)*

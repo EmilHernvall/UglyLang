@@ -5,4 +5,5 @@ import java.util.Map;
 public interface Type
 {
     public String getName();
+    public boolean isCompatible(Type other);
 }

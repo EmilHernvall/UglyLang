@@ -13,17 +13,38 @@ public class NamedTupleType implements Type
 
     public Map<String, Type> getParameters() { return parameters; }
 
-    public int getFieldIndex(String name)
+    public boolean hasField(String name)
     {
-        int i = 0;
         for (String field : parameters.keySet()) {
             if (name.equals(field)) {
-                return i;
+                return true;
             }
-            i++;
         }
 
-        return -1;
+        return false;
+    }
+
+    @Override
+    public boolean isCompatible(Type other)
+    {
+        if (!(other instanceof NamedTupleType)) {
+            return false;
+        }
+
+        NamedTupleType otherTuple = (NamedTupleType)other;
+        for (String field : parameters.keySet()) {
+            Type type = parameters.get(field);
+            Type otherType = otherTuple.parameters.get(field);
+            if (otherType == null) {
+                return false;
+            }
+
+            if (!type.isCompatible(otherType)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override

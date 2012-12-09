@@ -14,6 +14,17 @@ public class ArrayType implements Type
     public Type getType() { return type; }
 
     @Override
+    public boolean isCompatible(Type other)
+    {
+        if (!(other instanceof ArrayType)) {
+            return false;
+        }
+
+        ArrayType otherArr = (ArrayType)other;
+        return type.isCompatible(otherArr);
+    }
+
+    @Override
     public String getName()
     {
         return type.getName() + "[]";

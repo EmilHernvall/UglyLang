@@ -172,7 +172,7 @@ public class Interpreter
                 {
                     try {
                         IntegerValue size = (IntegerValue)stack.pop();
-                        stack.push(new ArrayValue(new ArrayType(new PlaceholderType("type")),
+                        stack.push(new ArrayValue(new ArrayType(new VoidType()),
                                     size.getInt()));
                         programCounter++;
                     }
@@ -214,6 +214,30 @@ public class Interpreter
                     catch (ClassCastException e) {
                         throw new RuntimeException(e);
                     }
+                    continue;
+                }
+
+                case NTUPLE_ALLOCATE:
+                {
+                    NamedTupleAllocateInstruction allocInst =
+                        (NamedTupleAllocateInstruction)inst;
+                    Value value = new NamedTupleValue(allocInst.getType(),
+                            allocInst.getFieldsMap());
+                    stack.push(value);
+                    programCounter++;
+                    continue;
+                }
+
+                case NTUPLE_GET:
+                {
+                    NamedTupleGetInstruction getInst =
+                        (NamedTupleGetInstruction)inst;
+
+                    NamedTupleValue tuple = (NamedTupleValue)stack.pop();
+                    Symbol sym = tuple.getField(getInst.getField());
+                    Value value = values.get(sym);
+                    stack.push(value);
+                    programCounter++;
                     continue;
                 }
 

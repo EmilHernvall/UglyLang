@@ -14,6 +14,29 @@ public class TupleType implements Type
     public List<Type> getParameters() { return parameters; }
 
     @Override
+    public boolean isCompatible(Type other)
+    {
+        if (!(other instanceof TupleType)) {
+            return false;
+        }
+
+        TupleType otherTuple = (TupleType)other;
+        if (parameters.size() != otherTuple.parameters.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < parameters.size(); i++) {
+            Type a = parameters.get(i);
+            Type b = otherTuple.parameters.get(i);
+            if (!a.isCompatible(b)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     public String getName()
     {
         StringBuilder buf = new StringBuilder();

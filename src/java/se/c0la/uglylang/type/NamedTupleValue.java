@@ -9,15 +9,10 @@ public class NamedTupleValue extends AbstractValue<NamedTupleType>
     private NamedTupleType type;
     private Map<String, Symbol> fieldMap;
 
-    public NamedTupleValue(NamedTupleType type)
+    public NamedTupleValue(NamedTupleType type, Map<String, Symbol> fields)
     {
         this.type = type;
-        this.fieldMap = new LinkedHashMap<String, Symbol>();
-    }
-
-    public void setField(String field, Symbol sym)
-    {
-        fieldMap.put(field, sym);
+        this.fieldMap = fields;
     }
 
     public Symbol getField(String field)
