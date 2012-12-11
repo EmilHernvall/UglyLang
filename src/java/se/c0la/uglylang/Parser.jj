@@ -52,6 +52,7 @@ TOKEN : { < OR : "or" > }
 TOKEN : { < NOT : "not" > }
 TOKEN : { < XOR : "xor" > }
 TOKEN : { < IFSTMT : "if" > }
+TOKEN : { < WHILESTMT : "while" > }
 TOKEN : { < RETURNSTMT : "return" > }
 TOKEN : { < EQ : "==" > }
 TOKEN : { < NOTEQ : "!=" > }
@@ -254,6 +255,9 @@ Node Statement() :
         LOOKAHEAD( <IFSTMT> )
             n = IfStatement()
         |
+        LOOKAHEAD( <WHILESTMT> )
+            n = WhileStatement()
+        |
         LOOKAHEAD( <RETURNSTMT> )
             <RETURNSTMT>
             (<S>)+
@@ -338,6 +342,29 @@ Node IfStatement() :
     (<S>)*
 
      { return new IfStatement(n, stmts); }
+}
+
+Node WhileStatement() :
+{
+    Token t ;
+    Node n, n2 ;
+    List<Node> stmts;
+}
+{
+    { stmts = new ArrayList<Node>(); }
+    <WHILESTMT>
+    (<S>)*
+    n = Expression()
+    <LCLAUSE>
+    (<S>)*
+    (
+        n2 = Statement()
+        { stmts.add(n2); }
+    )*
+    <RCLAUSE>
+    (<S>)*
+
+     { return new WhileStatement(n, stmts); }
 }
 
 Declaration Declaration() :

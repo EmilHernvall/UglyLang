@@ -12,6 +12,8 @@ public interface Visitor
     void visit(EndFunctionStatement node);
     void visit(IfStatement node);
     void visit(EndIfStatement node);
+    void visit(WhileStatement node);
+    void visit(EndWhileStatement node);
     void visit(TupleNode node);
     void visit(TupleSetNode node);
     void visit(NamedTupleNode node);

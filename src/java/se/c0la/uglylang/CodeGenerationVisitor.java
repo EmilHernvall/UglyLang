@@ -228,6 +228,42 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void visit(WhileStatement node)
+    {
+        String label = "While_" + getCurrentAddr();
+        if (DEBUG) {
+            System.out.printf("%d JumpOnFalse %s\n", getCurrentAddr(), label);
+        }
+
+        instructions.add(new JumpOnFalseInstruction(label));
+    }
+
+    @Override
+    public void visit(EndWhileStatement node)
+    {
+        labels.put(node.getLabel(), getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d JUMP %d\n", getCurrentAddr(), node.getCondAddr());
+            System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
+        }
+
+        instructions.add(new JumpInstruction(node.getCondAddr()));
+
+        for (Instruction inst : instructions) {
+            if (inst.getOpCode() != OpCode.JUMPONFALSE) {
+                continue;
+            }
+
+            JumpOnFalseInstruction jumpOnFalse = (JumpOnFalseInstruction)inst;
+            if (!jumpOnFalse.getLabel().equals(node.getLabel())) {
+                continue;
+            }
+
+            jumpOnFalse.setAddr(getCurrentAddr());
+        }
+    }
+
+    @Override
     public void visit(TupleNode node)
     {
         if (DEBUG) {

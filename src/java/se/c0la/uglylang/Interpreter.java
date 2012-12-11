@@ -333,6 +333,46 @@ public class Interpreter
                     continue;
                 }
 
+                case LT:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.ltOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case LTEQ:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.ltEqOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case GT:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.gtOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case GTEQ:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.gtEqOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
                 case AND:
                 {
                     Value first = stack.pop();

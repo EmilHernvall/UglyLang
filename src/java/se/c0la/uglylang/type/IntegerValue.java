@@ -56,6 +56,34 @@ public class IntegerValue extends AbstractValue<IntegerType>
     }
 
     @Override
+    public Value ltOp(Value b)
+    {
+        IntegerValue intVal = (IntegerValue)b;
+        return new BooleanValue(intVal.val < val);
+    }
+
+    @Override
+    public Value ltEqOp(Value b)
+    {
+        IntegerValue intVal = (IntegerValue)b;
+        return new BooleanValue(intVal.val <= val);
+    }
+
+    @Override
+    public Value gtOp(Value b)
+    {
+        IntegerValue intVal = (IntegerValue)b;
+        return new BooleanValue(intVal.val > val);
+    }
+
+    @Override
+    public Value gtEqOp(Value b)
+    {
+        IntegerValue intVal = (IntegerValue)b;
+        return new BooleanValue(intVal.val >= val);
+    }
+
+    @Override
     public IntegerType getType() { return TYPE; }
 
     @Override
