@@ -6,6 +6,7 @@ public interface Visitor
 
     // language constructs
     void visit(Declaration node);
+    void visit(TypeDeclNode node);
     void visit(FunctionDecl node);
     void visit(ReturnStatement node);
     void visit(EndFunctionStatement node);
@@ -23,6 +24,7 @@ public interface Visitor
     void visit(AssignNode node);
     void visit(AssignDeclarationNode node);
     void visit(AssignSubscriptNode node);
+    void visit(AssignIndexNode node);
 
     // logic
     void visit(AndNode node);

@@ -18,7 +18,7 @@ public class ArrayNode implements Expression
     public int getSize() { return values.size(); }
 
     @Override
-    public Type inferType()
+    public ArrayType inferType()
     throws TypeException
     {
         Type type = null;

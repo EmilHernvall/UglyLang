@@ -45,6 +45,7 @@ TOKEN : { < #nl : "\n" | "\r" "\n" | "\r" | "\u000C" > }
 TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
 TOKEN : { < #w : (<wc>)* > }
 
+TOKEN : { < TYPEDECL : "type" > }
 TOKEN : { < SUBSCRIPT : "." > }
 TOKEN : { < AND : "and" > }
 TOKEN : { < OR : "or" > }
@@ -233,10 +234,23 @@ Node Statement() :
     Token t ;
     Node n, n2 ;
     Expression expr, expr2 ;
+    Variable var ;
     Declaration d ;
+    Type type ;
 }
 {
     (
+        LOOKAHEAD( <TYPEDECL> )
+            <TYPEDECL>
+            (<S>)*
+            t = <IDENT>
+            (<S>)*
+            type = Type()
+            <STMTBREAK>
+            (<S>)*
+            { types.put(t.image, type); }
+            { n = new TypeDeclNode(type, t.image); }
+        |
         LOOKAHEAD( <IFSTMT> )
             n = IfStatement()
         |
@@ -261,14 +275,28 @@ Node Statement() :
         |
         LOOKAHEAD( <IDENT> <SUBSCRIPT> <IDENT> (<S>)* <ASSIGN> )
             t = <IDENT>
-            { expr = new Variable(t.image, false); }
+            { var = new Variable(t.image, false); }
             <SUBSCRIPT>
             t = <IDENT>
             (<S>)*
             <ASSIGN>
             (<S>)*
+            expr = Expression()
+            { n = new AssignSubscriptNode(var, t.image, expr); }
+            <STMTBREAK>
+            (<S>)*
+        |
+        LOOKAHEAD( <IDENT> <LBRACKET> Expression() <RBRACKET> (<S>)* <ASSIGN> )
+            t = <IDENT>
+            { var = new Variable(t.image, false); }
+            <LBRACKET>
+            expr = Expression()
+            <RBRACKET>
+            (<S>)*
+            <ASSIGN>
+            (<S>)*
             expr2 = Expression()
-            { n = new AssignSubscriptNode(expr, t.image, expr2); }
+            { n = new AssignIndexNode(var, expr, expr2); }
             <STMTBREAK>
             (<S>)*
         |
@@ -338,13 +366,23 @@ TupleNode Tuple() :
 {
     { nodes = new ArrayList<Expression>(); }
     <LPAR>
+    n = Expression()
+    { nodes.add(n); }
+    ","
     (<S>)*
+
+    [
+    n = Expression()
+    { nodes.add(n); }
+    ]
+
     (
-        n = Expression()
-        { nodes.add(n); }
         ","
         (<S>)*
-    )+
+        n = Expression()
+        { nodes.add(n); }
+    )*
+
     <RPAR>
     (<S>)*
 
@@ -578,9 +616,9 @@ Expression Expression5() :
         LOOKAHEAD( Function() )
             n = Function()
         |
-        /*LOOKAHEAD( Tuple() )
+        LOOKAHEAD( Tuple() )
             n = Tuple()
-        |*/
+        |
         LOOKAHEAD( NamedTuple() )
             n = NamedTuple()
         |

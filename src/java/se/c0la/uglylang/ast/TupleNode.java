@@ -19,7 +19,7 @@ public class TupleNode implements Expression
     public int getValueCount() { return values.size(); }
 
     @Override
-    public Type inferType()
+    public TupleType inferType()
     throws TypeException
     {
         List<Type> parameters = new ArrayList<Type>();

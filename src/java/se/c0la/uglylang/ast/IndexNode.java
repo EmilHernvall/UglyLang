@@ -1,5 +1,7 @@
 package se.c0la.uglylang.ast;
 
+import java.util.List;
+
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.ArrayType;
 import se.c0la.uglylang.type.TupleType;
@@ -18,8 +20,8 @@ public class IndexNode implements Expression
         this.assignTarget = assignTarget;
     }
 
-    public Node getVariable() { return var; }
-    public Node getIndex() { return index; }
+    public Expression getVariable() { return var; }
+    public Expression getIndex() { return index; }
     public boolean isAssignTarget() { return assignTarget; }
 
     @Override
@@ -31,11 +33,16 @@ public class IndexNode implements Expression
             ArrayType arrType = (ArrayType)type;
             return arrType.getType();
         }
-        /*else if (type instanceof TupleType) {
+        else if (type instanceof TupleType) {
             TupleType tupleType = (TupleType)type;
             List<Type> params = tupleType.getParameters();
-            return params.get(index);
-        }*/
+            if (!(index instanceof IntegerConstant)) {
+                throw new TypeException("Tuples cannot be dynamically indexed: "
+                        + index.toString());
+            }
+            IntegerConstant indexConstant = (IntegerConstant)index;
+            return params.get(indexConstant.getValue());
+        }
 
         throw new TypeException(type.getName() + " cannot be indexed.");
     }

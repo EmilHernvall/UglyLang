@@ -1,0 +1,8 @@
+int[] arr = [ 3, 5, 7 ];
+
+int num = arr[2*2-3];
+arr[0] = 2;
+
+print(intToStr(num));
+print(intToStr(arr[0]));
+

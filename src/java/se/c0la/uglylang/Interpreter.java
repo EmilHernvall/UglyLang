@@ -41,6 +41,7 @@ public class Interpreter
             instrCount++;
 
             if (programCounter >= instructions.size()) {
+                System.out.println();
                 System.out.println("Execution halted after " + instrCount +
                         " instructions.");
                 return;
@@ -154,31 +155,23 @@ public class Interpreter
                         (JumpOnFalseInstruction)inst;
 
                     Value value = stack.pop();
-                    try {
-                        BooleanValue b = (BooleanValue)value;
-                        if (b.getBoolean()) {
-                            programCounter++;
-                        } else {
-                            programCounter = jumpOnFalse.getAddr();
-                        }
-                    }
-                    catch (ClassCastException e) {
-                        throw new RuntimeException(e);
+                    BooleanValue b = (BooleanValue)value;
+                    if (b.getBoolean()) {
+                        programCounter++;
+                    } else {
+                        programCounter = jumpOnFalse.getAddr();
                     }
                     continue;
                 }
 
                 case ARRAY_ALLOCATE:
                 {
-                    try {
-                        IntegerValue size = (IntegerValue)stack.pop();
-                        stack.push(new ArrayValue(new ArrayType(new VoidType()),
-                                    size.getInt()));
-                        programCounter++;
-                    }
-                    catch (ClassCastException e) {
-                        throw new RuntimeException(e);
-                    }
+                    ArrayAllocateInstruction alloc =
+                        (ArrayAllocateInstruction)inst;
+
+                    IntegerValue size = (IntegerValue)stack.pop();
+                    stack.push(new ArrayValue(alloc.getType(), size.getInt()));
+                    programCounter++;
                     continue;
                 }
 
@@ -203,17 +196,43 @@ public class Interpreter
 
                 case ARRAY_GET:
                 {
-                    try {
-                        IntegerValue index = (IntegerValue)stack.pop();
-                        ArrayValue arr = (ArrayValue)stack.pop();
+                    IntegerValue index = (IntegerValue)stack.pop();
+                    ArrayValue arr = (ArrayValue)stack.pop();
 
-                        stack.push(arr.get(index.getInt()));
+                    stack.push(arr.get(index.getInt()));
 
-                        programCounter++;
-                    }
-                    catch (ClassCastException e) {
-                        throw new RuntimeException(e);
-                    }
+                    programCounter++;
+                    continue;
+                }
+
+                case TUPLE_ALLOCATE:
+                {
+                    TupleAllocateInstruction allocInst =
+                        (TupleAllocateInstruction)inst;
+                    Value value = new TupleValue(allocInst.getType());
+                    stack.push(value);
+                    programCounter++;
+                    continue;
+                }
+
+                case TUPLE_SET:
+                {
+                    IntegerValue index =  (IntegerValue)stack.pop();
+                    Value value =  stack.pop();
+                    TupleValue tuple = (TupleValue)stack.pop();
+                    tuple.setValue(index.getInt(), value);
+                    stack.push(tuple);
+                    programCounter++;
+                    continue;
+                }
+
+                case TUPLE_GET:
+                {
+                    IntegerValue index =  (IntegerValue)stack.pop();
+                    TupleValue tuple = (TupleValue)stack.pop();
+                    Value value = tuple.getValue(index.getInt());
+                    stack.push(value);
+                    programCounter++;
                     continue;
                 }
 

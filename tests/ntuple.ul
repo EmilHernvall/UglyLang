@@ -1,10 +1,6 @@
-int[] arr = [ 3, 5, 7 ];
+type Greeter (name:string, setAge:(int)(int), greet:(int)());
 
-int num = arr[2*2-3];
-
-print(intToStr(num));
-
-(name:string, setAge:(int)(int), greet:(int)()) greeter =
+Greeter greeter =
     (
         name:"Emil",
         age: 2012-1986,

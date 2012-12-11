@@ -1,0 +1,10 @@
+type Person (string, int);
+
+Person first = ("Emil", 26);
+
+print(first[0]);
+
+Person second = first;
+second[1] = 27;
+
+print(intToStr(second[1]));

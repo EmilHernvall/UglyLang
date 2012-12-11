@@ -106,6 +106,15 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void visit(TypeDeclNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Type Declaration: type=%s, name=%s\n",
+                    getCurrentAddr(), node.getType().getName(), node.getName());
+        }
+    }
+
+    @Override
     public void visit(Declaration node)
     {
         if (DEBUG) {
@@ -225,8 +234,14 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d Tuple %d\n", getCurrentAddr(), node.getValueCount());
         }
 
-        instructions.add(new PushInstruction(new IntegerValue(node.getValueCount())));
-        instructions.add(new TupleAllocateInstruction());
+        TupleType type;
+        try {
+            type = node.inferType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }
+
+        instructions.add(new TupleAllocateInstruction(type));
     }
 
     @Override
@@ -283,13 +298,6 @@ public class CodeGenerationVisitor implements Visitor
 
         currentScope = currentScope.getParentScope();
 
-        /*NamedTupleType type = null;
-        try {
-            type = node.inferType();
-        } catch (TypeException e) {
-            throw new RuntimeException(e);
-        }*/
-
         instructions.add(new NamedTupleAllocateInstruction(node.getType(), symMap));
     }
 
@@ -301,8 +309,15 @@ public class CodeGenerationVisitor implements Visitor
                     node.getSize());
         }
 
+        ArrayType type;
+        try {
+            type = node.inferType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }
+
         instructions.add(new PushInstruction(new IntegerValue(node.getSize())));
-        instructions.add(new ArrayAllocateInstruction());
+        instructions.add(new ArrayAllocateInstruction(type));
     }
 
     @Override
@@ -374,25 +389,31 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(AssignSubscriptNode node)
     {
-        /*Type exprType;
-        try {
-            exprType = node.getExprType();
-        } catch (TypeException e) {
-            throw new RuntimeException(e);
-        }*/
-
         if (DEBUG) {
             System.out.printf("%d Assigning to subscript", getCurrentAddr());
         }
 
-        /*if (!targetSym.getType().isCompatible(exprType)) {
-            throw new RuntimeException("Type mismatch in assignment.");
+        instructions.add(new NamedTupleSetInstruction(node.getField()));
+    }
+
+    @Override
+    public void visit(AssignIndexNode node)
+    {
+        Variable var = node.getVariable();
+        Symbol sym = currentScope.findSymbol(var.getName());
+        Type type = sym.getType();
+
+        if (DEBUG) {
+            System.out.printf("%d Assigning to index: type=%s\n",
+                    getCurrentAddr(), type.getName());
         }
 
-        instructions.add(new StoreInstruction(currentScope.getTargetSymbol()));
-
-        currentScope.setTargetSymbol(null);*/
-        instructions.add(new NamedTupleSetInstruction(node.getField()));
+        if (type instanceof ArrayType) {
+            instructions.add(new ArraySetInstruction());
+        }
+        else if (type instanceof TupleType) {
+            instructions.add(new TupleSetInstruction());
+        }
     }
 
     @Override
@@ -583,11 +604,25 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(IndexNode node)
     {
-        if (DEBUG) {
-            System.out.printf("%d Index %s\n", getCurrentAddr(), node.toString());
+        Type type = null;
+        try {
+            type = node.getVariable().inferType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
         }
 
-        instructions.add(new ArrayGetInstruction());
+        if (DEBUG) {
+            System.out.printf("%d Index: idx=%s type=%s\n", getCurrentAddr(),
+                    node.toString(), type.getName());
+        }
+
+        if (type instanceof ArrayType) {
+            instructions.add(new ArrayGetInstruction());
+        } else if (type instanceof TupleType) {
+            instructions.add(new TupleGetInstruction());
+        } else {
+            throw new RuntimeException("Only arrays and tuples can be indexed.");
+        }
     }
 
     @Override

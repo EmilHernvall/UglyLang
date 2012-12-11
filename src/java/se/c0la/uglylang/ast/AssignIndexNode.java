@@ -3,25 +3,26 @@ package se.c0la.uglylang.ast;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class AssignSubscriptNode implements Node
+public class AssignIndexNode implements Node
 {
     private Variable a;
-    private String field;
     private Expression b;
+    private Expression c;
 
-    public AssignSubscriptNode(Variable a, String field, Expression b)
+    public AssignIndexNode(Variable a, Expression b, Expression c)
     {
         this.a = a;
         this.b = b;
-        this.field = field;
+        this.c = c;
     }
 
-    public String getField() { return field; }
+    public Variable getVariable() { return a; }
 
     @Override
     public void accept(Visitor visitor)
     {
         a.accept(visitor);
+        c.accept(visitor);
         b.accept(visitor);
 
         visitor.visit(this);
@@ -30,6 +31,6 @@ public class AssignSubscriptNode implements Node
     @Override
     public String toString()
     {
-        return a.toString() + "." + field + " = " + b.toString();
+        return a.toString() + "[" + b.toString() + "] = " + c.toString();
     }
 }
