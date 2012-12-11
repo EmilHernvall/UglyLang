@@ -232,7 +232,8 @@ Node Statement() :
 {
     Token t ;
     Node n, n2 ;
-    Expression expr ;
+    Expression expr, expr2 ;
+    Declaration d ;
 }
 {
     (
@@ -247,21 +248,36 @@ Node Statement() :
             (<S>)*
             { n = new ReturnStatement(expr); }
         |
-        LOOKAHEAD( Expression5() <ASSIGN>)
-            n = Expression5()
+        LOOKAHEAD( <IDENT> (<S>)* <ASSIGN>)
+            t = <IDENT>
+            (<S>)*
+            { expr = new Variable(t.image, true); }
             <ASSIGN>
             (<S>)*
-            expr = Expression()
-            { n = new AssignNode(n, expr); }
+            expr2 = Expression()
+            { n = new AssignNode(expr, expr2); }
+            <STMTBREAK>
+            (<S>)*
+        |
+        LOOKAHEAD( <IDENT> <SUBSCRIPT> <IDENT> (<S>)* <ASSIGN> )
+            t = <IDENT>
+            { expr = new Variable(t.image, false); }
+            <SUBSCRIPT>
+            t = <IDENT>
+            (<S>)*
+            <ASSIGN>
+            (<S>)*
+            expr2 = Expression()
+            { n = new AssignSubscriptNode(expr, t.image, expr2); }
             <STMTBREAK>
             (<S>)*
         |
         LOOKAHEAD( Declaration() <ASSIGN> )
-            n = Declaration()
+            d = Declaration()
             <ASSIGN>
             (<S>)*
             expr = Expression()
-            { n = new AssignNode(n, expr); }
+            { n = new AssignDeclarationNode(d, expr); }
             <STMTBREAK>
             (<S>)*
         |

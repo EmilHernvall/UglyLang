@@ -241,6 +241,19 @@ public class Interpreter
                     continue;
                 }
 
+                case NTUPLE_SET:
+                {
+                    NamedTupleSetInstruction getInst =
+                        (NamedTupleSetInstruction)inst;
+
+                    Value value =  stack.pop();
+                    NamedTupleValue tuple = (NamedTupleValue)stack.pop();
+                    Symbol sym = tuple.getField(getInst.getField());
+                    values.put(sym, value);
+                    programCounter++;
+                    continue;
+                }
+
                 case ADD:
                 {
                     Value first = stack.pop();
@@ -346,6 +359,9 @@ public class Interpreter
 
         Parser parser = new Parser(System.in);
         CodeGenerationVisitor visitor = new CodeGenerationVisitor();
+        if ("parse".equals(mode)) {
+            visitor.setDebug(true);
+        }
         Interpreter interpreter = new Interpreter();
 
         // register native functions

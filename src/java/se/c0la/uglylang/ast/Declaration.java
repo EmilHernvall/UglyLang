@@ -33,4 +33,3 @@ public class Declaration implements Node
         return String.format("%s %s", type, name);
     }
 }
-

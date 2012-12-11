@@ -5,10 +5,10 @@ import se.c0la.uglylang.type.TypeException;
 
 public class AssignNode implements Node
 {
-    private Node a;
+    private Expression a;
     private Expression b;
 
-    public AssignNode(Node a, Expression b)
+    public AssignNode(Expression a, Expression b)
     {
         this.a = a;
         this.b = b;
@@ -31,4 +31,3 @@ public class AssignNode implements Node
         return "(" + a + " = " + b.toString().trim() + ")";
     }
 }
-

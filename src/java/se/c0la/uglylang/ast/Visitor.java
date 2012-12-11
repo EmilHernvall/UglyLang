@@ -21,6 +21,8 @@ public interface Visitor
 
     // assignment
     void visit(AssignNode node);
+    void visit(AssignDeclarationNode node);
+    void visit(AssignSubscriptNode node);
 
     // logic
     void visit(AndNode node);

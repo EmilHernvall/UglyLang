@@ -1,19 +1,27 @@
-/*int[] arr = [ 1, 2, 3 ];*/
+int[] arr = [ 3, 5, 7 ];
 
-(name:string, greet:(int)()) greeter =
+int num = arr[2*2-3];
+
+print(intToStr(num));
+
+(name:string, setAge:(int)(int), greet:(int)()) greeter =
     (
         name:"Emil",
         age: 2012-1986,
+        setAge:(int)(int v) {
+            age = v;
+            return 0;
+        },
         greet:(int)() {
             print("Hello " + name + "! You are " + intToStr(age) + " this year.");
             return 0;
         }
     );
 
-/*int typeTest = 1+2*3;
-int num = arr[2*2-3];*/
-
 /*print(intToStr(greeter.age));*/
 print(greeter.name);
+greeter.greet();
 
+greeter.name = "Torbjörn";
+greeter.setAge(52);
 greeter.greet();

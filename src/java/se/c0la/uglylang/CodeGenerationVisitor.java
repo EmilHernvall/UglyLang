@@ -50,7 +50,7 @@ public class CodeGenerationVisitor implements Visitor
         public Symbol getTargetSymbol() { return targetSymbol; }
     }
 
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
 
     private Scope rootScope = null;
     private Scope currentScope = null;
@@ -67,6 +67,8 @@ public class CodeGenerationVisitor implements Visitor
 
         currentScope = rootScope;
     }
+
+    public void setDebug(boolean v) { DEBUG = v; }
 
     public Symbol registerNativeFunction(NativeFunction func)
     {
@@ -333,12 +335,64 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         if (!targetSym.getType().isCompatible(exprType)) {
-            throw new RuntimeException("Type mismatch in assignment.");
+            throw new RuntimeException("Type mismatch in assignment: " +
+                    targetSym.getType().getName() + " != " + exprType.getName());
         }
 
         instructions.add(new StoreInstruction(currentScope.getTargetSymbol()));
 
         currentScope.setTargetSymbol(null);
+    }
+
+    @Override
+    public void visit(AssignDeclarationNode node)
+    {
+        Type exprType;
+        try {
+            exprType = node.getExprType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }
+
+        Symbol targetSym = currentScope.getTargetSymbol();
+        if (DEBUG) {
+            System.out.printf("%d Assigning to decl %s to %s of type %s\n",
+                    getCurrentAddr(), exprType.getName(),
+                    targetSym.getName(), targetSym.getType().getName());
+        }
+
+        if (!targetSym.getType().isCompatible(exprType)) {
+            throw new RuntimeException("Type mismatch in assignment: " +
+                    targetSym.getType().getName() + " != " + exprType.getName());
+        }
+
+        instructions.add(new StoreInstruction(currentScope.getTargetSymbol()));
+
+        currentScope.setTargetSymbol(null);
+    }
+
+    @Override
+    public void visit(AssignSubscriptNode node)
+    {
+        /*Type exprType;
+        try {
+            exprType = node.getExprType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }*/
+
+        if (DEBUG) {
+            System.out.printf("%d Assigning to subscript", getCurrentAddr());
+        }
+
+        /*if (!targetSym.getType().isCompatible(exprType)) {
+            throw new RuntimeException("Type mismatch in assignment.");
+        }
+
+        instructions.add(new StoreInstruction(currentScope.getTargetSymbol()));
+
+        currentScope.setTargetSymbol(null);*/
+        instructions.add(new NamedTupleSetInstruction(node.getField()));
     }
 
     @Override
@@ -496,11 +550,10 @@ public class CodeGenerationVisitor implements Visitor
                     node.getName(), sym.getType().getName());
         }
 
-        // TODO: This is wrong if the variable is the target of an assignment
-        instructions.add(new LoadInstruction(sym));
-
         if (node.isAssignTarget()) {
             currentScope.setTargetSymbol(sym);
+        } else {
+            instructions.add(new LoadInstruction(sym));
         }
     }
 

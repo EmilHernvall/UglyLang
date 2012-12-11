@@ -21,7 +21,7 @@ public class ArrayType implements Type
         }
 
         ArrayType otherArr = (ArrayType)other;
-        return type.isCompatible(otherArr);
+        return type.isCompatible(otherArr.type);
     }
 
     @Override
