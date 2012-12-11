@@ -13,6 +13,12 @@ public class JumpInstruction implements Instruction
         this.addr = -1;
     }
 
+    public JumpInstruction(int addr)
+    {
+        this.label = null;
+        this.addr = addr;
+    }
+
     public String getLabel() { return label; }
 
     public void setAddr(int v) { this.addr = v; }

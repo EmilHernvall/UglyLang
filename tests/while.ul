@@ -1,0 +1,6 @@
+int a = 0;
+int b = 10;
+while a < b {
+    print(intToStr(a));
+    a = a + 1;
+}

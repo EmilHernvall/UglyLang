@@ -100,15 +100,18 @@ public class Interpreter
 
                 case RETURN:
                 {
-                    Value retVal = stack.pop();
-                    try {
-                        ReturnAddressValue retAddr = (ReturnAddressValue)stack.pop();
-                        programCounter = retAddr.getAddr();
+                    ReturnInstruction load = (ReturnInstruction)inst;
+                    Value retVal = null;
+                    if (!load.isVoidFunc()) {
+                        retVal = stack.pop();
                     }
-                    catch (ClassCastException e) {
-                        throw new RuntimeException(e);
+
+                    ReturnAddressValue retAddr = (ReturnAddressValue)stack.pop();
+                    programCounter = retAddr.getAddr();
+
+                    if (!load.isVoidFunc()) {
+                        stack.push(retVal);
                     }
-                    stack.push(retVal);
                     continue;
                 }
 
@@ -328,6 +331,46 @@ public class Interpreter
                     Value first = stack.pop();
                     Value second = stack.pop();
                     Value newValue = first.equalOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case LT:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.ltOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case LTEQ:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.ltEqOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case GT:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.gtOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case GTEQ:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.gtEqOp(second);
                     stack.push(newValue);
                     programCounter++;
                     continue;

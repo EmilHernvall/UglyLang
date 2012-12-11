@@ -1,16 +1,14 @@
-type Greeter (name:string, setAge:(int)(int), greet:(int)());
+type Greeter (name:string, setAge:(void)(int), greet:(void)());
 
 Greeter greeter =
     (
         name:"Emil",
         age: 2012-1986,
-        setAge:(int)(int v) {
+        setAge:(void)(int v) {
             age = v;
-            return 0;
         },
-        greet:(int)() {
+        greet:(void)() {
             print("Hello " + name + "! You are " + intToStr(age) + " this year.");
-            return 0;
         }
     );
 

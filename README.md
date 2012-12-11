@@ -196,7 +196,7 @@ If statements:
 
 While statements:
 
-    while (a < len) {
+    while a < len {
         /* code */
     }
 
@@ -204,7 +204,7 @@ An each loop can be applied to name tuples defining the get:(type)(int) and
 size:(int)() methods.
 
     int[] arr = [1,2,3];
-    each (int a : arr) {
+    each int a : arr {
         /* code */
     }
 

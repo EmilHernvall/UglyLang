@@ -153,12 +153,15 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d Return\n", getCurrentAddr());
         }
 
-        instructions.add(new ReturnInstruction());
+        instructions.add(new ReturnInstruction(false));
     }
 
     @Override
     public void visit(EndFunctionStatement node)
     {
+        // implicit return
+        instructions.add(new ReturnInstruction(true));
+
         if (DEBUG) {
             System.out.printf("%d EndFunctionStatement: funcAddr=%d\n",
                     getCurrentAddr(), node.getFuncAddr());
@@ -212,6 +215,42 @@ public class CodeGenerationVisitor implements Visitor
         if (DEBUG) {
             System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
         }
+
+        for (Instruction inst : instructions) {
+            if (inst.getOpCode() != OpCode.JUMPONFALSE) {
+                continue;
+            }
+
+            JumpOnFalseInstruction jumpOnFalse = (JumpOnFalseInstruction)inst;
+            if (!jumpOnFalse.getLabel().equals(node.getLabel())) {
+                continue;
+            }
+
+            jumpOnFalse.setAddr(getCurrentAddr());
+        }
+    }
+
+    @Override
+    public void visit(WhileStatement node)
+    {
+        String label = "While_" + getCurrentAddr();
+        if (DEBUG) {
+            System.out.printf("%d JumpOnFalse %s\n", getCurrentAddr(), label);
+        }
+
+        instructions.add(new JumpOnFalseInstruction(label));
+    }
+
+    @Override
+    public void visit(EndWhileStatement node)
+    {
+        labels.put(node.getLabel(), getCurrentAddr());
+        if (DEBUG) {
+            System.out.printf("%d JUMP %d\n", getCurrentAddr(), node.getCondAddr());
+            System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
+        }
+
+        instructions.add(new JumpInstruction(node.getCondAddr()));
 
         for (Instruction inst : instructions) {
             if (inst.getOpCode() != OpCode.JUMPONFALSE) {
