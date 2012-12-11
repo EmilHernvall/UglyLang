@@ -1,0 +1,35 @@
+type GtEq (gtEq:(int)(GtEq));
+
+type TreeKey GtEq;
+type TreeValue root;
+
+type TreeNode (key:TreeKey,
+               value:TreeValue,
+               left:TreeNode,
+               right:TreeNode);
+
+type Tree (new: (Tree)()
+           add: (void)(TreeKey, TreeValue),
+           get: (TreeValue)(TreeKey),
+           size: (int)());
+
+TreeKey defaultTreeKey =
+    (
+        gtEq:(int)() {
+            return 0;
+        }
+    );
+
+Tree UnbalancedBST =
+    (
+        root: defaultTreeKey,
+        new: (Tree):() {
+            return copy(UnbalancedBST);
+        },
+        add: (void)(TreeKey key, TreeValue value) {
+        },
+        get: (TreeValue)(TreeKey key) {
+        },
+        size: (int)() {
+        }
+    );

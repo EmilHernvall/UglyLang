@@ -1,0 +1,15 @@
+(void)(string) func =
+    (void)(string param) {
+        print(param);
+    };
+
+(void)() func2 =
+    (void)() {
+        print("nothing here");
+    };
+
+func("foo");
+func("bar");
+func("baz");
+
+func2();
