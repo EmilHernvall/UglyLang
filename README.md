@@ -10,17 +10,16 @@ Planned Features:
  * First-class functions
  * Prototype-based objects
    * No implementation inheritence
-   * Explicit interfaces
-   * Built-in delegation (unimplemented)
+   * Interfaces using type system
  * Overloadable operators (unimplemented)
- * Call-by-value with copy-on-write, unless ref keyword is used (unimplemented)
+ * Overloadable functions (unimplemented)
 
 Built-in types:
 
- * func (alias when declaring)
+ * func (alias when declaring, unimplemented)
  * string
  * int
- * fixed (for decimal)
+ * fixed (for decimal, unimplemented)
  * boolean
  * array
  * tuples (haskell-like)
@@ -30,9 +29,9 @@ Statements:
 
  * declarations
  * if
- * for (unimplemented)
+ * while
  * each (unimplemented)
- * type (unimplemented)
+ * type
 
 Operators
 ---------
@@ -158,13 +157,13 @@ For example:
 func is only a valid type when a function is first declared, and will be
 substituted for the full type.
 
-Overloading of functions can be achived by "adding" multiple functions. The 
+Overloading of functions can be achived by "adding" multiple functions. The
 return type must be the same for all the overloaded functions.
 
     func testFunc =
             (string)(int a) {
                 return intToStr(a);
-            } 
+            }
             +
             (string)(string a) {
                 return a;

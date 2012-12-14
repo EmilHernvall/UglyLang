@@ -1,35 +1,94 @@
-type GtEq (gtEq:(int)(GtEq));
+type TreeKey string;
+type TreeValue string;
 
-type TreeKey GtEq;
-type TreeValue root;
-
+/* Missing: Recursive type support */
 type TreeNode (key:TreeKey,
                value:TreeValue,
-               left:TreeNode,
-               right:TreeNode);
+               left:self,
+               right:self);
 
-type Tree (new: (Tree)()
+type Tree (new: (self)()
            add: (void)(TreeKey, TreeValue),
            get: (TreeValue)(TreeKey),
            size: (int)());
 
-TreeKey defaultTreeKey =
+TreeNode BSTTreeNode =
     (
-        gtEq:(int)() {
-            return 0;
-        }
+        key: "",
+        value: "",
+        left: BSTTreeNode,
+        right: BSTTreeNode
     );
 
 Tree UnbalancedBST =
     (
-        root: defaultTreeKey,
-        new: (Tree):() {
+        /* Missing: copy() */
+        root: copy(BSTTreeNode),
+
+        new: (Tree)() {
             return copy(UnbalancedBST);
         },
+
         add: (void)(TreeKey key, TreeValue value) {
+
+            (void)(TreeNode,TreeKey,TreeValue) hiddenAdd =
+                (void)(TreeNode node, TreeKey key, TreeValue value) {
+                    /* Missing: Named tuple comparisons */
+                    if (node == BSTTreeNode) {
+                        node.key = key;
+                        node.value = value;
+                        return;
+                    }
+
+                    if (key >= node.key) {
+                        hiddenAdd(node.right, key, value);
+                    } else {
+                        hiddenAdd(node.left, key, value);
+                    }
+                };
+
+            hiddenAdd(root, key, value);
         },
+
         get: (TreeValue)(TreeKey key) {
+
+            (TreeValue)(TreeNode,TreeKey) hiddenGet =
+                (TreeValue)(TreeNode node, TreeKey key) {
+                    if (node == BSTTreeNode) {
+                        return node;
+                    }
+
+                    if (key < node.key) {
+                        return hiddenGet(node.right, key, value);
+                    } else if (key > node.key) {
+                        return hiddenGet(node.left, key, value);
+                    } else {
+                        return node;
+                    }
+                };
+
+            return hiddenGet(root, key);
         },
+
         size: (int)() {
+
+            (int)(TreeNode) hiddenSize =
+                (int)(TreeNode node) {
+                    if (node == BSTTreeNode) {
+                        return 1;
+                    }
+
+                    return 1 + hiddenSize(node.right) + hiddenSize(node.left);
+                };
+
+            return hiddenSize(root);
         }
     );
+
+Tree testTree = UnbalancedBST.new();
+testTree.add("emil", "hernvall");
+testTree.add("daniel", "andersson");
+testTree.add("miki", "momen");
+
+print("size: " + intToStr(testTree.size()));
+print(testTree.get("emil"));
