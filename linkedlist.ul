@@ -1,0 +1,9 @@
+type LinkedList (val:string,
+                 next:self);
+
+LinkedList LLNode =
+    (
+        val: "",
+        next: LLNode
+    );
+

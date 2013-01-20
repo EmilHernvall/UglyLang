@@ -101,6 +101,7 @@ List<Node> parse() :
         types.put("string", new StringType());
         types.put("bool", new BooleanType());
         types.put("void", new VoidType());
+        types.put("self", new SelfType());
     }
     (<S>)*
     (

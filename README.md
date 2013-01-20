@@ -164,8 +164,7 @@ return type must be the same for all the overloaded functions.
             (string)(int a) {
                 return intToStr(a);
             }
-            +
-            (string)(string a) {
+            + (string)(string a) {
                 return a;
             };
 
@@ -179,6 +178,8 @@ A type can be given a name using type aliases:
 
     type MyFunc (string)(string, int, int);
     type MyFuncArr MyFunc[];
+
+The self keyword can be used to declare recursive types.
 
 Control structures
 ------------------

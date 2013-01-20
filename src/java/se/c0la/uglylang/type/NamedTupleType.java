@@ -28,7 +28,12 @@ public class NamedTupleType implements Type
     public boolean isCompatible(Type other)
     {
         if (!(other instanceof NamedTupleType)) {
+            System.out.println("not named tuple");
             return false;
+        }
+
+        if (other == this) {
+            return true;
         }
 
         NamedTupleType otherTuple = (NamedTupleType)other;
@@ -39,7 +44,21 @@ public class NamedTupleType implements Type
                 return false;
             }
 
+            if ("self".equals(type.getName())) {
+                System.out.println("encountered self");
+                System.out.println("\tthis: " + this.getName());
+                System.out.println("\ttype: " + type.getName());
+                System.out.println("\totherType: " + otherType.getName());
+                type = this;
+            }
+            /*if ("self".equals(otherType.getName())) {
+                otherType = this;
+            }*/
+
             if (!type.isCompatible(otherType)) {
+                System.out.println("mismatch");
+                System.out.println("\ttype: " + type.getName());
+                System.out.println("\totherType: " + otherType.getName());
                 return false;
             }
         }

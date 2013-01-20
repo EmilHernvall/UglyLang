@@ -1,13 +1,12 @@
-type TreeKey string;
-type TreeValue string;
+type TreeKey comparable;
+type TreeValue comparable;
 
-/* Missing: Recursive type support */
 type TreeNode (key:TreeKey,
                value:TreeValue,
                left:self,
                right:self);
 
-type Tree (new: (self)()
+type Tree (new: (self)(),
            add: (void)(TreeKey, TreeValue),
            get: (TreeValue)(TreeKey),
            size: (int)());
@@ -22,29 +21,33 @@ TreeNode BSTTreeNode =
 
 Tree UnbalancedBST =
     (
-        /* Missing: copy() */
-        root: copy(BSTTreeNode),
+        /* TODO: copy */
+        root: copy BSTTreeNode,
 
         new: (Tree)() {
-            return copy(UnbalancedBST);
+            return copy UnbalancedBST;
         },
 
         add: (void)(TreeKey key, TreeValue value) {
 
             (void)(TreeNode,TreeKey,TreeValue) hiddenAdd =
                 (void)(TreeNode node, TreeKey key, TreeValue value) {
-                    /* Missing: Named tuple comparisons */
+                    /* TODO: Named tuple comparisons */
                     if (node == BSTTreeNode) {
                         node.key = key;
                         node.value = value;
-                        return;
+
+                        /* TODO: returning void not implemented */
+                        /*return;*/
                     }
 
                     if (key >= node.key) {
                         hiddenAdd(node.right, key, value);
-                    } else {
-                        hiddenAdd(node.left, key, value);
                     }
+                    /* TODO: else not implemented */
+                    /*else {
+                        hiddenAdd(node.left, key, value);
+                    }*/
                 };
 
             hiddenAdd(root, key, value);
@@ -60,11 +63,13 @@ Tree UnbalancedBST =
 
                     if (key < node.key) {
                         return hiddenGet(node.right, key, value);
-                    } else if (key > node.key) {
+                    }
+                    /* TODO: else if not implemented */
+                    /*else if (key > node.key) {
                         return hiddenGet(node.left, key, value);
                     } else {
                         return node;
-                    }
+                    }*/
                 };
 
             return hiddenGet(root, key);
@@ -85,7 +90,9 @@ Tree UnbalancedBST =
         }
     );
 
-Tree testTree = UnbalancedBST.new();
+/* TODO: derive_type not implemented */
+derive_type StringTree Tree with (TreeKey:string, TreeValue:string);
+StringTree testTree = copy UnbalancedBST;
 testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
 testTree.add("miki", "momen");
