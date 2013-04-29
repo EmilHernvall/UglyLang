@@ -1,0 +1,22 @@
+(void)(int, int) swap =
+    (void)(int fst, int snd) {
+        int tmp = snd;
+        snd = fst;
+        fst = tmp;
+        print("in swap");
+        print(intToStr(fst));
+        print(intToStr(snd));
+    };
+
+int a = 1;
+int b = 2;
+
+print("before swap");
+print(intToStr(a));
+print(intToStr(b));
+
+swap(a, b);
+
+print("after swap");
+print(intToStr(a));
+print(intToStr(b));

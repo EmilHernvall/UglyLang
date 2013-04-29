@@ -1,0 +1,16 @@
+type TestFunc (int)(int);
+type FactoryFunc (TestFunc)(int);
+
+FactoryFunc createFunc =
+    (TestFunc)(int b) {
+        return (int)(int a) {
+                return a +b;
+            };
+    };
+
+TestFunc func = createFunc(7);
+print(intToStr(func(5)));
+print(intToStr(func(9)));
+
+TestFunc func2 = createFunc(10);
+print(intToStr(func2(22)));

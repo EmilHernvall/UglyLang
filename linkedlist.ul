@@ -1,9 +1,34 @@
-type LinkedList (val:string,
-                 next:self);
+type LinkedList #Link(value:string, next:self), #Terminator;
 
-LinkedList LLNode =
+(void)(LinkedList, string) addToList =
+    (void)(LinkedList list, string v) {
+        list.next =
+            (
+                value: v,
+                next: #Terminator
+            );
+    };
+
+LinkedList myList =
     (
-        val: "",
-        next: LLNode
+        value: "foo",
+        next: (
+            value: "bar",
+            next: #Terminator
+        )
     );
 
+addToList(myList, "baz");
+
+LinkedList current = myList;
+loop {
+    match myList {
+        case #Link(n) {
+            print(myList.next);
+            current = myList.next;
+        }
+        case #Terminator {
+            break;
+        }
+    }
+}

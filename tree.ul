@@ -91,7 +91,7 @@ Tree UnbalancedBST =
     );
 
 /* TODO: derive_type not implemented */
-derive_type StringTree Tree with (TreeKey:string, TreeValue:string);
+derive_type StringTree Tree(TreeKey:string, TreeValue:string);
 StringTree testTree = copy UnbalancedBST;
 testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
