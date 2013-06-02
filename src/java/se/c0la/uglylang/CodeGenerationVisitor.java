@@ -198,6 +198,48 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void visit(UnpackStatement node)
+    {
+        Scope subScope = new Scope();
+        subScope.setParentScope(currentScope);
+        currentScope.addSubScope(subScope);
+
+        System.out.println("Entering unpack scope");
+
+        currentScope = subScope;
+
+        if (node.getDst() != null) {
+            CompoundType type = node.getType();
+            Type subType = type.getSubType(node.getSubType());
+            String dst = node.getDst();
+
+            Symbol sym = new Symbol(subType, dst);
+            //node.setSymbol(sym);
+            currentScope.addSymbol(sym);
+            currentScope.setTargetSymbol(sym);
+            System.out.println(subType.getName());
+
+        }
+
+        if (DEBUG) {
+            System.out.printf("%d %s\n", getCurrentAddr(), node.toString());
+        }
+    }
+
+
+    @Override
+    public void visit(EndUnpackStatement node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d %s\n", getCurrentAddr(), node.getLabel());
+        }
+
+        System.out.println("Leaving unpack scope");
+
+        currentScope = currentScope.getParentScope();
+    }
+
+    @Override
     public void visit(IfStatement node)
     {
         String label = "EndIf_" + getCurrentAddr();
@@ -429,7 +471,7 @@ public class CodeGenerationVisitor implements Visitor
     public void visit(AssignSubscriptNode node)
     {
         if (DEBUG) {
-            System.out.printf("%d Assigning to subscript", getCurrentAddr());
+            System.out.printf("%d Assigning to subscript\n", getCurrentAddr());
         }
 
         instructions.add(new NamedTupleSetInstruction(node.getField()));
@@ -683,6 +725,27 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         IntegerValue value = new IntegerValue(node.getValue());
+        instructions.add(new PushInstruction(value));
+    }
+
+    @Override
+    public void visit(TypeValue node)
+    {
+        Type type = null;
+        try {
+            type = node.inferType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (DEBUG) {
+            System.out.printf("%d TypeValue: type=%s name=%s\n",
+                    getCurrentAddr(),
+                    type.getName(),
+                    node.getName());
+        }
+
+        CompoundTypeValue value = new CompoundTypeValue(node.getType(), node.getName());
         instructions.add(new PushInstruction(value));
     }
 

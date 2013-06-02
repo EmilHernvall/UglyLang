@@ -1,8 +1,9 @@
 package se.c0la.uglylang.type;
 
 import java.util.Map;
+import java.util.Set;
 
-public class NamedTupleType implements Type
+public class NamedTupleType extends AbstractType
 {
     private Map<String, Type> parameters;
 
@@ -25,10 +26,9 @@ public class NamedTupleType implements Type
     }
 
     @Override
-    public boolean isCompatible(Type other)
+    public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
         if (!(other instanceof NamedTupleType)) {
-            System.out.println("not named tuple");
             return false;
         }
 
@@ -55,7 +55,7 @@ public class NamedTupleType implements Type
                 otherType = this;
             }*/
 
-            if (!type.isCompatible(otherType)) {
+            if (!type.isCompatible(otherType, seenTypes)) {
                 System.out.println("mismatch");
                 System.out.println("\ttype: " + type.getName());
                 System.out.println("\totherType: " + otherType.getName());
@@ -67,8 +67,10 @@ public class NamedTupleType implements Type
     }
 
     @Override
-    public String getName()
+    public String getName(Set<Type> seenTypes)
     {
+        seenTypes.add(this);
+
         StringBuilder buf = new StringBuilder();
         buf.append("(");
         String delim = "";
@@ -79,7 +81,11 @@ public class NamedTupleType implements Type
             buf.append(delim);
             buf.append(key);
             buf.append(":");
-            buf.append(param.getName());
+            if (param != null) {
+                buf.append(param.getName(seenTypes));
+            } else {
+                buf.append("N/A");
+            }
             delim = ",";
         }
         buf.append(")");

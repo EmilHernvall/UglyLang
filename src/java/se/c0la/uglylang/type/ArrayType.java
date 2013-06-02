@@ -1,8 +1,9 @@
 package se.c0la.uglylang.type;
 
 import java.util.List;
+import java.util.Set;
 
-public class ArrayType implements Type
+public class ArrayType extends AbstractType
 {
     private Type type;
 
@@ -14,7 +15,7 @@ public class ArrayType implements Type
     public Type getType() { return type; }
 
     @Override
-    public boolean isCompatible(Type other)
+    public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
         if (!(other instanceof ArrayType)) {
             return false;
@@ -25,9 +26,9 @@ public class ArrayType implements Type
     }
 
     @Override
-    public String getName()
+    public String getName(Set<Type> seenTypes)
     {
-        return type.getName() + "[]";
+        return type.getName(seenTypes) + "[]";
     }
 
     @Override

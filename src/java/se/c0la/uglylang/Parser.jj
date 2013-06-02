@@ -14,6 +14,7 @@ import se.c0la.uglylang.type.*;
 public class Parser
 {
     private Map<String, Type> types = null;
+    private Map<String, CompoundType> subTypeLookup = null;
 }
 PARSER_END(Parser)
 
@@ -31,6 +32,7 @@ SKIP :
 }
 
 TOKEN : { < #ident : ("-")? <nmstart> (<nmchar>)* > }
+TOKEN : { < #typename : "#" <nmstart> (<nmchar>)* > }
 TOKEN : { < #name : (<nmchar>)+ > }
 TOKEN : { < #nmstart : ["a"-"z","A"-"Z"] | "_" | <nonascii> | <escape> > }
 TOKEN : { < #nonascii : ["\u0080"-"\uD7FF","\uE000"-"\uFFFD"] > }
@@ -45,7 +47,11 @@ TOKEN : { < #nl : "\n" | "\r" "\n" | "\r" | "\u000C" > }
 TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
 TOKEN : { < #w : (<wc>)* > }
 
+TOKEN : { < UNPACK : "unpack" > }
+TOKEN : { < AS : "as" > }
 TOKEN : { < TYPEDECL : "type" > }
+TOKEN : { < TYPENAME : <typename> > }
+TOKEN : { < COMPOUNDTYPEDECL : "compund_type" > }
 TOKEN : { < SUBSCRIPT : "." > }
 TOKEN : { < AND : "and" > }
 TOKEN : { < OR : "or" > }
@@ -101,7 +107,8 @@ List<Node> parse() :
         types.put("string", new StringType());
         types.put("bool", new BooleanType());
         types.put("void", new VoidType());
-        types.put("self", new SelfType());
+
+        subTypeLookup = new HashMap<String, CompoundType>();
     }
     (<S>)*
     (
@@ -231,6 +238,82 @@ Type Type() :
     { return type; }
 }
 
+Node TypeDeclaration() :
+{
+    Token t ;
+    Type type ;
+    Node n, n2 ;
+}
+{
+    <TYPEDECL>
+    (<S>)*
+    t = <IDENT>
+    (<S>)*
+    type = Type()
+    <STMTBREAK>
+    (<S>)*
+    { types.put(t.image, type); }
+    { n = new TypeDeclNode(type, t.image); }
+    { return n; }
+}
+
+Node CompoundTypeDeclaration() :
+{
+    String name ;
+    Token t ;
+    Type type = new VoidType() ;
+    CompoundType compoundType ;
+    Node n, n2 ;
+    Map<String, Type> subTypes ;
+}
+{
+    {
+    subTypes = new HashMap<String, Type>();
+    }
+
+    <COMPOUNDTYPEDECL>
+    (<S>)*
+    t = <IDENT>
+    {
+    name = t.image;
+    compoundType = new CompoundType(name, subTypes);
+    types.put(name, compoundType);
+    }
+    (<S>)*
+
+    t = <TYPENAME>
+    (<S>)*
+    [ type = Type() ]
+    {
+    subTypes.put(t.image, type);
+    subTypeLookup.put(t.image, compoundType);
+    type = new VoidType();
+    }
+
+    (
+        <LISTSEP>
+        (<S>)*
+        t = <TYPENAME>
+        (<S>)*
+        [ type = Type() ]
+        {
+        if (subTypeLookup.containsKey(t.image)) {
+            throw new ParseException(t.image + " has already been declared.");
+        }
+        subTypeLookup.put(t.image, compoundType);
+        subTypes.put(t.image, type);
+        type = new VoidType();
+        }
+    )*
+
+    <STMTBREAK>
+    (<S>)*
+    {
+    n = new TypeDeclNode(compoundType, name);
+    return n;
+    }
+}
+
 Node Statement() :
 {
     Token t ;
@@ -238,23 +321,20 @@ Node Statement() :
     Expression expr, expr2 ;
     Variable var ;
     Declaration d ;
-    Type type ;
 }
 {
     (
         LOOKAHEAD( <TYPEDECL> )
-            <TYPEDECL>
-            (<S>)*
-            t = <IDENT>
-            (<S>)*
-            type = Type()
-            <STMTBREAK>
-            (<S>)*
-            { types.put(t.image, type); }
-            { n = new TypeDeclNode(type, t.image); }
+            n = TypeDeclaration()
+        |
+        LOOKAHEAD( <COMPOUNDTYPEDECL> )
+            n = CompoundTypeDeclaration()
         |
         LOOKAHEAD( <IFSTMT> )
             n = IfStatement()
+        |
+        LOOKAHEAD( <UNPACK> )
+            n = UnpackStatement()
         |
         LOOKAHEAD( <WHILESTMT> )
             n = WhileStatement()
@@ -320,6 +400,55 @@ Node Statement() :
     )
 
     { return n; }
+}
+
+Node UnpackStatement() :
+{
+    Token t ;
+    Variable src ;
+    String dst = null ;
+    Node n ;
+    String subType ;
+    List<Node> stmts;
+}
+{
+    { stmts = new ArrayList<Node>(); }
+    <UNPACK>
+    (<S>)*
+
+    t = <IDENT>
+    (<S>)*
+    { src = new Variable(t.image, false); }
+
+    <AS>
+    (<S>)*
+
+    t = <TYPENAME>
+    (<S>)*
+    { subType = t.image; }
+
+    [
+        t = <IDENT>
+        (<S>)*
+        { dst = t.image; }
+    ]
+
+    <LCLAUSE>
+    (<S>)*
+    (
+        n = Statement()
+        { stmts.add(n); }
+    )*
+    <RCLAUSE>
+    (<S>)*
+
+     {
+         CompoundType type = subTypeLookup.get(subType);
+         if (type == null) {
+            throw new ParseException(subType + " not found.");
+         }
+         return new UnpackStatement(src, dst, type, subType, stmts);
+     }
 }
 
 Node IfStatement() :
@@ -666,6 +795,16 @@ Expression Expression5() :
             t = <NUMBER>
             (<S>)*
             { n = new IntegerConstant(t.image); }
+        |
+            t = <TYPENAME>
+            (<S>)*
+            {
+            CompoundType type = subTypeLookup.get(t.image);
+            if (type == null) {
+                throw new ParseException(t.image + " not found.");
+            }
+            n = new TypeValue(type, t.image);
+            }
         |
             t = <STRING>
             (<S>)*

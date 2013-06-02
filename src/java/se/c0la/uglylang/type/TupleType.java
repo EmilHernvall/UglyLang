@@ -1,8 +1,9 @@
 package se.c0la.uglylang.type;
 
 import java.util.List;
+import java.util.Set;
 
-public class TupleType implements Type
+public class TupleType extends AbstractType
 {
     private List<Type> parameters;
 
@@ -14,7 +15,7 @@ public class TupleType implements Type
     public List<Type> getParameters() { return parameters; }
 
     @Override
-    public boolean isCompatible(Type other)
+    public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
         if (!(other instanceof TupleType)) {
             return false;
@@ -37,7 +38,7 @@ public class TupleType implements Type
     }
 
     @Override
-    public String getName()
+    public String getName(Set<Type> seenTypes)
     {
         StringBuilder buf = new StringBuilder();
         buf.append("(");

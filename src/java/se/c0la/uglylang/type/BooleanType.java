@@ -1,13 +1,15 @@
 package se.c0la.uglylang.type;
 
-public class BooleanType implements Type
+import java.util.Set;
+
+public class BooleanType extends AbstractType
 {
     @Override
-    public boolean isCompatible(Type other)
+    public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
         return other instanceof BooleanType;
     }
 
     @Override
-    public String getName() { return "boolean"; }
+    public String getName(Set<Type> seenTypes) { return "boolean"; }
 }

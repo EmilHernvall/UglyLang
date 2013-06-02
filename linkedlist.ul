@@ -1,4 +1,5 @@
-type LinkedList #Link(value:string, next:self), #Terminator;
+compund_type LinkedList #Link (value:string, next:LinkedList),
+                        #Terminator;
 
 (void)(LinkedList, string) addToList =
     (void)(LinkedList list, string v) {
@@ -21,14 +22,14 @@ LinkedList myList =
 addToList(myList, "baz");
 
 LinkedList current = myList;
-loop {
-    match myList {
-        case #Link(n) {
-            print(myList.next);
-            current = myList.next;
-        }
-        case #Terminator {
-            break;
-        }
+int loop = 1;
+while loop == 1 {
+    unpack myList as #Link n {
+        print(n.value);
+        current = n.next;
+    }
+
+    unpack myList as #Terminator {
+        loop = 1;
     }
 }

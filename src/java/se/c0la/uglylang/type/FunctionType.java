@@ -1,8 +1,9 @@
 package se.c0la.uglylang.type;
 
 import java.util.List;
+import java.util.Set;
 
-public class FunctionType implements Type
+public class FunctionType extends AbstractType
 {
     private Type returnType;
     private List<Type> parameters;
@@ -17,7 +18,7 @@ public class FunctionType implements Type
     public List<Type> getParameters() { return parameters; }
 
     @Override
-    public boolean isCompatible(Type other)
+    public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
         if (!(other instanceof FunctionType)) {
             return false;
@@ -45,7 +46,7 @@ public class FunctionType implements Type
     }
 
     @Override
-    public String getName()
+    public String getName(Set<Type> seenTypes)
     {
         StringBuilder buf = new StringBuilder();
         buf.append("(");

@@ -1,13 +1,15 @@
 package se.c0la.uglylang.type;
 
-public final class SelfType implements Type
+import java.util.Set;
+
+public final class SelfType extends AbstractType
 {
     @Override
-    public boolean isCompatible(Type other)
+    public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
         return other instanceof SelfType;
     }
 
     @Override
-    public String getName() { return "self"; }
+    public String getName(Set<Type> seenTypes) { return "self"; }
 }
