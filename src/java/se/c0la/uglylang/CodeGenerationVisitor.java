@@ -18,23 +18,17 @@ public class CodeGenerationVisitor implements Visitor
         private Symbol targetSymbol = null;
         private NamedTupleAllocateInstruction ntupAlloc = null;
 
-        private int namedTupleId = -1;
+        private int scopeId = -1;
 
-        public Scope()
-        {
-            this.subScopes = new ArrayList<Scope>();
-            this.symbols = new ArrayList<Symbol>();
-        }
-
-        public Scope(int namedTupleId)
+        public Scope(int scopeId)
         {
             this.subScopes = new ArrayList<Scope>();
             this.symbols = new ArrayList<Symbol>();
 
-            this.namedTupleId = namedTupleId;
+            this.scopeId = scopeId;
         }
 
-        public int getNamedTupleId() { return namedTupleId; }
+        public int getScopeId() { return scopeId; }
 
         public Scope getParentScope() { return parent; }
         public void setParentScope(Scope scope) { this.parent = scope; }
@@ -87,14 +81,14 @@ public class CodeGenerationVisitor implements Visitor
     private List<Instruction> instructions;
     private Map<String, Integer> labels;
 
-    private int namedTupleCounter = 0;
+    private int scopeCounter = 0;
 
     public CodeGenerationVisitor()
     {
         instructions = new ArrayList<Instruction>();
         labels = new HashMap<String, Integer>();
 
-        rootScope = new Scope();
+        rootScope = new Scope(scopeCounter++);
 
         currentScope = rootScope;
     }
@@ -162,7 +156,7 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(FunctionDecl node)
     {
-        Scope subScope = new Scope();
+        Scope subScope = new Scope(scopeCounter++);
         subScope.setParentScope(currentScope);
         currentScope.addSubScope(subScope);
 
@@ -233,7 +227,7 @@ public class CodeGenerationVisitor implements Visitor
     {
         String label = "EndUnpack_" + getCurrentAddr();
 
-        Scope subScope = new Scope();
+        Scope subScope = new Scope(scopeCounter++);
         subScope.setParentScope(currentScope);
         currentScope.addSubScope(subScope);
 
@@ -363,21 +357,19 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(NamedTupleNode node)
     {
-        namedTupleCounter++;
-
-        if (DEBUG) {
-            System.out.printf("%d NamedTuple %d\n", getCurrentAddr(),
-                    namedTupleCounter);
-        }
-
-        Scope subScope = new Scope(namedTupleCounter);
+        Scope subScope = new Scope(scopeCounter++);
         subScope.setParentScope(currentScope);
         currentScope.addSubScope(subScope);
 
         currentScope = subScope;
 
+        if (DEBUG) {
+            System.out.printf("%d NamedTuple %d\n", getCurrentAddr(),
+                    subScope.getScopeId());
+        }
+
         // Use a wildcard type as a placeholder
-        Symbol sym = new Symbol(new WildcardType(), "_ntuple" + namedTupleCounter);
+        Symbol sym = new Symbol(new WildcardType(), "_ntuple" + subScope.getScopeId());
         currentScope.addSymbol(sym);
 
         NamedTupleAllocateInstruction alloc = new NamedTupleAllocateInstruction(null);
@@ -403,7 +395,7 @@ public class CodeGenerationVisitor implements Visitor
 
         // SCOPESTACK GET
         Symbol ntupleSym =
-            currentScope.findSymbol("_ntuple" + currentScope.getNamedTupleId());
+            currentScope.findSymbol("_ntuple" + currentScope.getScopeId());
         instructions.add(new LoadInstruction(ntupleSym));
         instructions.add(new SwapInstruction());
         instructions.add(new NamedTupleSetInstruction(node.getField()));
@@ -418,7 +410,7 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         Symbol ntupleSym =
-            currentScope.findSymbol("_ntuple" + currentScope.getNamedTupleId());
+            currentScope.findSymbol("_ntuple" + currentScope.getScopeId());
         ntupleSym.setType(node.getType());
 
         currentScope.ntupAlloc.setType(node.getType());
@@ -486,7 +478,7 @@ public class CodeGenerationVisitor implements Visitor
             // SCOPESTACK GET
             Scope scope = currentScope.findSymbolScope(targetSym);
             Symbol ntupleSym =
-                currentScope.findSymbol("_ntuple" + scope.getNamedTupleId());
+                currentScope.findSymbol("_ntuple" + scope.getScopeId());
             instructions.add(new LoadInstruction(ntupleSym));
             instructions.add(new SwapInstruction());
             instructions.add(new NamedTupleSetInstruction(targetSym.getName()));
@@ -714,7 +706,7 @@ public class CodeGenerationVisitor implements Visitor
                 // SCOPESTACK GET
                 Scope scope = currentScope.findSymbolScope(sym);
                 Symbol ntupleSym =
-                    currentScope.findSymbol("_ntuple" + scope.getNamedTupleId());
+                    currentScope.findSymbol("_ntuple" + scope.getScopeId());
                 instructions.add(new LoadInstruction(ntupleSym));
                 instructions.add(new NamedTupleGetInstruction(sym.getName()));
             } else {
