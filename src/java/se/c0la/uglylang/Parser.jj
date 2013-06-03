@@ -51,7 +51,7 @@ TOKEN : { < UNPACK : "unpack" > }
 TOKEN : { < AS : "as" > }
 TOKEN : { < TYPEDECL : "type" > }
 TOKEN : { < TYPENAME : <typename> > }
-TOKEN : { < COMPOUNDTYPEDECL : "compund_type" > }
+TOKEN : { < COMPOUNDTYPEDECL : "compound_type" > }
 TOKEN : { < SUBSCRIPT : "." > }
 TOKEN : { < AND : "and" > }
 TOKEN : { < OR : "or" > }
@@ -146,30 +146,6 @@ Type FunctionType() :
     { return type; }
 }
 
-Type TupleType() :
-{
-    Type type, type2 ;
-    List<Type> params ;
-}
-{
-    { params = new ArrayList<Type>(); }
-    <LPAR>
-    [
-        type2 = Type()
-        { params.add(type2); }
-        (
-            ","
-            (<S>)*
-            type2 = Type()
-            { params.add(type2); }
-        )*
-    ]
-    <RPAR>
-    { type = new TupleType(params); }
-
-    { return type; }
-}
-
 Type NamedTupleType() :
 {
     Token t ;
@@ -211,9 +187,6 @@ Type Type() :
     (
         LOOKAHEAD ( FunctionType() )
         type = FunctionType()
-        |
-        LOOKAHEAD ( TupleType() )
-        type = TupleType()
         |
         LOOKAHEAD ( NamedTupleType() )
         type = NamedTupleType()
@@ -261,7 +234,7 @@ Node CompoundTypeDeclaration() :
 {
     String name ;
     Token t ;
-    Type type = new VoidType() ;
+    Type type = null ;
     CompoundType compoundType ;
     Node n, n2 ;
     Map<String, Type> subTypes ;
@@ -285,9 +258,12 @@ Node CompoundTypeDeclaration() :
     (<S>)*
     [ type = Type() ]
     {
+    if (type == null) {
+        type = new CompoundTerminalType(t.image);
+    }
     subTypes.put(t.image, type);
     subTypeLookup.put(t.image, compoundType);
-    type = new VoidType();
+    type = null;
     }
 
     (
@@ -297,12 +273,15 @@ Node CompoundTypeDeclaration() :
         (<S>)*
         [ type = Type() ]
         {
+        if (type == null) {
+            type = new CompoundTerminalType(t.image);
+        }
         if (subTypeLookup.containsKey(t.image)) {
             throw new ParseException(t.image + " has already been declared.");
         }
         subTypeLookup.put(t.image, compoundType);
         subTypes.put(t.image, type);
-        type = new VoidType();
+        type = null;
         }
     )*
 
@@ -513,37 +492,6 @@ Declaration Declaration() :
     (<S>)*
 
     { return d; }
-}
-
-TupleNode Tuple() :
-{
-    List<Expression> nodes ;
-    Expression n ;
-}
-{
-    { nodes = new ArrayList<Expression>(); }
-    <LPAR>
-    n = Expression()
-    { nodes.add(n); }
-    ","
-    (<S>)*
-
-    [
-    n = Expression()
-    { nodes.add(n); }
-    ]
-
-    (
-        ","
-        (<S>)*
-        n = Expression()
-        { nodes.add(n); }
-    )*
-
-    <RPAR>
-    (<S>)*
-
-    { return new TupleNode(nodes); }
 }
 
 NamedTupleNode NamedTuple() :
@@ -772,9 +720,6 @@ Expression Expression5() :
     (
         LOOKAHEAD( Function() )
             n = Function()
-        |
-        LOOKAHEAD( Tuple() )
-            n = Tuple()
         |
         LOOKAHEAD( NamedTuple() )
             n = NamedTuple()

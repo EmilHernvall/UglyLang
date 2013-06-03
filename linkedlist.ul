@@ -1,13 +1,33 @@
-compund_type LinkedList #Link (value:string, next:LinkedList),
-                        #Terminator;
+compound_type LinkedList #Link (value:string, next:LinkedList),
+                         #Terminator;
 
-(void)(LinkedList, string) addToList =
+(void)(LinkedList, string) appendList =
     (void)(LinkedList list, string v) {
-        list.next =
-            (
-                value: v,
-                next: #Terminator
-            );
+        unpack list as #Link current {
+            LinkedList after = current.next;
+
+            unpack after as #Terminator {
+                current.next =
+                    (
+                        value: v,
+                        next: #Terminator
+                    );
+            }
+
+            unpack after as #Link link {
+                appendList(link, v);
+            }
+        }
+    };
+
+(LinkedList)(LinkedList, string) prependList =
+    (LinkedList)(LinkedList list, string v) {
+        unpack list as #Link link {
+            return (
+                    value: v,
+                    next: link
+                );
+        }
     };
 
 LinkedList myList =
@@ -19,17 +39,19 @@ LinkedList myList =
         )
     );
 
-addToList(myList, "baz");
+appendList(myList, "baz");
+appendList(myList, "quux");
+appendList(myList, "what");
 
 LinkedList current = myList;
 int loop = 1;
 while loop == 1 {
-    unpack myList as #Link n {
+    unpack current as #Link n {
         print(n.value);
         current = n.next;
     }
 
-    unpack myList as #Terminator {
-        loop = 1;
+    unpack current as #Terminator {
+        loop = 0;
     }
 }

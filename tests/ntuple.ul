@@ -1,21 +1,37 @@
-type Greeter (name:string, setAge:(void)(int), greet:(void)());
+type Greeter (name: string,
+              setName: (void)(string),
+              setAge: (void)(int),
+              greet: (void)());
 
-Greeter greeter =
-    (
-        name:"Emil",
-        age: 2012-1986,
-        setAge:(void)(int v) {
-            age = v;
-        },
-        greet:(void)() {
-            print("Hello " + name + "! You are " + intToStr(age) + " this year.");
-        }
-    );
+(Greeter)(string,int) createGreeter =
+    (Greeter)(string name_, int age_) {
+        return (
+            name: name_,
+            age: age_,
+            setName:(void)(string v) {
+                name = v;
+            },
+            setAge:(void)(int v) {
+                age = v;
+            },
+            greet:(void)() {
+                print("Hello " + name + "! You are " + intToStr(age) + " this year.");
+            }
+        );
+    };
 
-/*print(intToStr(greeter.age));*/
-print(greeter.name);
-greeter.greet();
+Greeter emil = createGreeter("Emil", 26);
+emil.greet();
+print(emil.name);
+emil.setName("Emil Hernvall");
+emil.greet();
 
-greeter.name = "Torbjörn";
-greeter.setAge(52);
-greeter.greet();
+Greeter tobbe = createGreeter("Torbjörn", 52);
+emil.greet();
+tobbe.name = "foo";
+emil.greet();
+print(emil.name);
+/*tobbe.greet();
+tobbe.setName("Torbjörn Hernvall");
+tobbe.setAge(53);
+tobbe.greet();*/

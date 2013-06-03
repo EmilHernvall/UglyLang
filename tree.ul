@@ -1,75 +1,67 @@
-type TreeKey comparable;
-type TreeValue comparable;
+type TreeKey string;
+type TreeValue string;
 
-type TreeNode (key:TreeKey,
-               value:TreeValue,
-               left:self,
-               right:self);
+compound_type TreeNode #Node (key:TreeKey,
+                              value:TreeValue,
+                              left:TreeNode,
+                              right:TreeNode),
+                       #Terminator;
 
-type Tree (new: (self)(),
-           add: (void)(TreeKey, TreeValue),
-           get: (TreeValue)(TreeKey),
+type Tree (root: TreeNode,
+           add: (void)(string, string),
+           get: (string)(string),
            size: (int)());
 
-TreeNode BSTTreeNode =
+Tree testTree =
     (
-        key: "",
-        value: "",
-        left: BSTTreeNode,
-        right: BSTTreeNode
-    );
+        root: (
+            key: "",
+            value: "",
+            left: #Terminator,
+            right: #Terminator
+        ),
 
-Tree UnbalancedBST =
-    (
-        /* TODO: copy */
-        root: copy BSTTreeNode,
+        add: (void)(string key, string value) {
 
-        new: (Tree)() {
-            return copy UnbalancedBST;
-        },
-
-        add: (void)(TreeKey key, TreeValue value) {
-
-            (void)(TreeNode,TreeKey,TreeValue) hiddenAdd =
-                (void)(TreeNode node, TreeKey key, TreeValue value) {
-                    /* TODO: Named tuple comparisons */
-                    if (node == BSTTreeNode) {
-                        node.key = key;
-                        node.value = value;
-
-                        /* TODO: returning void not implemented */
-                        /*return;*/
+            (TreeNode)(TreeNode,string,string) hiddenAdd =
+                (TreeNode)(TreeNode node, string key, string value) {
+                    unpack node as #Terminator {
+                        return (
+                                key: key,
+                                value: value,
+                                left: #Terminator,
+                                right: #Terminator
+                            );
                     }
 
-                    if (key >= node.key) {
-                        hiddenAdd(node.right, key, value);
+                    unpack node as #Node n {
+                        if (key >= n.key) {
+                            n.right = hiddenAdd(n.right, key, value);
+                        }
+                        if (key < n.key) {
+                            n.left = hiddenAdd(n.left, key, value);
+                        }
                     }
-                    /* TODO: else not implemented */
-                    /*else {
-                        hiddenAdd(node.left, key, value);
-                    }*/
                 };
 
             hiddenAdd(root, key, value);
         },
 
-        get: (TreeValue)(TreeKey key) {
+        get: (string)(string key) {
 
-            (TreeValue)(TreeNode,TreeKey) hiddenGet =
-                (TreeValue)(TreeNode node, TreeKey key) {
-                    if (node == BSTTreeNode) {
-                        return node;
+            (string)(TreeNode,string) hiddenGet =
+                (string)(TreeNode node, string key) {
+                    unpack node as #Node n {
+                        if (key == n.key) {
+                            return n.value;
+                        }
+                        if (key < n.key) {
+                            return hiddenGet(n.right, key);
+                        }
+                        if (key > n.key) {
+                            return hiddenGet(n.left, key);
+                        }
                     }
-
-                    if (key < node.key) {
-                        return hiddenGet(node.right, key, value);
-                    }
-                    /* TODO: else if not implemented */
-                    /*else if (key > node.key) {
-                        return hiddenGet(node.left, key, value);
-                    } else {
-                        return node;
-                    }*/
                 };
 
             return hiddenGet(root, key);
@@ -79,11 +71,13 @@ Tree UnbalancedBST =
 
             (int)(TreeNode) hiddenSize =
                 (int)(TreeNode node) {
-                    if (node == BSTTreeNode) {
-                        return 1;
+                    unpack node as #Terminator {
+                        return 0;
                     }
 
-                    return 1 + hiddenSize(node.right) + hiddenSize(node.left);
+                    unpack node as #Node n {
+                        return 1 + hiddenSize(n.right) + hiddenSize(n.left);
+                    }
                 };
 
             return hiddenSize(root);
@@ -91,8 +85,6 @@ Tree UnbalancedBST =
     );
 
 /* TODO: derive_type not implemented */
-derive_type StringTree Tree(TreeKey:string, TreeValue:string);
-StringTree testTree = copy UnbalancedBST;
 testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
 testTree.add("miki", "momen");

@@ -7,17 +7,24 @@ import se.c0la.uglylang.Symbol;
 public class NamedTupleValue extends AbstractValue<NamedTupleType>
 {
     private NamedTupleType type;
-    private Map<String, Symbol> fieldMap;
+    private Map<String, Value> fieldMap;
 
-    public NamedTupleValue(NamedTupleType type, Map<String, Symbol> fields)
+    public NamedTupleValue(NamedTupleType type)
     {
         this.type = type;
-        this.fieldMap = fields;
+        this.fieldMap = new HashMap<String, Value>();
     }
 
-    public Symbol getField(String field)
+    public Set<String> getFields() { return fieldMap.keySet(); }
+
+    public Value getField(String field)
     {
         return fieldMap.get(field);
+    }
+
+    public void setField(String field, Value value)
+    {
+        fieldMap.put(field, value);
     }
 
     @Override

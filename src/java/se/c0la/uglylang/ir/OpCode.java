@@ -7,6 +7,8 @@ public enum OpCode
     LOAD,
     STORE,
     PUSH,
+    CAST,
+    SWAP,
 
     ARRAY_ALLOCATE,
     ARRAY_GET,
@@ -33,6 +35,7 @@ public enum OpCode
     OR,
     XOR,
 
+    ISTYPE,
     EQUAL,
     NOTEQUAL,
     GT,

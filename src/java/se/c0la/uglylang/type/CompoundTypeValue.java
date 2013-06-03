@@ -2,21 +2,19 @@ package se.c0la.uglylang.type;
 
 public class CompoundTypeValue extends AbstractValue
 {
-    private CompoundType type;
-    private String name;
+    private CompoundTerminalType type;
 
-    public CompoundTypeValue(CompoundType type, String name)
+    public CompoundTypeValue(CompoundTerminalType type)
     {
         this.type = type;
-        this.name = name;
     }
 
     @Override
-    public CompoundType getType() { return type; }
+    public CompoundTerminalType getType() { return type; }
 
     @Override
     public String toString()
     {
-        return this.name;
+        return type.getName();
     }
 }

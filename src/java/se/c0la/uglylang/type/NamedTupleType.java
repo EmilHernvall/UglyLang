@@ -14,6 +14,11 @@ public class NamedTupleType extends AbstractType
 
     public Map<String, Type> getParameters() { return parameters; }
 
+    public Type getField(String field)
+    {
+        return parameters.get(field);
+    }
+
     public boolean hasField(String name)
     {
         for (String field : parameters.keySet()) {

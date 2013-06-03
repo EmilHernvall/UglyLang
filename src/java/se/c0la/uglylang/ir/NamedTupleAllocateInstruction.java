@@ -9,17 +9,14 @@ import se.c0la.uglylang.type.NamedTupleType;
 public class NamedTupleAllocateInstruction implements Instruction
 {
     private NamedTupleType type;
-    private Map<String, Symbol> fields;
 
-    public NamedTupleAllocateInstruction(NamedTupleType type,
-            Map<String, Symbol> fields)
+    public NamedTupleAllocateInstruction(NamedTupleType type)
     {
         this.type = type;
-        this.fields = fields;
     }
 
+    public void setType(NamedTupleType t) { this.type = t; }
     public NamedTupleType getType() { return type; }
-    public Map<String, Symbol> getFieldsMap() { return fields; }
 
     @Override
     public OpCode getOpCode() { return OpCode.NTUPLE_ALLOCATE; }

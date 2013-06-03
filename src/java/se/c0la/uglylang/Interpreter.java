@@ -11,6 +11,7 @@ public class Interpreter
 {
     private int programCounter;
     private Stack<Value> stack;
+    private Stack<Value> scopeStack;
     private Map<Symbol, Value> values;
 
     public Interpreter()
@@ -32,10 +33,49 @@ public class Interpreter
         values.put(symbol, new NativeFunctionValue(func.getType(), func));
     }
 
+    public String dumpValue(Value value)
+    {
+        Set<Value> seen = new HashSet<Value>();
+        return dumpValue(value, seen);
+    }
+
+    public String dumpValue(Value value, Set<Value> seen)
+    {
+        StringBuilder buffer = new StringBuilder();
+        if (value instanceof NamedTupleValue) {
+            if (seen.contains(value)) {
+                return "** RECURSION **";
+            }
+
+            seen.add(value);
+
+            buffer.append("(");
+            NamedTupleValue ntuple = (NamedTupleValue)value;
+            String delim = "";
+            for (String field : ntuple.getFields()) {
+                buffer.append(delim);
+                buffer.append(field);
+                buffer.append(":");
+
+                Value sub = ntuple.getField(field);
+                buffer.append(dumpValue(sub, seen));
+
+                delim = ", ";
+            }
+            buffer.append(")");
+        }
+        else {
+            buffer.append(value.toString());
+        }
+
+        return buffer.toString();
+    }
+
     public void run(List<Instruction> instructions)
     {
         programCounter = 0;
         stack = new Stack<Value>();
+        scopeStack = new Stack<Value>();
         int instrCount = 0;
         while (true) {
             instrCount++;
@@ -145,6 +185,25 @@ public class Interpreter
                     continue;
                 }
 
+                case CAST:
+                {
+                    CastInstruction cast = (CastInstruction)inst;
+                    Value value = values.get(cast.getFrom());
+                    values.put(cast.getTo(), value);
+                    programCounter++;
+                    continue;
+                }
+
+                case SWAP:
+                {
+                    Value a = stack.pop();
+                    Value b = stack.pop();
+                    stack.push(a);
+                    stack.push(b);
+                    programCounter++;
+                    continue;
+                }
+
                 case JUMP:
                 {
                     JumpInstruction jump = (JumpInstruction)inst;
@@ -208,43 +267,12 @@ public class Interpreter
                     continue;
                 }
 
-                case TUPLE_ALLOCATE:
-                {
-                    TupleAllocateInstruction allocInst =
-                        (TupleAllocateInstruction)inst;
-                    Value value = new TupleValue(allocInst.getType());
-                    stack.push(value);
-                    programCounter++;
-                    continue;
-                }
-
-                case TUPLE_SET:
-                {
-                    IntegerValue index =  (IntegerValue)stack.pop();
-                    Value value =  stack.pop();
-                    TupleValue tuple = (TupleValue)stack.pop();
-                    tuple.setValue(index.getInt(), value);
-                    stack.push(tuple);
-                    programCounter++;
-                    continue;
-                }
-
-                case TUPLE_GET:
-                {
-                    IntegerValue index =  (IntegerValue)stack.pop();
-                    TupleValue tuple = (TupleValue)stack.pop();
-                    Value value = tuple.getValue(index.getInt());
-                    stack.push(value);
-                    programCounter++;
-                    continue;
-                }
-
                 case NTUPLE_ALLOCATE:
                 {
                     NamedTupleAllocateInstruction allocInst =
                         (NamedTupleAllocateInstruction)inst;
-                    Value value = new NamedTupleValue(allocInst.getType(),
-                            allocInst.getFieldsMap());
+
+                    Value value = new NamedTupleValue(allocInst.getType());
                     stack.push(value);
                     programCounter++;
                     continue;
@@ -256,8 +284,7 @@ public class Interpreter
                         (NamedTupleGetInstruction)inst;
 
                     NamedTupleValue tuple = (NamedTupleValue)stack.pop();
-                    Symbol sym = tuple.getField(getInst.getField());
-                    Value value = values.get(sym);
+                    Value value = tuple.getField(getInst.getField());
                     stack.push(value);
                     programCounter++;
                     continue;
@@ -270,8 +297,7 @@ public class Interpreter
 
                     Value value =  stack.pop();
                     NamedTupleValue tuple = (NamedTupleValue)stack.pop();
-                    Symbol sym = tuple.getField(getInst.getField());
-                    values.put(sym, value);
+                    tuple.setField(getInst.getField(), value);
                     programCounter++;
                     continue;
                 }
@@ -322,6 +348,19 @@ public class Interpreter
                     Value second = stack.pop();
                     Value newValue = first.modOp(second);
                     stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case ISTYPE:
+                {
+                    IsTypeInstruction istype = (IsTypeInstruction)inst;
+                    Value val = stack.pop();
+                    if (istype.getType().isCompatible(val.getType())) {
+                        stack.push(new BooleanValue(true));
+                    } else {
+                        stack.push(new BooleanValue(false));
+                    }
                     programCounter++;
                     continue;
                 }
@@ -434,6 +473,12 @@ public class Interpreter
         }
 
         {
+            NativeFunction func = new DumpFunction(interpreter);
+            Symbol sym = visitor.registerNativeFunction(func);
+            interpreter.registerNativeFunction(sym, func);
+        }
+
+        {
             NativeFunction func = new IntToStrFunction();
             Symbol sym = visitor.registerNativeFunction(func);
             interpreter.registerNativeFunction(sym, func);
@@ -457,6 +502,7 @@ public class Interpreter
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println();
+                System.out.println("pc: " + interpreter.programCounter);
                 interpreter.dumpStack();
             }
         }

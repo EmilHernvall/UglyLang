@@ -24,5 +24,8 @@ public class StringValue extends AbstractValue<StringType>
     public StringType getType() { return TYPE; }
 
     @Override
-    public String toString() { return "str " + str; }
+    public String toString() { return "\"" + str + "\""; }
+
+    @Override
+    public int hashCode() { return str.hashCode(); }
 }

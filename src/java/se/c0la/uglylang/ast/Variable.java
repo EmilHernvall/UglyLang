@@ -27,7 +27,7 @@ public class Variable implements Expression
     throws TypeException
     {
         if (symbol == null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException(name + " is missing symbol.");
         }
 
         return symbol.getType();

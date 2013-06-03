@@ -23,17 +23,15 @@ public class UnpackStatement implements Node, Block
 
     public CompoundType getType() { return type; }
     public String getSubType() { return subType; }
+    public Variable getSrc() { return src; }
     public String getDst() { return dst; }
 
     @Override
     public void accept(Visitor visitor)
     {
-        visitor.visit(this);
-
-        //src.accept(visitor);
-        //dst.accept(visitor);
-
         String endUnpackLbl = "EndUnpack_" + visitor.getCurrentAddr();
+
+        visitor.visit(this);
 
         for (Node node : stmts) {
             node.accept(visitor);
