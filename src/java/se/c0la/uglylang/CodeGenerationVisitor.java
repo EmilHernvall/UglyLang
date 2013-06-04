@@ -15,8 +15,7 @@ public class CodeGenerationVisitor implements Visitor
         private List<Scope> subScopes = null;
         private List<Symbol> symbols = null;
 
-        private Symbol targetSymbol = null;
-        private NamedTupleAllocateInstruction ntupAlloc = null;
+        private ObjectAllocateInstruction ntupAlloc = null;
 
         private int scopeId = -1;
 
@@ -68,9 +67,6 @@ public class CodeGenerationVisitor implements Visitor
 
             return null;
         }
-
-        public void setTargetSymbol(Symbol sym) { this.targetSymbol = sym; }
-        public Symbol getTargetSymbol() { return targetSymbol; }
     }
 
     private static boolean DEBUG = false;
@@ -82,6 +78,9 @@ public class CodeGenerationVisitor implements Visitor
     private Map<String, Integer> labels;
 
     private int scopeCounter = 0;
+    private int maxSeq = 0;
+
+    private Set<Flag> flags;
 
     public CodeGenerationVisitor()
     {
@@ -89,6 +88,8 @@ public class CodeGenerationVisitor implements Visitor
         labels = new HashMap<String, Integer>();
 
         rootScope = new Scope(scopeCounter++);
+
+        flags = EnumSet.noneOf(Flag.class);
 
         currentScope = rootScope;
     }
@@ -125,6 +126,18 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void addFlag(Flag flag)
+    {
+        flags.add(flag);
+    }
+
+    @Override
+    public void removeFlag(Flag flag)
+    {
+        flags.remove(flag);
+    }
+
+    @Override
     public int getCurrentAddr()
     {
         return instructions.size();
@@ -150,7 +163,6 @@ public class CodeGenerationVisitor implements Visitor
         Symbol sym = new Symbol(node.getType(), node.getName());
         node.setSymbol(sym);
         currentScope.addSymbol(sym);
-        currentScope.setTargetSymbol(sym);
     }
 
     @Override
@@ -178,14 +190,22 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d Return\n", getCurrentAddr());
         }
 
-        instructions.add(new ReturnInstruction(false));
+        if (flags.contains(Flag.OBJECT)) {
+            instructions.add(new ReturnCtxInstruction(false));
+        } else {
+            instructions.add(new ReturnInstruction(false));
+        }
     }
 
     @Override
     public void visit(EndFunctionStatement node)
     {
         // implicit return
-        instructions.add(new ReturnInstruction(true));
+        if (flags.contains(Flag.OBJECT)) {
+            instructions.add(new ReturnCtxInstruction(true));
+        } else {
+            instructions.add(new ReturnInstruction(true));
+        }
 
         if (DEBUG) {
             System.out.printf("%d EndFunctionStatement: funcAddr=%d\n",
@@ -236,10 +256,6 @@ public class CodeGenerationVisitor implements Visitor
         CompoundType type = node.getType();
         Type subType = type.getSubType(node.getSubType());
 
-        Variable srcVar = node.getSrc();
-        Symbol srcSym = currentScope.findSymbol(srcVar.getName());
-
-        instructions.add(new LoadInstruction(srcSym));
         instructions.add(new IsTypeInstruction(subType));
         instructions.add(new JumpOnFalseInstruction(label));
 
@@ -249,10 +265,10 @@ public class CodeGenerationVisitor implements Visitor
             }
 
             Symbol dstSym = new Symbol(subType, node.getDst());
-            //node.setSymbol(sym);
             currentScope.addSymbol(dstSym);
-            currentScope.setTargetSymbol(dstSym);
 
+            Variable srcVar = node.getSrc();
+            Symbol srcSym = currentScope.findSymbol(srcVar.getName());
             instructions.add(new CastInstruction(srcSym, dstSym));
         }
 
@@ -355,7 +371,7 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
-    public void visit(NamedTupleNode node)
+    public void visit(ObjectNode node)
     {
         Scope subScope = new Scope(scopeCounter++);
         subScope.setParentScope(currentScope);
@@ -364,27 +380,24 @@ public class CodeGenerationVisitor implements Visitor
         currentScope = subScope;
 
         if (DEBUG) {
-            System.out.printf("%d NamedTuple %d\n", getCurrentAddr(),
+            System.out.printf("%d Object %d\n", getCurrentAddr(),
                     subScope.getScopeId());
         }
 
-        // Use a wildcard type as a placeholder
-        Symbol sym = new Symbol(new WildcardType(), "_ntuple" + subScope.getScopeId());
-        currentScope.addSymbol(sym);
+        // store current value of object reg on stack
+        instructions.add(new LoadObjectRegInstruction());
 
-        NamedTupleAllocateInstruction alloc = new NamedTupleAllocateInstruction(null);
+        ObjectAllocateInstruction alloc = new ObjectAllocateInstruction(null);
         currentScope.ntupAlloc = alloc;
-
         instructions.add(alloc);
-        // SCOPESTACK PUSH
-        instructions.add(new StoreInstruction(sym));
+        instructions.add(new StoreObjectRegInstruction());
     }
 
     @Override
-    public void visit(NamedTupleSetNode node)
+    public void visit(ObjectSetNode node)
     {
         if (DEBUG) {
-            System.out.printf("%d NamedTupleSet: field=%s type=%s\n",
+            System.out.printf("%d ObjectSet: field=%s type=%s\n",
                     getCurrentAddr(), node.getField(), node.getType().getName());
         }
 
@@ -393,32 +406,31 @@ public class CodeGenerationVisitor implements Visitor
 
         //instructions.add(new StoreInstruction(sym));
 
-        // SCOPESTACK GET
-        Symbol ntupleSym =
-            currentScope.findSymbol("_ntuple" + currentScope.getScopeId());
-        instructions.add(new LoadInstruction(ntupleSym));
+        //Symbol objSym =
+        //    currentScope.findSymbol("_obj" + currentScope.getScopeId());
+        //instructions.add(new LoadInstruction(objSym));
+        instructions.add(new LoadObjectRegInstruction());
         instructions.add(new SwapInstruction());
-        instructions.add(new NamedTupleSetInstruction(node.getField()));
+        instructions.add(new ObjectSetInstruction(node.getField()));
     }
 
     @Override
-    public void visit(NamedTupleEndNode node)
+    public void visit(ObjectEndNode node)
     {
         if (DEBUG) {
-            System.out.printf("%d NamedTupleEnd: type=%s\n", getCurrentAddr(),
+            System.out.printf("%d ObjectEnd: type=%s\n", getCurrentAddr(),
                     node.getType().getName());
         }
-
-        Symbol ntupleSym =
-            currentScope.findSymbol("_ntuple" + currentScope.getScopeId());
-        ntupleSym.setType(node.getType());
 
         currentScope.ntupAlloc.setType(node.getType());
 
         currentScope = currentScope.getParentScope();
 
-        // SCOPESTACK POP
-        instructions.add(new LoadInstruction(ntupleSym));
+        instructions.add(new LoadObjectRegInstruction());
+        instructions.add(new SwapInstruction());
+
+        // restore previous value of object reg on stack
+        instructions.add(new StoreObjectRegInstruction());
     }
 
     @Override
@@ -429,15 +441,11 @@ public class CodeGenerationVisitor implements Visitor
                     node.getSize());
         }
 
-        ArrayType type;
-        try {
-            type = node.inferType();
-        } catch (TypeException e) {
-            throw new RuntimeException(e);
-        }
-
         instructions.add(new PushInstruction(new IntegerValue(node.getSize())));
-        instructions.add(new ArrayAllocateInstruction(type));
+
+        ArrayAllocateInstruction allocInst = new ArrayAllocateInstruction(null);
+        node.setAllocInst(allocInst);
+        instructions.add(allocInst);
     }
 
     @Override
@@ -453,11 +461,30 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void visit(ArrayEndNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d ArrayEnd\n", getCurrentAddr());
+        }
+
+        ArrayType type;
+        try {
+            ArrayNode arrayNode = node.getArrayNode();
+            type = arrayNode.inferType();
+        } catch (TypeException e) {
+            throw new RuntimeException(e);
+        }
+
+        ArrayAllocateInstruction allocInst = node.getAllocInst();
+        allocInst.setType(type);
+    }
+
+    @Override
     public void visit(AssignNode node)
     {
-        Type exprType;
+        /*Type exprType;
         try {
-            exprType = node.getExprType();
+            exprType = node.inferType();
         } catch (TypeException e) {
             throw new RuntimeException(e);
         }
@@ -474,19 +501,22 @@ public class CodeGenerationVisitor implements Visitor
                     targetSym.getType().getName() + " != " + exprType.getName());
         }
 
-        if (targetSym.isNamedTupleField()) {
-            // SCOPESTACK GET
+        if (targetSym.isObjectField()) {
             Scope scope = currentScope.findSymbolScope(targetSym);
-            Symbol ntupleSym =
-                currentScope.findSymbol("_ntuple" + scope.getScopeId());
-            instructions.add(new LoadInstruction(ntupleSym));
+            Symbol objSym =
+                currentScope.findSymbol("_obj" + scope.getScopeId());
+            instructions.add(new LoadInstruction(objSym));
             instructions.add(new SwapInstruction());
-            instructions.add(new NamedTupleSetInstruction(targetSym.getName()));
+            instructions.add(new ObjectSetInstruction(targetSym.getName()));
         } else {
             instructions.add(new StoreInstruction(targetSym));
+        }*/
+
+        if (DEBUG) {
+            System.out.printf("%d Assign\n", getCurrentAddr());
         }
 
-        currentScope.setTargetSymbol(null);
+        maxSeq = node.findMaxSeq();
     }
 
     @Override
@@ -499,7 +529,7 @@ public class CodeGenerationVisitor implements Visitor
             throw new RuntimeException(e);
         }
 
-        Symbol targetSym = currentScope.getTargetSymbol();
+        Symbol targetSym = node.getDeclaration().getSymbol();
         if (DEBUG) {
             System.out.printf("%d Assigning to decl %s to %s of type %s\n",
                     getCurrentAddr(), exprType.getName(),
@@ -512,35 +542,6 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         instructions.add(new StoreInstruction(targetSym));
-
-        currentScope.setTargetSymbol(null);
-    }
-
-    @Override
-    public void visit(AssignSubscriptNode node)
-    {
-        if (DEBUG) {
-            System.out.printf("%d Assigning to subscript\n", getCurrentAddr());
-        }
-
-        instructions.add(new NamedTupleSetInstruction(node.getField()));
-    }
-
-    @Override
-    public void visit(AssignIndexNode node)
-    {
-        Variable var = node.getVariable();
-        Symbol sym = currentScope.findSymbol(var.getName());
-        Type type = sym.getType();
-
-        if (DEBUG) {
-            System.out.printf("%d Assigning to index: type=%s\n",
-                    getCurrentAddr(), type.getName());
-        }
-
-        if (type instanceof ArrayType) {
-            instructions.add(new ArraySetInstruction());
-        }
     }
 
     @Override
@@ -694,21 +695,33 @@ public class CodeGenerationVisitor implements Visitor
         node.setSymbol(sym);
 
         if (DEBUG) {
-            System.out.printf("%d Variable: name=%s, type=%s nTupleFld=%s\n",
-                    getCurrentAddr(), node.getName(), sym.getType().getName(),
-                    sym.isNamedTupleField());
+            if (flags.contains(Flag.CALL)) {
+                System.out.printf("C ");
+            }
+            if (flags.contains(Flag.ASSIGN)) {
+                System.out.printf("A ");
+            }
+            System.out.printf("%d Variable: name=%s, seq=%d, type=%s, objFld=%s\n",
+                    getCurrentAddr(), node.getName(), node.getSeq(),
+                    sym.getType().getName(), sym.isObjectField());
         }
 
-        if (node.isAssignTarget()) {
-            currentScope.setTargetSymbol(sym);
+        if (flags.contains(Flag.ASSIGN) && node.getSeq() == maxSeq) {
+            if (sym.isObjectField()) {
+                instructions.add(new LoadObjectRegInstruction());
+                instructions.add(new SwapInstruction());
+                instructions.add(new ObjectSetInstruction(sym.getName()));
+            } else {
+                instructions.add(new StoreInstruction(sym));
+            }
         } else {
-            if (sym.isNamedTupleField()) {
-                // SCOPESTACK GET
-                Scope scope = currentScope.findSymbolScope(sym);
-                Symbol ntupleSym =
-                    currentScope.findSymbol("_ntuple" + scope.getScopeId());
-                instructions.add(new LoadInstruction(ntupleSym));
-                instructions.add(new NamedTupleGetInstruction(sym.getName()));
+            if (sym.isObjectField()) {
+                //Scope scope = currentScope.findSymbolScope(sym);
+                //Symbol objSym =
+                //    currentScope.findSymbol("_obj" + scope.getScopeId());
+                //instructions.add(new LoadInstruction(objSym));
+                instructions.add(new LoadObjectRegInstruction());
+                instructions.add(new ObjectGetInstruction(sym.getName()));
             } else {
                 instructions.add(new LoadInstruction(sym));
             }
@@ -718,7 +731,7 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(SubscriptNode node)
     {
-        NamedTupleType type = null;
+        ObjectType type = null;
         try {
             type = node.getType();
         } catch (TypeException e) {
@@ -731,11 +744,25 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         if (DEBUG) {
-            System.out.printf("%d Subscript %s\n", getCurrentAddr(),
-                    node.toString());
+            if (flags.contains(Flag.CALL)) {
+                System.out.printf("C ");
+            }
+            if (flags.contains(Flag.ASSIGN)) {
+                System.out.printf("A ");
+            }
+            System.out.printf("%d Subscript %s seq=%d\n", getCurrentAddr(),
+                    node.toString(), node.getSeq());
         }
 
-        instructions.add(new NamedTupleGetInstruction(node.getKey()));
+        if (flags.contains(Flag.ASSIGN) && node.getSeq() == maxSeq) {
+            instructions.add(new SwapInstruction());
+            instructions.add(new ObjectSetInstruction(node.getKey()));
+        } else if (flags.contains(Flag.CALL)) {
+            instructions.add(new DupInstruction());
+            instructions.add(new ObjectGetInstruction(node.getKey()));
+        } else {
+            instructions.add(new ObjectGetInstruction(node.getKey()));
+        }
     }
 
     @Override
@@ -749,14 +776,24 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         if (DEBUG) {
-            System.out.printf("%d Index: idx=%s type=%s\n", getCurrentAddr(),
-                    node.toString(), type.getName());
+            if (flags.contains(Flag.CALL)) {
+                System.out.printf("C ");
+            }
+            if (flags.contains(Flag.ASSIGN)) {
+                System.out.printf("A ");
+            }
+            System.out.printf("%d Index: idx=%s, seq=%d, type=%s\n", getCurrentAddr(),
+                    node.toString(), node.getSeq(), type.getName());
         }
 
-        if (type instanceof ArrayType) {
-            instructions.add(new ArrayGetInstruction());
+        if (!(type instanceof ArrayType)) {
+            throw new RuntimeException("Only arrays can be indexed.");
+        }
+
+        if (flags.contains(Flag.ASSIGN) && node.getSeq() == maxSeq) {
+            instructions.add(new ArraySetInstruction());
         } else {
-            throw new RuntimeException("Only arrays and tuples can be indexed.");
+            instructions.add(new ArrayGetInstruction());
         }
     }
 
@@ -815,6 +852,10 @@ public class CodeGenerationVisitor implements Visitor
                     type.getName());
         }
 
-        instructions.add(new CallInstruction());
+        if (node.isSubscriptCall()) {
+            instructions.add(new CallCtxInstruction());
+        } else {
+            instructions.add(new CallInstruction());
+        }
     }
 }

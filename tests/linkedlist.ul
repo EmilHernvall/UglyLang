@@ -43,6 +43,8 @@ appendList(myList, "baz");
 appendList(myList, "quux");
 appendList(myList, "what");
 
+myList = prependList(myList, "start");
+
 LinkedList current = myList;
 int loop = 1;
 while loop == 1 {

@@ -2,6 +2,15 @@ package se.c0la.uglylang.ast;
 
 public interface Visitor
 {
+    public enum Flag {
+        OBJECT,
+        ASSIGN,
+        CALL;
+    };
+
+    public void addFlag(Flag flag);
+    public void removeFlag(Flag flag);
+
     int getCurrentAddr();
 
     // language constructs
@@ -16,17 +25,16 @@ public interface Visitor
     void visit(EndUnpackStatement node);
     void visit(WhileStatement node);
     void visit(EndWhileStatement node);
-    void visit(NamedTupleNode node);
-    void visit(NamedTupleSetNode node);
-    void visit(NamedTupleEndNode node);
+    void visit(ObjectNode node);
+    void visit(ObjectSetNode node);
+    void visit(ObjectEndNode node);
     void visit(ArrayNode node);
     void visit(ArraySetNode node);
+    void visit(ArrayEndNode node);
 
     // assignment
     void visit(AssignNode node);
     void visit(AssignDeclarationNode node);
-    void visit(AssignSubscriptNode node);
-    void visit(AssignIndexNode node);
 
     // logic
     void visit(AndNode node);

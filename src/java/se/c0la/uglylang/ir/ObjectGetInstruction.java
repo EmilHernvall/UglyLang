@@ -2,11 +2,11 @@ package se.c0la.uglylang.ir;
 
 import se.c0la.uglylang.Symbol;
 
-public class NamedTupleSetInstruction implements Instruction
+public class ObjectGetInstruction implements Instruction
 {
     private String field;
 
-    public NamedTupleSetInstruction(String field)
+    public ObjectGetInstruction(String field)
     {
         this.field = field;
     }
@@ -14,7 +14,7 @@ public class NamedTupleSetInstruction implements Instruction
     public String getField() { return field; }
 
     @Override
-    public OpCode getOpCode() { return OpCode.NTUPLE_SET; }
+    public OpCode getOpCode() { return OpCode.OBJECT_GET; }
 
     @Override
     public String toString()

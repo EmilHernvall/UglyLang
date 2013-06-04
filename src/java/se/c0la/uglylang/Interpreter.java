@@ -14,6 +14,8 @@ public class Interpreter
     private Stack<Value> scopeStack;
     private Map<Symbol, Value> values;
 
+    private ObjectValue objectReg = ObjectValue.EMPTY;
+
     public Interpreter()
     {
         values = new HashMap<Symbol, Value>();
@@ -42,7 +44,7 @@ public class Interpreter
     public String dumpValue(Value value, Set<Value> seen)
     {
         StringBuilder buffer = new StringBuilder();
-        if (value instanceof NamedTupleValue) {
+        if (value instanceof ObjectValue) {
             if (seen.contains(value)) {
                 return "** RECURSION **";
             }
@@ -50,19 +52,38 @@ public class Interpreter
             seen.add(value);
 
             buffer.append("(");
-            NamedTupleValue ntuple = (NamedTupleValue)value;
+            ObjectValue obj = (ObjectValue)value;
             String delim = "";
-            for (String field : ntuple.getFields()) {
+            for (String field : obj.getFields()) {
                 buffer.append(delim);
                 buffer.append(field);
                 buffer.append(":");
 
-                Value sub = ntuple.getField(field);
+                Value sub = obj.getField(field);
                 buffer.append(dumpValue(sub, seen));
 
                 delim = ", ";
             }
             buffer.append(")");
+        }
+        else if (value instanceof ArrayValue) {
+            if (seen.contains(value)) {
+                return "** RECURSION **";
+            }
+
+            seen.add(value);
+
+            buffer.append("[");
+            ArrayValue arr = (ArrayValue)value;
+            String delim = "";
+            for (int i = 0; i < arr.getSize(); i++) {
+                Value sub = arr.get(i);
+                buffer.append(delim);
+                buffer.append(dumpValue(sub, seen));
+
+                delim = ", ";
+            }
+            buffer.append("]");
         }
         else {
             buffer.append(value.toString());
@@ -93,7 +114,6 @@ public class Interpreter
             switch (inst.getOpCode()) {
                 case CALL:
                 {
-                    CallInstruction call = (CallInstruction)inst;
                     int retAddr = programCounter+1;
 
                     Value value = stack.pop();
@@ -138,6 +158,34 @@ public class Interpreter
                     continue;
                 }
 
+                case CALL_CTX:
+                {
+                    int retAddr = programCounter+1;
+                    ObjectValue currentCtx = objectReg;
+
+                    FunctionValue func = (FunctionValue)stack.pop();
+                    objectReg = (ObjectValue)stack.pop();
+
+                    programCounter = func.getAddr();
+
+                    // put arguments in values map
+                    Map<String, Symbol> symbolMap = func.getSymbolMap();
+                    List<String> names = new ArrayList<String>(symbolMap.keySet());
+
+                    for (int i = names.size()-1; i >= 0; i--) {
+                        String name = names.get(i);
+                        Symbol sym = symbolMap.get(name);
+
+                        Value arg = stack.pop();
+                        values.put(sym, arg);
+                    }
+
+                    stack.push(new ReturnAddressValue(retAddr));
+                    stack.push(currentCtx);
+
+                    continue;
+                }
+
                 case RETURN:
                 {
                     ReturnInstruction load = (ReturnInstruction)inst;
@@ -146,6 +194,24 @@ public class Interpreter
                         retVal = stack.pop();
                     }
 
+                    ReturnAddressValue retAddr = (ReturnAddressValue)stack.pop();
+                    programCounter = retAddr.getAddr();
+
+                    if (!load.isVoidFunc()) {
+                        stack.push(retVal);
+                    }
+                    continue;
+                }
+
+                case RETURN_CTX:
+                {
+                    ReturnCtxInstruction load = (ReturnCtxInstruction)inst;
+                    Value retVal = null;
+                    if (!load.isVoidFunc()) {
+                        retVal = stack.pop();
+                    }
+
+                    objectReg = (ObjectValue)stack.pop();
                     ReturnAddressValue retAddr = (ReturnAddressValue)stack.pop();
                     programCounter = retAddr.getAddr();
 
@@ -168,11 +234,25 @@ public class Interpreter
                     continue;
                 }
 
+                case LOAD_OBJECTREG:
+                {
+                    stack.push(objectReg);
+                    programCounter++;
+                    continue;
+                }
+
                 case STORE:
                 {
                     StoreInstruction store = (StoreInstruction)inst;
                     Value value = stack.pop();
                     values.put(store.getSymbol(), value);
+                    programCounter++;
+                    continue;
+                }
+
+                case STORE_OBJECTREG:
+                {
+                    objectReg = (ObjectValue)stack.pop();
                     programCounter++;
                     continue;
                 }
@@ -200,6 +280,15 @@ public class Interpreter
                     Value b = stack.pop();
                     stack.push(a);
                     stack.push(b);
+                    programCounter++;
+                    continue;
+                }
+
+                case DUP:
+                {
+                    Value a = stack.pop();
+                    stack.push(a);
+                    stack.push(a);
                     programCounter++;
                     continue;
                 }
@@ -267,37 +356,37 @@ public class Interpreter
                     continue;
                 }
 
-                case NTUPLE_ALLOCATE:
+                case OBJECT_ALLOCATE:
                 {
-                    NamedTupleAllocateInstruction allocInst =
-                        (NamedTupleAllocateInstruction)inst;
+                    ObjectAllocateInstruction allocInst =
+                        (ObjectAllocateInstruction)inst;
 
-                    Value value = new NamedTupleValue(allocInst.getType());
+                    Value value = new ObjectValue(allocInst.getType());
                     stack.push(value);
                     programCounter++;
                     continue;
                 }
 
-                case NTUPLE_GET:
+                case OBJECT_GET:
                 {
-                    NamedTupleGetInstruction getInst =
-                        (NamedTupleGetInstruction)inst;
+                    ObjectGetInstruction getInst =
+                        (ObjectGetInstruction)inst;
 
-                    NamedTupleValue tuple = (NamedTupleValue)stack.pop();
-                    Value value = tuple.getField(getInst.getField());
+                    ObjectValue obj = (ObjectValue)stack.pop();
+                    Value value = obj.getField(getInst.getField());
                     stack.push(value);
                     programCounter++;
                     continue;
                 }
 
-                case NTUPLE_SET:
+                case OBJECT_SET:
                 {
-                    NamedTupleSetInstruction getInst =
-                        (NamedTupleSetInstruction)inst;
+                    ObjectSetInstruction getInst =
+                        (ObjectSetInstruction)inst;
 
                     Value value =  stack.pop();
-                    NamedTupleValue tuple = (NamedTupleValue)stack.pop();
-                    tuple.setField(getInst.getField(), value);
+                    ObjectValue obj = (ObjectValue)stack.pop();
+                    obj.setField(getInst.getField(), value);
                     programCounter++;
                     continue;
                 }

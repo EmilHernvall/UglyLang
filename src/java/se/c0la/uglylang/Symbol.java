@@ -24,7 +24,7 @@ public class Symbol
     public void setType(Type v) { this.type = v; }
     public Type getType() { return type; }
     public String getName() { return name; }
-    public boolean isNamedTupleField() { return nTupleFld; }
+    public boolean isObjectField() { return nTupleFld; }
 
     public Symbol copy()
     {

@@ -4,12 +4,15 @@ import java.util.*;
 
 import se.c0la.uglylang.Symbol;
 
-public class NamedTupleValue extends AbstractValue<NamedTupleType>
+public class ObjectValue extends AbstractValue<ObjectType>
 {
-    private NamedTupleType type;
-    private Map<String, Value> fieldMap;
+    public final static ObjectValue EMPTY = new ObjectValue(ObjectType.EMPTY);
 
-    public NamedTupleValue(NamedTupleType type)
+    private ObjectType type;
+    private Map<String, Value> fieldMap;
+    private boolean empty;
+
+    public ObjectValue(ObjectType type)
     {
         this.type = type;
         this.fieldMap = new HashMap<String, Value>();
@@ -28,11 +31,11 @@ public class NamedTupleValue extends AbstractValue<NamedTupleType>
     }
 
     @Override
-    public NamedTupleType getType() { return type; }
+    public ObjectType getType() { return type; }
 
     @Override
     public String toString()
     {
-        return "NamedTuple " + type.getName();
+        return "Object " + type.getName();
     }
 }

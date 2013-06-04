@@ -14,6 +14,7 @@ public class AssignDeclarationNode implements Node
         this.b = b;
     }
 
+    public Declaration getDeclaration() { return a; }
     public Type getExprType() throws TypeException { return b.inferType(); }
 
     @Override

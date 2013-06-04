@@ -1,35 +1,33 @@
 package se.c0la.uglylang.ast;
 
+import java.util.List;
+
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class AssignSubscriptNode implements Node
+public class ObjectSetNode implements Node
 {
-    private Variable a;
     private String field;
-    private Expression b;
+    private Type type;
 
-    public AssignSubscriptNode(Variable a, String field, Expression b)
+    public ObjectSetNode(String field, Type type)
     {
-        this.a = a;
-        this.b = b;
         this.field = field;
+        this.type = type;
     }
 
     public String getField() { return field; }
+    public Type getType() { return type; }
 
     @Override
     public void accept(Visitor visitor)
     {
-        a.accept(visitor);
-        b.accept(visitor);
-
         visitor.visit(this);
     }
 
     @Override
     public String toString()
     {
-        return a.toString() + "." + field + " = " + b.toString();
+        return "object set field=" + field;
     }
 }

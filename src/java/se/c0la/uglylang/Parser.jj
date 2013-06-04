@@ -146,7 +146,7 @@ Type FunctionType() :
     { return type; }
 }
 
-Type NamedTupleType() :
+Type ObjectType() :
 {
     Token t ;
     Type type, type2 ;
@@ -172,7 +172,7 @@ Type NamedTupleType() :
         )*
     ]
     <RPAR>
-    { type = new NamedTupleType(params); }
+    { type = new ObjectType(params); }
 
     { return type; }
 }
@@ -188,8 +188,8 @@ Type Type() :
         LOOKAHEAD ( FunctionType() )
         type = FunctionType()
         |
-        LOOKAHEAD ( NamedTupleType() )
-        type = NamedTupleType()
+        LOOKAHEAD ( ObjectType() )
+        type = ObjectType()
         |
         (
             t = <IDENT>
@@ -326,44 +326,6 @@ Node Statement() :
             (<S>)*
             { n = new ReturnStatement(expr); }
         |
-        LOOKAHEAD( <IDENT> (<S>)* <ASSIGN>)
-            t = <IDENT>
-            (<S>)*
-            { expr = new Variable(t.image, true); }
-            <ASSIGN>
-            (<S>)*
-            expr2 = Expression()
-            { n = new AssignNode(expr, expr2); }
-            <STMTBREAK>
-            (<S>)*
-        |
-        LOOKAHEAD( <IDENT> <SUBSCRIPT> <IDENT> (<S>)* <ASSIGN> )
-            t = <IDENT>
-            { var = new Variable(t.image, false); }
-            <SUBSCRIPT>
-            t = <IDENT>
-            (<S>)*
-            <ASSIGN>
-            (<S>)*
-            expr = Expression()
-            { n = new AssignSubscriptNode(var, t.image, expr); }
-            <STMTBREAK>
-            (<S>)*
-        |
-        LOOKAHEAD( <IDENT> <LBRACKET> Expression() <RBRACKET> (<S>)* <ASSIGN> )
-            t = <IDENT>
-            { var = new Variable(t.image, false); }
-            <LBRACKET>
-            expr = Expression()
-            <RBRACKET>
-            (<S>)*
-            <ASSIGN>
-            (<S>)*
-            expr2 = Expression()
-            { n = new AssignIndexNode(var, expr, expr2); }
-            <STMTBREAK>
-            (<S>)*
-        |
         LOOKAHEAD( Declaration() <ASSIGN> )
             d = Declaration()
             <ASSIGN>
@@ -397,7 +359,7 @@ Node UnpackStatement() :
 
     t = <IDENT>
     (<S>)*
-    { src = new Variable(t.image, false); }
+    { src = new Variable(t.image, 0); }
 
     <AS>
     (<S>)*
@@ -494,7 +456,7 @@ Declaration Declaration() :
     { return d; }
 }
 
-NamedTupleNode NamedTuple() :
+ObjectNode Object() :
 {
     Map<String, Expression> nodes ;
     Token t ;
@@ -521,7 +483,7 @@ NamedTupleNode NamedTuple() :
     <RPAR>
     (<S>)*
 
-    { return new NamedTupleNode(nodes); }
+    { return new ObjectNode(nodes); }
 }
 
 ArrayNode Array() :
@@ -596,20 +558,10 @@ Expression Expression() :
 {
     n = Expression2()
     (
-            <AND>
+            <ASSIGN>
             (<S>)*
             n2 = Expression2()
-            { n = new AndNode(n, n2); }
-        |
-            <OR>
-            (<S>)*
-            n2 = Expression2()
-            { n = new OrNode(n, n2); }
-        |
-            <XOR>
-            (<S>)*
-            n2 = Expression2()
-            { n = new XorNode(n, n2); }
+            { n = new AssignNode(n, n2); }
     )*
 
     { return n; }
@@ -623,35 +575,20 @@ Expression Expression2() :
 {
     n = Expression3()
     (
-            <EQ>
+            <AND>
             (<S>)*
             n2 = Expression3()
-            { n = new EqualNode(n, n2); }
+            { n = new AndNode(n, n2); }
         |
-            <NOTEQ>
+            <OR>
             (<S>)*
             n2 = Expression3()
-            { n = new NotEqualNode(n, n2); }
+            { n = new OrNode(n, n2); }
         |
-            <LT>
+            <XOR>
             (<S>)*
             n2 = Expression3()
-            { n = new LtNode(n, n2); }
-        |
-            <GT>
-            (<S>)*
-            n2 = Expression3()
-            { n = new GtNode(n, n2); }
-        |
-            <LTEQ>
-            (<S>)*
-            n2 = Expression3()
-            { n = new LtEqNode(n, n2); }
-        |
-            <GTEQ>
-            (<S>)*
-            n2 = Expression3()
-            { n = new GtEqNode(n, n2); }
+            { n = new XorNode(n, n2); }
     )*
 
     { return n; }
@@ -663,20 +600,38 @@ Expression Expression3() :
     Expression n, n2 ;
 }
 {
+    n = Expression4()
     (
-        n = Expression4()
-        (
-                <ADD>
-                (<S>)*
-                n2 = Expression4()
-                { n = new AddNode(n, n2); }
-            |
-                <SUB>
-                (<S>)*
-                n2 = Expression4()
-                { n = new SubNode(n, n2); }
-        )*
-    )
+            <EQ>
+            (<S>)*
+            n2 = Expression4()
+            { n = new EqualNode(n, n2); }
+        |
+            <NOTEQ>
+            (<S>)*
+            n2 = Expression4()
+            { n = new NotEqualNode(n, n2); }
+        |
+            <LT>
+            (<S>)*
+            n2 = Expression4()
+            { n = new LtNode(n, n2); }
+        |
+            <GT>
+            (<S>)*
+            n2 = Expression4()
+            { n = new GtNode(n, n2); }
+        |
+            <LTEQ>
+            (<S>)*
+            n2 = Expression4()
+            { n = new LtEqNode(n, n2); }
+        |
+            <GTEQ>
+            (<S>)*
+            n2 = Expression4()
+            { n = new GtEqNode(n, n2); }
+    )*
 
     { return n; }
 }
@@ -690,20 +645,15 @@ Expression Expression4() :
     (
         n = Expression5()
         (
-                <MUL>
+                <ADD>
                 (<S>)*
                 n2 = Expression5()
-                { n = new MulNode(n, n2); }
+                { n = new AddNode(n, n2); }
             |
-                <DIV>
+                <SUB>
                 (<S>)*
                 n2 = Expression5()
-                { n = new DivNode(n, n2); }
-            |
-                <MOD>
-                (<S>)*
-                n2 = Expression5()
-                { n = new ModNode(n, n2); }
+                { n = new SubNode(n, n2); }
         )*
     )
 
@@ -712,17 +662,47 @@ Expression Expression4() :
 
 Expression Expression5() :
 {
+    Token t ;
+    Expression n, n2 ;
+}
+{
+    (
+        n = Expression6()
+        (
+                <MUL>
+                (<S>)*
+                n2 = Expression6()
+                { n = new MulNode(n, n2); }
+            |
+                <DIV>
+                (<S>)*
+                n2 = Expression6()
+                { n = new DivNode(n, n2); }
+            |
+                <MOD>
+                (<S>)*
+                n2 = Expression6()
+                { n = new ModNode(n, n2); }
+        )*
+    )
+
+    { return n; }
+}
+
+Expression Expression6() :
+{
     Token t, t2 ;
     Expression n, n2 ;
     List<Expression> params ;
+    int seq = 0 ;
 }
 {
     (
         LOOKAHEAD( Function() )
             n = Function()
         |
-        LOOKAHEAD( NamedTuple() )
-            n = NamedTuple()
+        LOOKAHEAD( Object() )
+            n = Object()
         |
         LOOKAHEAD( Array() )
             n = Array()
@@ -735,7 +715,7 @@ Expression Expression5() :
         |
             t = <IDENT>
             (<S>)*
-            { n = new Variable(t.image, false); }
+            { n = new Variable(t.image, seq++); }
         |
             t = <NUMBER>
             (<S>)*
@@ -756,40 +736,42 @@ Expression Expression5() :
             { n = new StringConstant(t.image.substring(1, t.image.length()-1)); }
     )
 
-    [
-        <SUBSCRIPT>
-        t = <IDENT>
-        (<S>)*
-        { n = new SubscriptNode(n, t.image, false); }
-    ]
-
-    [
-        <LBRACKET>
-        n2 = Expression()
-        <RBRACKET>
-        (<S>)*
-        { n = new IndexNode(n, n2, false); }
-    ]
-
-    [
-        <LPAR>
-        (<S>)*
-        { params = new ArrayList<Expression>(); }
-
-        [
+    (
+        (
+            <SUBSCRIPT>
+            t = <IDENT>
+            (<S>)*
+            { n = new SubscriptNode(n, t.image, seq++); }
+        )
+        |
+        (
+            <LBRACKET>
             n2 = Expression()
-            { params.add(n2); }
-            (
-                <LISTSEP>
-                (<S>)*
+            <RBRACKET>
+            (<S>)*
+            { n = new IndexNode(n, n2, seq++); }
+        )
+        |
+        (
+            <LPAR>
+            (<S>)*
+            { params = new ArrayList<Expression>(); }
+
+            [
                 n2 = Expression()
                 { params.add(n2); }
-            )*
-        ]
-        <RPAR>
-        (<S>)*
-        { n = new FunctionCall(n, params); }
-    ]
+                (
+                    <LISTSEP>
+                    (<S>)*
+                    n2 = Expression()
+                    { params.add(n2); }
+                )*
+            ]
+            <RPAR>
+            (<S>)*
+            { n = new FunctionCall(n, params); }
+        )
+    )*
 
     { return n; }
 }

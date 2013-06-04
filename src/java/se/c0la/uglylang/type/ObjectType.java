@@ -1,13 +1,17 @@
 package se.c0la.uglylang.type;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 
-public class NamedTupleType extends AbstractType
+public class ObjectType extends AbstractType
 {
+    public final static ObjectType EMPTY =
+        new ObjectType(new HashMap<String, Type>());
+
     private Map<String, Type> parameters;
 
-    public NamedTupleType(Map<String, Type> parameters)
+    public ObjectType(Map<String, Type> parameters)
     {
         this.parameters = parameters;
     }
@@ -33,7 +37,7 @@ public class NamedTupleType extends AbstractType
     @Override
     public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
-        if (!(other instanceof NamedTupleType)) {
+        if (!(other instanceof ObjectType)) {
             return false;
         }
 
@@ -41,10 +45,10 @@ public class NamedTupleType extends AbstractType
             return true;
         }
 
-        NamedTupleType otherTuple = (NamedTupleType)other;
+        ObjectType otherObj = (ObjectType)other;
         for (String field : parameters.keySet()) {
             Type type = parameters.get(field);
-            Type otherType = otherTuple.parameters.get(field);
+            Type otherType = otherObj.parameters.get(field);
             if (otherType == null) {
                 return false;
             }

@@ -3,7 +3,7 @@ package se.c0la.uglylang.ast;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class AssignNode implements Node
+public class AssignNode implements Expression
 {
     private Expression a;
     private Expression b;
@@ -14,15 +14,45 @@ public class AssignNode implements Node
         this.b = b;
     }
 
-    public Type getExprType() throws TypeException { return b.inferType(); }
+    public int findMaxSeq()
+    {
+        if (a instanceof SubscriptNode) {
+            return ((SubscriptNode)a).getSeq();
+        }
+        else if (a instanceof IndexNode) {
+            return ((IndexNode)a).getSeq();
+        }
+        else if (a instanceof Variable) {
+            return ((Variable)a).getSeq();
+        }
+
+        throw new IllegalStateException("Assignments can only be variabesl, " +
+                "indexes and subscripts.");
+    }
+
+    public Type inferType()
+    throws TypeException
+    {
+        Type fst = a.inferType();
+        Type snd = b.inferType();
+        if (!fst.isCompatible(snd)) {
+            throw new TypeException("Invalid assignment: " +
+                fst.getName() + " != " + snd.getName());
+        }
+
+        return fst;
+    }
 
     @Override
     public void accept(Visitor visitor)
     {
-        a.accept(visitor);
         b.accept(visitor);
 
         visitor.visit(this);
+
+        visitor.addFlag(Visitor.Flag.ASSIGN);
+        a.accept(visitor);
+        visitor.removeFlag(Visitor.Flag.ASSIGN);
     }
 
     @Override

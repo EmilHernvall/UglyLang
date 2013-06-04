@@ -4,10 +4,10 @@ type Greeter (name: string,
               greet: (void)());
 
 (Greeter)(string,int) createGreeter =
-    (Greeter)(string name_, int age_) {
+    (Greeter)(string name, int age) {
         return (
-            name: name_,
-            age: age_,
+            name: name,
+            age: age,
             setName:(void)(string v) {
                 name = v;
             },
@@ -21,17 +21,18 @@ type Greeter (name: string,
     };
 
 Greeter emil = createGreeter("Emil", 26);
-emil.greet();
-print(emil.name);
-emil.setName("Emil Hernvall");
+emil.name = "Emil Hernvall";
+print("name: " + emil.name);
 emil.greet();
 
 Greeter tobbe = createGreeter("Torbjörn", 52);
-emil.greet();
-tobbe.name = "foo";
-emil.greet();
-print(emil.name);
-/*tobbe.greet();
-tobbe.setName("Torbjörn Hernvall");
-tobbe.setAge(53);
-tobbe.greet();*/
+tobbe.greet();
+
+Greeter[] greeters = [ emil, tobbe ];
+
+greeters[1].name = "Torbjörn Hernvall";
+greeters[0].greet();
+
+greeters[1].setName("Torbjörn Hernvall");
+greeters[1].greet();
+tobbe.greet();

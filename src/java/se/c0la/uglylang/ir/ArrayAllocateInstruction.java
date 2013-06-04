@@ -16,6 +16,7 @@ public class ArrayAllocateInstruction implements Instruction
     }
 
     public ArrayType getType() { return type; }
+    public void setType(ArrayType v) { this.type = v; }
 
     @Override
     public OpCode getOpCode() { return OpCode.ARRAY_ALLOCATE; }

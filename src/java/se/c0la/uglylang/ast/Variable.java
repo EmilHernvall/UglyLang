@@ -7,17 +7,17 @@ import se.c0la.uglylang.type.TypeException;
 public class Variable implements Expression
 {
     private String name = null;
-    private boolean assignTarget = false;
     private Symbol symbol = null;
+    private int seq;
 
-    public Variable(String name, boolean assignTarget)
+    public Variable(String name, int seq)
     {
         this.name = name;
-        this.assignTarget = assignTarget;
+        this.seq = seq;
     }
 
     public String getName() { return name; }
-    public boolean isAssignTarget() { return assignTarget; }
+    public int getSeq() { return seq; }
 
     public void setSymbol(Symbol sym) { this.symbol = sym; }
     public Symbol getSymbol() { return symbol; }

@@ -19,6 +19,11 @@ public class FunctionCall implements Expression
 
     public int getParamCount() { return params.size(); }
 
+    public boolean isSubscriptCall()
+    {
+        return var instanceof SubscriptNode;
+    }
+
     public FunctionType getFunctionType()
     throws TypeException
     {
@@ -49,8 +54,10 @@ public class FunctionCall implements Expression
             node.accept(visitor);
         }
 
+        visitor.addFlag(Visitor.Flag.CALL);
         var.accept(visitor);
         visitor.visit(this);
+        visitor.removeFlag(Visitor.Flag.CALL);
     }
 
     @Override

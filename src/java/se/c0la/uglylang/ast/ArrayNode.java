@@ -5,10 +5,12 @@ import java.util.List;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.ArrayType;
 import se.c0la.uglylang.type.TypeException;
+import se.c0la.uglylang.ir.ArrayAllocateInstruction;
 
 public class ArrayNode implements Expression
 {
     private List<Expression> values;
+    private ArrayAllocateInstruction inst;
 
     public ArrayNode(List<Expression> values)
     {
@@ -16,6 +18,8 @@ public class ArrayNode implements Expression
     }
 
     public int getSize() { return values.size(); }
+
+    public void setAllocInst(ArrayAllocateInstruction v) { this.inst = v; }
 
     @Override
     public ArrayType inferType()
@@ -50,6 +54,9 @@ public class ArrayNode implements Expression
             setNode.accept(visitor);
             i++;
         }
+
+        ArrayEndNode endNode = new ArrayEndNode(this, inst);
+        endNode.accept(visitor);
     }
 
     @Override

@@ -29,8 +29,9 @@ public class UnpackStatement implements Node, Block
     @Override
     public void accept(Visitor visitor)
     {
-        String endUnpackLbl = "EndUnpack_" + visitor.getCurrentAddr();
+        src.accept(visitor);
 
+        String endUnpackLbl = "EndUnpack_" + visitor.getCurrentAddr();
         visitor.visit(this);
 
         for (Node node : stmts) {

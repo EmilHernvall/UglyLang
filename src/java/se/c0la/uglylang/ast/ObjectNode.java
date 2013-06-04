@@ -4,20 +4,20 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 
 import se.c0la.uglylang.type.Type;
-import se.c0la.uglylang.type.NamedTupleType;
+import se.c0la.uglylang.type.ObjectType;
 import se.c0la.uglylang.type.TypeException;
 
-public class NamedTupleNode implements Expression
+public class ObjectNode implements Expression
 {
     private Map<String, Expression> values;
 
-    public NamedTupleNode(Map<String, Expression> values)
+    public ObjectNode(Map<String, Expression> values)
     {
         this.values = values;
     }
 
     @Override
-    public NamedTupleType inferType()
+    public ObjectType inferType()
     throws TypeException
     {
         Map<String, Type> parameters = new LinkedHashMap<String, Type>();
@@ -25,15 +25,16 @@ public class NamedTupleNode implements Expression
             parameters.put(entry.getKey(), entry.getValue().inferType());
         }
 
-        return new NamedTupleType(parameters);
+        return new ObjectType(parameters);
     }
 
     @Override
     public void accept(Visitor visitor)
     {
+        visitor.addFlag(Visitor.Flag.OBJECT);
         visitor.visit(this);
 
-        NamedTupleSetNode setNode = null;
+        ObjectSetNode setNode = null;
         for (Map.Entry<String, Expression> entry : values.entrySet()) {
             String field = entry.getKey();
             Expression expr = entry.getValue();
@@ -42,7 +43,7 @@ public class NamedTupleNode implements Expression
             try {
                 Type type = expr.inferType();
 
-                setNode = new NamedTupleSetNode(field, type);
+                setNode = new ObjectSetNode(field, type);
                 setNode.accept(visitor);
             } catch (TypeException e) {
                 throw new RuntimeException(e);
@@ -50,11 +51,12 @@ public class NamedTupleNode implements Expression
         }
 
         try {
-            NamedTupleEndNode endNode = new NamedTupleEndNode(inferType());
+            ObjectEndNode endNode = new ObjectEndNode(inferType());
             endNode.accept(visitor);
         } catch (TypeException e) {
             throw new RuntimeException(e);
         }
+        visitor.removeFlag(Visitor.Flag.OBJECT);
     }
 
     @Override

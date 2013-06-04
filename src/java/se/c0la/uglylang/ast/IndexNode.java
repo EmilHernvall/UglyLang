@@ -10,18 +10,18 @@ public class IndexNode implements Expression
 {
     private Expression var;
     private Expression index;
-    private boolean assignTarget;
+    private int seq;
 
-    public IndexNode(Expression var, Expression index, boolean assignTarget)
+    public IndexNode(Expression var, Expression index, int seq)
     {
         this.var = var;
         this.index = index;
-        this.assignTarget = assignTarget;
+        this.seq = seq;
     }
 
     public Expression getVariable() { return var; }
     public Expression getIndex() { return index; }
-    public boolean isAssignTarget() { return assignTarget; }
+    public int getSeq() { return seq; }
 
     @Override
     public Type inferType()

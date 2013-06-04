@@ -3,18 +3,18 @@ package se.c0la.uglylang.ast;
 import java.util.List;
 
 import se.c0la.uglylang.type.Type;
-import se.c0la.uglylang.type.NamedTupleType;
+import se.c0la.uglylang.type.ObjectType;
 
-public class NamedTupleEndNode implements Node
+public class ObjectEndNode implements Node
 {
-    private NamedTupleType type;
+    private ObjectType type;
 
-    public NamedTupleEndNode(NamedTupleType type)
+    public ObjectEndNode(ObjectType type)
     {
         this.type = type;
     }
 
-    public NamedTupleType getType() { return type; }
+    public ObjectType getType() { return type; }
 
     @Override
     public void accept(Visitor visitor)
@@ -25,6 +25,6 @@ public class NamedTupleEndNode implements Node
     @Override
     public String toString()
     {
-        return "namedtuple end";
+        return "object end";
     }
 }

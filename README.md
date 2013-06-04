@@ -4,34 +4,30 @@ UglyLang
 Toy programming language. Work in progress. Most of what's in this document is
 not yet implemented.
 
-Planned Features:
+Features:
 
  * Static typing
  * First-class functions
  * Prototype-based objects
    * No implementation inheritence
    * Interfaces using type system
- * Overloadable operators (unimplemented)
- * Overloadable functions (unimplemented)
 
 Built-in types:
 
- * func (alias when declaring, unimplemented)
  * string
  * int
- * fixed (for decimal, unimplemented)
  * boolean
  * array
- * tuples (haskell-like)
- * named tuples
+ * objects
 
 Statements:
 
  * declarations
  * if
  * while
- * each (unimplemented)
  * type
+ * compound_type
+ * unpack
 
 Operators
 ---------
@@ -73,6 +69,38 @@ Priority:
 
     ()
 
+Types
+------------
+
+A type can be given a name using type aliases:
+
+    type MyFunc (string)(string, int, int);
+    type MyFuncArr MyFunc[];
+
+You can also declare compound types:
+
+    compound_type LinkedList #Link (value:string, next:LinkedList),
+                             #Terminator;
+
+A compound type has multiple possible representations, which can be accessed
+using the the unpack statement:
+
+    LinkedList current = myList;
+    int loop = 1;
+    while loop == 1 {
+        unpack current as #Link n {
+            print(n.value);
+            current = n.next;
+        }
+
+        unpack current as #Terminator {
+            loop = 0;
+        }
+    }
+
+Unpack guarantees that the code in the scope will only be executed if the
+variable has the correct type.
+
 Arrays
 ------
 
@@ -97,30 +125,52 @@ Values can be set and retrieved using the subscript operator:
     arr[0] = 7;
     int foo = arr[0];
 
-Tuples and named tuples
------------------------
+Objects
+-------
 
-Tuples have a type signature which consists of a list of subtypes surrounded
-by paranthesis. They are declared and initialized like this:
+An object is defined like this:
 
-    (string, int, int) myTuple = ("foo", 7, 11);
-
-A named tuple is defined like this:
-
-    (name:string, age:int, height:int) myNamedTuple =
+    (name:string, age:int, height:int) myObj =
         (name:"emil", age:26, height:188);
 
-Not all keys of a named tuple has to be declared in the type signature, but all
-keys in the type signature has to be present in the instance of the tuple.
+Not all keys of an object has to be declared in the type signature, but all
+keys in the type signature has to be present in the instance of the object.
 
-Both tuples and named tuples are dereferences using the subscript operator:
+Objects are dereferenced using the subscript operator:
 
-    string val1 = myTuple[0];
     string val2 = myTuple.name;
 
-Note that tuples cannot be dynamically dereferenced since this would make it
-impossible to determine the type at compile time. This is however possible for
-arrays.
+Named tuples are used to construct objects. An object is a named tuple with
+fields containing functions. All other fields of the tuple can be accessed from
+within it. Externally only the keys specified in the type signature will be
+available. The named tuple type is thus the object interface.
+
+    type Greeter (name: string,
+                  setName: (void)(string),
+                  setAge: (void)(int),
+                  greet: (void)());
+
+    (Greeter)(string,int) createGreeter =
+        (Greeter)(string name_, int age_) {
+            return (
+                name: name,
+                age: age,
+                setName:(void)(string v) {
+                    name = v;
+                },
+                setAge:(void)(int v) {
+                    age = v;
+                },
+                greet:(void)() {
+                    print("Hello " + name + "! You are " +
+                          intToStr(age) + " this year.");
+                }
+            );
+        };
+
+    Greeter emil = createGreeter("Emil", 26);
+    emil.name = "Emil Hernvall";
+    emil.greet();
 
 Functions
 ---------
@@ -129,9 +179,7 @@ A function signature looks like this:
 
     (return-type)(param-type param-name, ...)
 
-Functions are always stored in a variable. When first declaring a function, the
-"func" type indicator can be used. In any other case the full signature has
-to be used.
+Functions are always stored in a variable.
 
 For example:
 
@@ -146,40 +194,13 @@ For example:
             return num*fastexp(num*num, (pow - 1)/2);
         };
 
-    func factorial =
+    (int)(int) factorial =
         (int)(int num) {
             if (num == 1) {
                 return num;
             }
             return num*factorial(num-1);
         };
-
-func is only a valid type when a function is first declared, and will be
-substituted for the full type.
-
-Overloading of functions can be achived by "adding" multiple functions. The
-return type must be the same for all the overloaded functions.
-
-    func testFunc =
-            (string)(int a) {
-                return intToStr(a);
-            }
-            + (string)(string a) {
-                return a;
-            };
-
-    string foo = testFunc(77);
-    string bar = testFunc("hello");
-
-Type aliases
-------------
-
-A type can be given a name using type aliases:
-
-    type MyFunc (string)(string, int, int);
-    type MyFuncArr MyFunc[];
-
-The self keyword can be used to declare recursive types.
 
 Control structures
 ------------------
@@ -188,10 +209,6 @@ If statements:
 
     if a == b {
         /* code */
-    } elif a == c {
-        /* code */
-    } else {
-        /* code */
     }
 
 While statements:
@@ -199,37 +216,3 @@ While statements:
     while a < len {
         /* code */
     }
-
-An each loop can be applied to name tuples defining the get:(type)(int) and
-size:(int)() methods.
-
-    int[] arr = [1,2,3];
-    each int a : arr {
-        /* code */
-    }
-
-Objects
--------
-
-Named tuples are used to construct objects. An object is a named tuple with
-fields containing functions. All other fields of the tuple can be accessed from
-within it. Externally only the keys specified in the type signature will be
-available. The named tuple type is thus the object interface.
-
-    type Greeter (name:string, new:(Greeter)(string), greet:(void)());
-
-    Greeter greeterImpl =
-        (
-            name: "",
-            new: (Greeter)(string name) {
-                 Greeter newGreeter = copy(self);
-                 newGreeter["name"] = name;
-            },
-            greet: (void)() {
-                print "Hello, " + name + "!";
-            }
-        );
-
-    Greeter myGreeter = greeterImpl.new();
-    myGreeter.name = "Emil";
-    myGreeter.greet();
