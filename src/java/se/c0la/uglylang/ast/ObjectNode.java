@@ -31,8 +31,8 @@ public class ObjectNode implements Expression
     @Override
     public void accept(Visitor visitor)
     {
-        visitor.addFlag(Visitor.Flag.OBJECT);
         visitor.visit(this);
+        visitor.addScopeFlag(Visitor.Flag.OBJECT);
 
         ObjectSetNode setNode = null;
         for (Map.Entry<String, Expression> entry : values.entrySet()) {
@@ -56,7 +56,7 @@ public class ObjectNode implements Expression
         } catch (TypeException e) {
             throw new RuntimeException(e);
         }
-        visitor.removeFlag(Visitor.Flag.OBJECT);
+        visitor.removeScopeFlag(Visitor.Flag.OBJECT);
     }
 
     @Override

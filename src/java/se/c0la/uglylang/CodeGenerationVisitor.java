@@ -19,12 +19,16 @@ public class CodeGenerationVisitor implements Visitor
 
         private int scopeId = -1;
 
+        private Set<Flag> flags;
+
         public Scope(int scopeId)
         {
             this.subScopes = new ArrayList<Scope>();
             this.symbols = new ArrayList<Symbol>();
 
             this.scopeId = scopeId;
+
+            flags = EnumSet.noneOf(Flag.class);
         }
 
         public int getScopeId() { return scopeId; }
@@ -132,9 +136,21 @@ public class CodeGenerationVisitor implements Visitor
     }
 
     @Override
+    public void addScopeFlag(Flag flag)
+    {
+        currentScope.flags.add(flag);
+    }
+
+    @Override
     public void removeFlag(Flag flag)
     {
         flags.remove(flag);
+    }
+
+    @Override
+    public void removeScopeFlag(Flag flag)
+    {
+        currentScope.flags.remove(flag);
     }
 
     @Override
@@ -190,7 +206,8 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d Return\n", getCurrentAddr());
         }
 
-        if (flags.contains(Flag.OBJECT)) {
+        Scope parentScope = currentScope.getParentScope();
+        if (parentScope.flags.contains(Flag.OBJECT)) {
             instructions.add(new ReturnCtxInstruction(false));
         } else {
             instructions.add(new ReturnInstruction(false));
@@ -201,7 +218,8 @@ public class CodeGenerationVisitor implements Visitor
     public void visit(EndFunctionStatement node)
     {
         // implicit return
-        if (flags.contains(Flag.OBJECT)) {
+        Scope parentScope = currentScope.getParentScope();
+        if (parentScope.flags.contains(Flag.OBJECT)) {
             instructions.add(new ReturnCtxInstruction(true));
         } else {
             instructions.add(new ReturnInstruction(true));

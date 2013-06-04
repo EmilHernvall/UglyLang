@@ -9,7 +9,9 @@ public interface Visitor
     };
 
     public void addFlag(Flag flag);
+    public void addScopeFlag(Flag flag);
     public void removeFlag(Flag flag);
+    public void removeScopeFlag(Flag flag);
 
     int getCurrentAddr();
 

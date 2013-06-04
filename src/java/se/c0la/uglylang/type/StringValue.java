@@ -21,6 +21,27 @@ public class StringValue extends AbstractValue<StringType>
     }
 
     @Override
+    public Value equalOp(Value b)
+    {
+        StringValue val = (StringValue)b;
+        return new BooleanValue(str.equals(val.str));
+    }
+
+    @Override
+    public Value gtEqOp(Value b)
+    {
+        StringValue val = (StringValue)b;
+        return new BooleanValue(str.compareTo(val.str) >= 0);
+    }
+
+    @Override
+    public Value ltOp(Value b)
+    {
+        StringValue val = (StringValue)b;
+        return new BooleanValue(str.compareTo(val.str) < 0);
+    }
+
+    @Override
     public StringType getType() { return TYPE; }
 
     @Override

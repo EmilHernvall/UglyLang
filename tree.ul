@@ -8,23 +8,20 @@ compound_type TreeNode #Node (key:TreeKey,
                        #Terminator;
 
 type Tree (root: TreeNode,
-           add: (void)(string, string),
-           get: (string)(string),
+           add: (void)(TreeKey, TreeValue),
+           get: (string)(TreeKey),
            size: (int)());
+type TreeConstructor (Tree)();
 
-Tree testTree =
-    (
-        root: (
-            key: "",
-            value: "",
-            left: #Terminator,
-            right: #Terminator
-        ),
+TreeConstructor createTree =
+(Tree)() {
+    return (
+        root: #Terminator,
 
-        add: (void)(string key, string value) {
+        add: (void)(TreeKey key, TreeValue value) {
 
             (TreeNode)(TreeNode,string,string) hiddenAdd =
-                (TreeNode)(TreeNode node, string key, string value) {
+                (TreeNode)(TreeNode node, TreeKey key, TreeValue value) {
                     unpack node as #Terminator {
                         return (
                                 key: key,
@@ -44,13 +41,13 @@ Tree testTree =
                     }
                 };
 
-            hiddenAdd(root, key, value);
+            root = hiddenAdd(root, key, value);
         },
 
-        get: (string)(string key) {
+        get: (TreeValue)(TreeKey key) {
 
             (string)(TreeNode,string) hiddenGet =
-                (string)(TreeNode node, string key) {
+                (string)(TreeNode node, TreeKey key) {
                     unpack node as #Node n {
                         if (key == n.key) {
                             return n.value;
@@ -83,8 +80,9 @@ Tree testTree =
             return hiddenSize(root);
         }
     );
+};
 
-/* TODO: derive_type not implemented */
+Tree testTree = createTree();
 testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
 testTree.add("miki", "momen");
