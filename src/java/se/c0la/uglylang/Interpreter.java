@@ -345,6 +345,23 @@ public class Interpreter
                     continue;
                 }
 
+                case ARRAY_SET2:
+                {
+                    try {
+                        IntegerValue index = (IntegerValue)stack.pop();
+                        ArrayValue arr = (ArrayValue)stack.pop();
+                        Value value = stack.pop();
+
+                        arr.set(index.getInt(), value);
+
+                        programCounter++;
+                    }
+                    catch (ClassCastException e) {
+                        throw new RuntimeException(e);
+                    }
+                    continue;
+                }
+
                 case ARRAY_GET:
                 {
                     IntegerValue index = (IntegerValue)stack.pop();

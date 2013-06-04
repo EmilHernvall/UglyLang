@@ -18,6 +18,7 @@ public enum OpCode
     ARRAY_ALLOCATE,
     ARRAY_GET,
     ARRAY_SET,
+    ARRAY_SET2,
 
     OBJECT_ALLOCATE,
     OBJECT_GET,

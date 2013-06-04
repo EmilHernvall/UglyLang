@@ -791,7 +791,7 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         if (flags.contains(Flag.ASSIGN) && node.getSeq() == maxSeq) {
-            instructions.add(new ArraySetInstruction());
+            instructions.add(new ArraySetInstruction2());
         } else {
             instructions.add(new ArrayGetInstruction());
         }
