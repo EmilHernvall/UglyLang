@@ -1,6 +1,9 @@
 type TreeKey string;
 type TreeValue string;
 
+compound_type TreeLookup #Valid TreeValue,
+                         #NotFound;
+
 compound_type TreeNode #Node (key:TreeKey,
                               value:TreeValue,
                               left:TreeNode,
@@ -9,7 +12,7 @@ compound_type TreeNode #Node (key:TreeKey,
 
 type Tree (root: TreeNode,
            add: (void)(TreeKey, TreeValue),
-           get: (string)(TreeKey),
+           get: (TreeLookup)(TreeKey),
            size: (int)());
 type TreeConstructor (Tree)();
 
@@ -50,10 +53,10 @@ TreeConstructor createTree =
             root = hiddenAdd(root, key, value);
         },
 
-        get: (TreeValue)(TreeKey key) {
+        get: (TreeLookup)(TreeKey key) {
 
-            (string)(TreeNode,string) hiddenGet =
-            (string)(TreeNode node, TreeKey key) {
+            (TreeLookup)(TreeNode,string) hiddenGet =
+            (TreeLookup)(TreeNode node, TreeKey key) {
                 unpack node as #Node n {
                     if (key > n.key) {
                         return hiddenGet(n.right, key);
@@ -65,7 +68,7 @@ TreeConstructor createTree =
                 }
 
                 unpack node as #Terminator {
-                    return "N/A";
+                    return #NotFound;
                 }
             };
 
@@ -93,12 +96,26 @@ TreeConstructor createTree =
 };
 
 Tree testTree = createTree();
+testTree.add("charlotta", "bengtsgård");
 testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
 testTree.add("miki", "momen");
+testTree.add("hannes", "hernvall");
+testTree.add("erik", "ödmark");
+testTree.add("torbjörn", "hernvall");
 
 dump(testTree.root);
 
 print("size: " + intToStr(testTree.size()));
-print(testTree.get("emil"));
-print(testTree.get("miki"));
+TreeLookup result = testTree.get("charlotta");
+unpack result as #Valid v {
+    print(v);
+}
+
+TreeLookup result2 = testTree.get("felicia");
+unpack result2 as #Valid v {
+    print(v);
+}
+unpack result2 as #NotFound {
+    print("Not Found");
+}

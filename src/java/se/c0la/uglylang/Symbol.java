@@ -30,4 +30,18 @@ public class Symbol
     {
         return new Symbol(type, name);
     }
+
+    @Override
+    public boolean equals(Object b)
+    {
+        Symbol sym = (Symbol)b;
+
+        return type.equals(sym.type) && name.equals(sym.name);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return name.hashCode();
+    }
 }

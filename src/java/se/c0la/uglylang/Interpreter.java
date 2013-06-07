@@ -9,16 +9,59 @@ import se.c0la.uglylang.nativefunc.*;
 
 public class Interpreter
 {
+    private static class Scope
+    {
+        private Scope parent;
+        private Map<Symbol, Value> values;
+
+        public Scope(Scope parent)
+        {
+            this.parent = parent;
+            this.values = new HashMap<Symbol, Value>();
+        }
+
+        public int getHeight()
+        {
+            if (parent == null) {
+                return 1;
+            }
+
+            return 1 + parent.getHeight();
+        }
+
+        public Scope getParentScope()
+        {
+            return parent;
+        }
+
+        public void set(Symbol sym, Value val)
+        {
+            values.put(sym, val);
+        }
+
+        public Value get(Symbol sym)
+        {
+            if (!values.containsKey(sym)) {
+                if (parent != null) {
+                    return parent.get(sym);
+                }
+
+                return null;
+            }
+
+            return values.get(sym);
+        }
+    }
+
     private int programCounter;
     private Stack<Value> stack;
-    private Stack<Value> scopeStack;
-    private Map<Symbol, Value> values;
+    private Scope scope;
 
     private ObjectValue objectReg = ObjectValue.EMPTY;
 
     public Interpreter()
     {
-        values = new HashMap<Symbol, Value>();
+        scope = new Scope(null);
     }
 
     public void dumpStack()
@@ -30,9 +73,25 @@ public class Interpreter
         System.out.println();
     }
 
+    public void dumpScope()
+    {
+        System.out.println("Dumping scope " + scope.getHeight() + ":");
+        for (Map.Entry<Symbol, Value> entry : scope.values.entrySet()) {
+            Symbol sym = entry.getKey();
+            Value val = entry.getValue();
+            System.out.println(sym.getName() + ": " + dumpValue(val));
+        }
+        System.out.println();
+    }
+
     public void registerNativeFunction(Symbol symbol, NativeFunction func)
     {
-        values.put(symbol, new NativeFunctionValue(func.getType(), func));
+        scope.set(symbol, new NativeFunctionValue(func.getType(), func));
+    }
+
+    public String dumpObjectReg()
+    {
+        return dumpValue(objectReg);
     }
 
     public String dumpValue(Value value)
@@ -96,7 +155,6 @@ public class Interpreter
     {
         programCounter = 0;
         stack = new Stack<Value>();
-        scopeStack = new Stack<Value>();
         int instrCount = 0;
         while (true) {
             instrCount++;
@@ -119,6 +177,7 @@ public class Interpreter
                     Value value = stack.pop();
 
                     if (value instanceof FunctionValue) {
+                        scope = new Scope(scope);
                         FunctionValue func = (FunctionValue)value;
                         programCounter = func.getAddr();
 
@@ -131,7 +190,7 @@ public class Interpreter
                             Symbol sym = symbolMap.get(name);
 
                             Value arg = stack.pop();
-                            values.put(sym, arg);
+                            scope.set(sym, arg);
                         }
 
                         stack.push(new ReturnAddressValue(retAddr));
@@ -168,6 +227,8 @@ public class Interpreter
 
                     programCounter = func.getAddr();
 
+                    scope = new Scope(scope);
+
                     // put arguments in values map
                     Map<String, Symbol> symbolMap = func.getSymbolMap();
                     List<String> names = new ArrayList<String>(symbolMap.keySet());
@@ -177,7 +238,7 @@ public class Interpreter
                         Symbol sym = symbolMap.get(name);
 
                         Value arg = stack.pop();
-                        values.put(sym, arg);
+                        scope.set(sym, arg);
                     }
 
                     stack.push(new ReturnAddressValue(retAddr));
@@ -200,6 +261,8 @@ public class Interpreter
                     if (!load.isVoidFunc()) {
                         stack.push(retVal);
                     }
+
+                    scope = scope.getParentScope();
                     continue;
                 }
 
@@ -218,13 +281,15 @@ public class Interpreter
                     if (!load.isVoidFunc()) {
                         stack.push(retVal);
                     }
+
+                    scope = scope.getParentScope();
                     continue;
                 }
 
                 case LOAD:
                 {
                     LoadInstruction load = (LoadInstruction)inst;
-                    Value value = values.get(load.getSymbol());
+                    Value value = scope.get(load.getSymbol());
                     if (value == null) {
                         throw new RuntimeException(load.getSymbol().getName() +
                                 " is not defined.");
@@ -245,7 +310,7 @@ public class Interpreter
                 {
                     StoreInstruction store = (StoreInstruction)inst;
                     Value value = stack.pop();
-                    values.put(store.getSymbol(), value);
+                    scope.set(store.getSymbol(), value);
                     programCounter++;
                     continue;
                 }
@@ -268,8 +333,8 @@ public class Interpreter
                 case CAST:
                 {
                     CastInstruction cast = (CastInstruction)inst;
-                    Value value = values.get(cast.getFrom());
-                    values.put(cast.getTo(), value);
+                    Value value = scope.get(cast.getFrom());
+                    scope.set(cast.getTo(), value);
                     programCounter++;
                     continue;
                 }
@@ -586,6 +651,18 @@ public class Interpreter
 
         {
             NativeFunction func = new DumpStackFunction(interpreter);
+            Symbol sym = visitor.registerNativeFunction(func);
+            interpreter.registerNativeFunction(sym, func);
+        }
+
+        {
+            NativeFunction func = new DumpObjectRegFunction(interpreter);
+            Symbol sym = visitor.registerNativeFunction(func);
+            interpreter.registerNativeFunction(sym, func);
+        }
+
+        {
+            NativeFunction func = new DumpScopeFunction(interpreter);
             Symbol sym = visitor.registerNativeFunction(func);
             interpreter.registerNativeFunction(sym, func);
         }
