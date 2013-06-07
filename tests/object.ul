@@ -15,7 +15,7 @@ type Greeter (name: string,
             age = v;
         },
         greet:(void)() {
-            print("Hello " + name + "! You are " + intToStr(age) + " this year.");
+            print("Hello " + name + "! You are " + age.str + " this year.");
         }
     );
 };

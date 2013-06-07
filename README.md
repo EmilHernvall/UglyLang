@@ -136,22 +136,22 @@ are accessible from within the functions.
                   greet: (void)());
 
     (Greeter)(string,int) createGreeter =
-        (Greeter)(string name_, int age_) {
-            return (
-                name: name,
-                age: age,
-                setName:(void)(string v) {
-                    name = v;
-                },
-                setAge:(void)(int v) {
-                    age = v;
-                },
-                greet:(void)() {
-                    print("Hello " + name + "! You are " +
-                          intToStr(age) + " this year.");
-                }
-            );
-        };
+    (Greeter)(string name, int age) {
+        return (
+            name: name,
+            age: age,
+            setName:(void)(string v) {
+                name = v;
+            },
+            setAge:(void)(int v) {
+                age = v;
+            },
+            greet:(void)() {
+                print("Hello " + name + "! You are " +
+                      age.str + " this year.");
+            }
+        );
+    };
 
     Greeter emil = createGreeter("Emil", 26);
     emil.name = "Emil Hernvall";
@@ -169,23 +169,23 @@ Functions are always stored in a variable.
 For example:
 
     (int)(int,int) fastexp =
-        (int)(int num, int pow) {
-            if (pow == 1) {
-                return num;
-            }
-            if (pow % 2 == 0) {
-                return fastexp(num*num, pow/2);
-            }
-            return num*fastexp(num*num, (pow - 1)/2);
-        };
+    (int)(int num, int pow) {
+        if pow == 1 {
+            return num;
+        }
+        if pow % 2 == 0 {
+            return fastexp(num*num, pow/2);
+        }
+        return num*fastexp(num*num, (pow - 1)/2);
+    };
 
     (int)(int) factorial =
-        (int)(int num) {
-            if (num == 1) {
-                return num;
-            }
-            return num*factorial(num-1);
-        };
+    (int)(int num) {
+        if num == 1 {
+            return num;
+        }
+        return num*factorial(num-1);
+    };
 
 Control structures
 ------------------
