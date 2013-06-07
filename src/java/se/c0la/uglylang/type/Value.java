@@ -4,6 +4,8 @@ public interface Value<E extends Type>
 {
     public E getType();
 
+    public Value getField(String field);
+
     public Value addOp(Value b);
     public Value subOp(Value b);
     public Value mulOp(Value b);

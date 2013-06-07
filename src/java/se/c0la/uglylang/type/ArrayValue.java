@@ -31,6 +31,16 @@ public class ArrayValue extends AbstractValue<ArrayType>
     }
 
     @Override
+    public Value getField(String field)
+    {
+        if ("size".equals(field)) {
+            return new IntegerValue(arr.length);
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public ArrayType getType() { return type; }
 
     @Override

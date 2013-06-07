@@ -1,30 +1,21 @@
 type TreeKey string;
 type TreeValue string;
 
-compound_type TreeLookup #Valid TreeValue,
-                         #NotFound;
-
 compound_type TreeNode #Node (key:TreeKey,
                               value:TreeValue,
                               left:TreeNode,
                               right:TreeNode),
                        #Terminator;
 
+compound_type TreeLookup #Valid TreeValue,
+                         #NotFound;
+
 type Tree (root: TreeNode,
            add: (void)(TreeKey, TreeValue),
            get: (TreeLookup)(TreeKey),
            size: (int)());
-type TreeConstructor (Tree)();
 
-(TreeNode)(TreeKey, TreeValue) createTreeNode =
-(TreeNode)(TreeKey key, TreeValue value) {
-    return (
-            key: key,
-            value: value,
-            left: #Terminator,
-            right: #Terminator
-        );
-};
+type TreeConstructor (Tree)();
 
 TreeConstructor createTree =
 (Tree)() {
@@ -33,10 +24,15 @@ TreeConstructor createTree =
 
         add: (void)(TreeKey key, TreeValue value) {
 
-            (TreeNode)(TreeNode,string,string) hiddenAdd =
+            (TreeNode)(TreeNode,TreeKey,TreeValue) hiddenAdd =
             (TreeNode)(TreeNode node, TreeKey key, TreeValue value) {
                 unpack node as #Terminator {
-                    return createTreeNode(key, value);
+                    return (
+                            key: key,
+                            value: value,
+                            left: #Terminator,
+                            right: #Terminator
+                        );
                 }
 
                 unpack node as #Node n {
@@ -55,7 +51,7 @@ TreeConstructor createTree =
 
         get: (TreeLookup)(TreeKey key) {
 
-            (TreeLookup)(TreeNode,string) hiddenGet =
+            (TreeLookup)(TreeNode,TreeKey) hiddenGet =
             (TreeLookup)(TreeNode node, TreeKey key) {
                 unpack node as #Node n {
                     if (key > n.key) {
@@ -95,8 +91,18 @@ TreeConstructor createTree =
     );
 };
 
+(void)(Tree,TreeKey) lookupTest =
+(void)(Tree tree, TreeKey key) {
+    TreeLookup result = tree.get(key);
+    unpack result as #Valid value {
+        print(key + ": " + value);
+    }
+    unpack result as #NotFound {
+        print(key + ": Not Found");
+    }
+};
+
 Tree testTree = createTree();
-testTree.add("charlotta", "bengtsgård");
 testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
 testTree.add("miki", "momen");
@@ -104,18 +110,9 @@ testTree.add("hannes", "hernvall");
 testTree.add("erik", "ödmark");
 testTree.add("torbjörn", "hernvall");
 
-dump(testTree.root);
-
 print("size: " + intToStr(testTree.size()));
-TreeLookup result = testTree.get("charlotta");
-unpack result as #Valid v {
-    print(v);
-}
 
-TreeLookup result2 = testTree.get("felicia");
-unpack result2 as #Valid v {
-    print(v);
-}
-unpack result2 as #NotFound {
-    print("Not Found");
-}
+lookupTest(testTree, "erik");
+lookupTest(testTree, "miki");
+lookupTest(testTree, "emil");
+lookupTest(testTree, "felicia");

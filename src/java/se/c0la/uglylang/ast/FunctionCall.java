@@ -24,7 +24,7 @@ public class FunctionCall implements Expression
         return var instanceof SubscriptNode;
     }
 
-    public FunctionType getFunctionType()
+    public FunctionType inferActualType()
     throws TypeException
     {
         List<Type> sig = new ArrayList<Type>();
@@ -32,6 +32,17 @@ public class FunctionCall implements Expression
             sig.add(expr.inferType());
         }
         return new FunctionType(inferType(), sig);
+    }
+
+    public FunctionType inferExpectedType()
+    throws TypeException
+    {
+        Type type = var.inferType();
+        if (!(type instanceof FunctionType)) {
+            throw new TypeException("Call to non function of type " + type);
+        }
+
+        return (FunctionType)type;
     }
 
     @Override

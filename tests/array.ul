@@ -1,4 +1,5 @@
 int[] arr = [ 3, 5, 7 ];
+print("len: " + arr.size.str);
 dump(arr);
 
 int num = arr[2*2-3];

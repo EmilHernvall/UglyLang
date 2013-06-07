@@ -20,6 +20,7 @@ public class ObjectValue extends AbstractValue<ObjectType>
 
     public Set<String> getFields() { return fieldMap.keySet(); }
 
+    @Override
     public Value getField(String field)
     {
         return fieldMap.get(field);

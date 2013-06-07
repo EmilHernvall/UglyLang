@@ -14,6 +14,16 @@ public class IntegerValue extends AbstractValue<IntegerType>
     public int getInt() { return val; }
 
     @Override
+    public Value getField(String field)
+    {
+        if ("str".equals(field)) {
+            return new StringValue(String.valueOf(val));
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Value addOp(Value b)
     {
         IntegerValue intVal = (IntegerValue)b;

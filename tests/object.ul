@@ -28,15 +28,18 @@ emil.greet();
 Greeter tobbe = createGreeter("Torbjörn", 52);
 tobbe.greet();
 
-Greeter charlotta = createGreeter("Charlotta", 29);
-charlotta.greet();
+Greeter lia = createGreeter("Lia", 21);
+lia.greet();
 
-Greeter[] greeters = [ emil, tobbe, charlotta, createGreeter("Hannes", 23) ];
+Greeter[] greeters = [ emil, tobbe, lia, createGreeter("Hannes", 23) ];
 
 greeters[1].name = "Torbjörn Hernvall";
-greeters[0].greet();
-
 greeters[3].setName("Hannes Hernvall");
-greeters[3].greet();
 
-tobbe.greet();
+print("looping:");
+int idx = 0;
+while idx < greeters.size {
+    greeters[idx].greet();
+    idx = idx + 1;
+}
+

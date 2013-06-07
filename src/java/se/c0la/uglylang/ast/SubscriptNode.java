@@ -21,25 +21,25 @@ public class SubscriptNode implements Expression
     public String getKey() { return key; }
     public int getSeq() { return seq; }
 
-    public ObjectType getType()
+    public Type getType()
     throws TypeException
     {
         Type exprType = var.inferType();
-        if (!(exprType instanceof ObjectType)) {
-            throw new RuntimeException("Only named tuples can be subscripted.");
-        }
+        /*if (!(exprType instanceof ObjectType)) {
+            throw new RuntimeException("Only objects can be subscripted.");
+        }*/
 
-        return (ObjectType)exprType;
+        return exprType;
     }
 
     @Override
     public Type inferType()
     throws TypeException
     {
-        ObjectType namedTupleType = getType();
-        Type fieldType = namedTupleType.getParameters().get(key);
+        Type objectType = getType();
+        Type fieldType = objectType.getField(key);
         if (fieldType == null) {
-            throw new TypeException(namedTupleType.getName() + " does not have " +
+            throw new TypeException(objectType.getName() + " does not have " +
                     "a field called " + key + ".");
         }
 

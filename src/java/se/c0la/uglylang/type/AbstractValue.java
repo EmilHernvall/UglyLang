@@ -5,6 +5,12 @@ public abstract class AbstractValue<E extends Type> implements Value<E>
     public abstract E getType();
 
     @Override
+    public Value getField(String field)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Value addOp(Value b)
     {
         throw new UnsupportedOperationException();

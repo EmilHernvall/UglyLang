@@ -749,7 +749,7 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(SubscriptNode node)
     {
-        ObjectType type = null;
+        Type type = null;
         try {
             type = node.getType();
         } catch (TypeException e) {
@@ -857,17 +857,24 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(FunctionCall node)
     {
-        Type type = null;
+        Type actualType = null, expectedType = null;
         try {
-            type = node.getFunctionType();
+            actualType = node.inferActualType();
+            expectedType = node.inferExpectedType();
         }
         catch (TypeException e) {
             throw new RuntimeException(e);
         }
 
+        if (!expectedType.isCompatible(actualType)) {
+            throw new RuntimeException("Type mismatch for function call: " +
+                actualType.getName() + " != " + expectedType.getName());
+        }
+
         if (DEBUG) {
-            System.out.printf("%d CALL FunctionCall: type=%s\n", getCurrentAddr(),
-                    type.getName());
+            System.out.printf("%d CALL FunctionCall: actual=%s expected=%s\n",
+                    getCurrentAddr(),
+                    actualType.getName(), expectedType.getName());
         }
 
         if (node.isSubscriptCall()) {

@@ -32,5 +32,21 @@ public class ArrayType extends AbstractType
     }
 
     @Override
+    public boolean hasField(String name)
+    {
+        return "size".equals(name);
+    }
+
+    @Override
+    public Type getField(String field)
+    {
+        if ("size".equals(field)) {
+            return new IntegerType();
+        }
+
+        return null;
+    }
+
+    @Override
     public String toString() { return getName(); }
 }

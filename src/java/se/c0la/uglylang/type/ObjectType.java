@@ -18,11 +18,13 @@ public class ObjectType extends AbstractType
 
     public Map<String, Type> getParameters() { return parameters; }
 
+    @Override
     public Type getField(String field)
     {
         return parameters.get(field);
     }
 
+    @Override
     public boolean hasField(String name)
     {
         for (String field : parameters.keySet()) {

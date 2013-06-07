@@ -1,8 +1,7 @@
 UglyLang
 ========
 
-Toy programming language. Work in progress. Most of what's in this document is
-not yet implemented.
+Toy programming language. Work in progress.
 
 Features:
 
@@ -38,7 +37,7 @@ Arithmetic:
      - Subtraction
      * Multiplication
      / Division
-     ^ Exponentation
+     ^ Exponentation (unimplemented)
      % Modulus
 
 Comparison:
@@ -108,19 +107,7 @@ Arrays can be defined for any type by appending [].
 
     int[] arr = [ 2,3,5,7,11 ];
 
-An empty array of specified size can be created using:
-
-    int[] arr = array(100, 0);
-
-In this case 100 is the size, and 0 is the default value.
-
-An automatically growing array can be created using:
-
-    int[] arr = autoarray(0);
-
-0 is the default value.
-
-Values can be set and retrieved using the subscript operator:
+Values can be set and retrieved using the index operator:
 
     arr[0] = 7;
     int foo = arr[0];
@@ -138,12 +125,10 @@ keys in the type signature has to be present in the instance of the object.
 
 Objects are dereferenced using the subscript operator:
 
-    string val2 = myTuple.name;
+    string val2 = obj.name;
 
-Named tuples are used to construct objects. An object is a named tuple with
-fields containing functions. All other fields of the tuple can be accessed from
-within it. Externally only the keys specified in the type signature will be
-available. The named tuple type is thus the object interface.
+The fields of an object can be function. In that case, the fields of the object
+are accessible from within the functions.
 
     type Greeter (name: string,
                   setName: (void)(string),

@@ -19,4 +19,16 @@ public abstract class AbstractType implements Type
     }
 
     public abstract boolean isCompatible(Type other, Set<Type> seenTypes);
+
+    @Override
+    public boolean hasField(String name)
+    {
+        return false;
+    }
+
+    @Override
+    public Type getField(String field)
+    {
+        return null;
+    }
 }

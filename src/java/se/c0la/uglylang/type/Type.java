@@ -8,4 +8,6 @@ public interface Type
     public String getName(Set<Type> seenTypes);
     public boolean isCompatible(Type other);
     public boolean isCompatible(Type other, Set<Type> seenTypes);
+    public boolean hasField(String name);
+    public Type getField(String field);
 }

@@ -451,10 +451,9 @@ public class Interpreter
 
                 case OBJECT_GET:
                 {
-                    ObjectGetInstruction getInst =
-                        (ObjectGetInstruction)inst;
+                    ObjectGetInstruction getInst = (ObjectGetInstruction)inst;
 
-                    ObjectValue obj = (ObjectValue)stack.pop();
+                    Value obj = stack.pop();
                     Value value = obj.getField(getInst.getField());
                     stack.push(value);
                     programCounter++;
