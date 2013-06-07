@@ -17,5 +17,5 @@ public class ReturnCtxInstruction implements Instruction
     public OpCode getOpCode() { return OpCode.RETURN_CTX; }
 
     @Override
-    public String toString() { return getOpCode().toString(); }
+    public String toString() { return getOpCode().toString() + " " + voidFunc; }
 }

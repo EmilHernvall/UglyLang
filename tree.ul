@@ -13,6 +13,16 @@ type Tree (root: TreeNode,
            size: (int)());
 type TreeConstructor (Tree)();
 
+(TreeNode)(TreeKey, TreeValue) createTreeNode =
+(TreeNode)(TreeKey key, TreeValue value) {
+    return (
+            key: key,
+            value: value,
+            left: #Terminator,
+            right: #Terminator
+        );
+};
+
 TreeConstructor createTree =
 (Tree)() {
     return (
@@ -21,25 +31,21 @@ TreeConstructor createTree =
         add: (void)(TreeKey key, TreeValue value) {
 
             (TreeNode)(TreeNode,string,string) hiddenAdd =
-                (TreeNode)(TreeNode node, TreeKey key, TreeValue value) {
-                    unpack node as #Terminator {
-                        return (
-                                key: key,
-                                value: value,
-                                left: #Terminator,
-                                right: #Terminator
-                            );
-                    }
+            (TreeNode)(TreeNode node, TreeKey key, TreeValue value) {
+                unpack node as #Terminator {
+                    return createTreeNode(key, value);
+                }
 
-                    unpack node as #Node n {
-                        if (key >= n.key) {
-                            n.right = hiddenAdd(n.right, key, value);
-                        }
-                        if (key < n.key) {
-                            n.left = hiddenAdd(n.left, key, value);
-                        }
+                unpack node as #Node n {
+                    if (key >= n.key) {
+                        n.right = hiddenAdd(n.right, key, value);
                     }
-                };
+                    if (key < n.key) {
+                        n.left = hiddenAdd(n.left, key, value);
+                    }
+                    return n;
+                }
+            };
 
             root = hiddenAdd(root, key, value);
         },
@@ -47,19 +53,21 @@ TreeConstructor createTree =
         get: (TreeValue)(TreeKey key) {
 
             (string)(TreeNode,string) hiddenGet =
-                (string)(TreeNode node, TreeKey key) {
-                    unpack node as #Node n {
-                        if (key == n.key) {
-                            return n.value;
-                        }
-                        if (key < n.key) {
-                            return hiddenGet(n.right, key);
-                        }
-                        if (key > n.key) {
-                            return hiddenGet(n.left, key);
-                        }
+            (string)(TreeNode node, TreeKey key) {
+                unpack node as #Node n {
+                    if (key > n.key) {
+                        return hiddenGet(n.right, key);
                     }
-                };
+                    if (key < n.key) {
+                        return hiddenGet(n.left, key);
+                    }
+                    return n.value;
+                }
+
+                unpack node as #Terminator {
+                    return "N/A";
+                }
+            };
 
             return hiddenGet(root, key);
         },
@@ -67,15 +75,17 @@ TreeConstructor createTree =
         size: (int)() {
 
             (int)(TreeNode) hiddenSize =
-                (int)(TreeNode node) {
-                    unpack node as #Terminator {
-                        return 0;
-                    }
+            (int)(TreeNode node) {
+                unpack node as #Terminator {
+                    return 0;
+                }
 
-                    unpack node as #Node n {
-                        return 1 + hiddenSize(n.right) + hiddenSize(n.left);
-                    }
-                };
+                unpack node as #Node n {
+                    int a = hiddenSize(n.left);
+                    int b = hiddenSize(n.right);
+                    return 1 + a + b;
+                }
+            };
 
             return hiddenSize(root);
         }
@@ -87,5 +97,8 @@ testTree.add("emil", "hernvall");
 testTree.add("daniel", "andersson");
 testTree.add("miki", "momen");
 
+dump(testTree.root);
+
 print("size: " + intToStr(testTree.size()));
 print(testTree.get("emil"));
+print(testTree.get("miki"));

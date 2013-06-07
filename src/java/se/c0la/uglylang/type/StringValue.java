@@ -28,6 +28,13 @@ public class StringValue extends AbstractValue<StringType>
     }
 
     @Override
+    public Value gtOp(Value b)
+    {
+        StringValue val = (StringValue)b;
+        return new BooleanValue(str.compareTo(val.str) > 0);
+    }
+
+    @Override
     public Value gtEqOp(Value b)
     {
         StringValue val = (StringValue)b;
@@ -39,6 +46,13 @@ public class StringValue extends AbstractValue<StringType>
     {
         StringValue val = (StringValue)b;
         return new BooleanValue(str.compareTo(val.str) < 0);
+    }
+
+    @Override
+    public Value ltEqOp(Value b)
+    {
+        StringValue val = (StringValue)b;
+        return new BooleanValue(str.compareTo(val.str) <= 0);
     }
 
     @Override

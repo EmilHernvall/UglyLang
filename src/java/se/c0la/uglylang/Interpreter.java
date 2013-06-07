@@ -585,6 +585,12 @@ public class Interpreter
         }
 
         {
+            NativeFunction func = new DumpStackFunction(interpreter);
+            Symbol sym = visitor.registerNativeFunction(func);
+            interpreter.registerNativeFunction(sym, func);
+        }
+
+        {
             NativeFunction func = new IntToStrFunction();
             Symbol sym = visitor.registerNativeFunction(func);
             interpreter.registerNativeFunction(sym, func);

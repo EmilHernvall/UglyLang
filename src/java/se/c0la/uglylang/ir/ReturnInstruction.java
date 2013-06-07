@@ -17,5 +17,5 @@ public class ReturnInstruction implements Instruction
     public OpCode getOpCode() { return OpCode.RETURN; }
 
     @Override
-    public String toString() { return getOpCode().toString(); }
+    public String toString() { return getOpCode().toString() + " " + voidFunc; }
 }
