@@ -58,6 +58,8 @@ TOKEN : { < OR : "or" > }
 TOKEN : { < NOT : "not" > }
 TOKEN : { < XOR : "xor" > }
 TOKEN : { < IFSTMT : "if" > }
+TOKEN : { < ELSEIFSTMT : "elif" > }
+TOKEN : { < ELSESTMT : "else" > }
 TOKEN : { < WHILESTMT : "while" > }
 TOKEN : { < RETURNSTMT : "return" > }
 TOKEN : { < EQ : "==" > }
@@ -346,7 +348,7 @@ Node Statement() :
 Node UnpackStatement() :
 {
     Token t ;
-    Variable src ;
+    Expression src ;
     String dst = null ;
     Node n ;
     String subType ;
@@ -357,9 +359,7 @@ Node UnpackStatement() :
     <UNPACK>
     (<S>)*
 
-    t = <IDENT>
-    (<S>)*
-    { src = new Variable(t.image, 0); }
+    src = Expression()
 
     <AS>
     (<S>)*
@@ -392,7 +392,7 @@ Node UnpackStatement() :
      }
 }
 
-Node IfStatement() :
+ElseIfStatement ElseIfStatement() :
 {
     Token t ;
     Node n, n2 ;
@@ -400,7 +400,7 @@ Node IfStatement() :
 }
 {
     { stmts = new ArrayList<Node>(); }
-    <IFSTMT>
+    <ELSEIFSTMT>
     (<S>)*
     n = Expression()
     <LCLAUSE>
@@ -412,7 +412,61 @@ Node IfStatement() :
     <RCLAUSE>
     (<S>)*
 
-     { return new IfStatement(n, stmts); }
+     { return new ElseIfStatement(n, stmts); }
+}
+
+ElseStatement ElseStatement() :
+{
+    Token t ;
+    Node n, n2 ;
+    List<Node> stmts;
+}
+{
+    { stmts = new ArrayList<Node>(); }
+    <ELSESTMT>
+    (<S>)*
+    <LCLAUSE>
+    (<S>)*
+    (
+        n2 = Statement()
+        { stmts.add(n2); }
+    )*
+    <RCLAUSE>
+    (<S>)*
+
+     { return new ElseStatement(stmts); }
+}
+
+Node IfStatement() :
+{
+    Token t ;
+    Node n, n2 ;
+    ElseIfStatement elseIfStmt = null ;
+    List<ElseIfStatement> elseIfList ;
+    ElseStatement elseStmt = null ;
+    List<Node> stmts;
+}
+{
+    { stmts = new ArrayList<Node>(); }
+    { elseIfList = new ArrayList<ElseIfStatement>(); }
+    <IFSTMT>
+    (<S>)*
+    n = Expression()
+    <LCLAUSE>
+    (<S>)*
+    (
+        n2 = Statement()
+        { stmts.add(n2); }
+    )*
+    <RCLAUSE>
+    (<S>)*
+    (
+        elseIfStmt = ElseIfStatement()
+        { elseIfList.add(elseIfStmt); }
+    )*
+    [ elseStmt = ElseStatement() ]
+
+     { return new IfStatement(n, stmts, elseIfList, elseStmt); }
 }
 
 Node WhileStatement() :

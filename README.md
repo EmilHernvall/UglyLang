@@ -22,10 +22,11 @@ Built-in types:
 Statements:
 
  * declarations
- * if
- * while
+ * assignment
  * type
  * compound_type
+ * if, elif, else
+ * while
  * unpack
 
 Operators
@@ -193,6 +194,12 @@ Control structures
 If statements:
 
     if a == b {
+        /* code */
+    }
+    elif a == c {
+        /* code */
+    }
+    else {
         /* code */
     }
 

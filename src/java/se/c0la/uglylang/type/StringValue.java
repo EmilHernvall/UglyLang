@@ -24,35 +24,35 @@ public class StringValue extends AbstractValue<StringType>
     public Value equalOp(Value b)
     {
         StringValue val = (StringValue)b;
-        return new BooleanValue(str.equals(val.str));
+        return BooleanValue.fromBool(str.equals(val.str));
     }
 
     @Override
     public Value gtOp(Value b)
     {
         StringValue val = (StringValue)b;
-        return new BooleanValue(str.compareTo(val.str) > 0);
+        return BooleanValue.fromBool(str.compareTo(val.str) > 0);
     }
 
     @Override
     public Value gtEqOp(Value b)
     {
         StringValue val = (StringValue)b;
-        return new BooleanValue(str.compareTo(val.str) >= 0);
+        return BooleanValue.fromBool(str.compareTo(val.str) >= 0);
     }
 
     @Override
     public Value ltOp(Value b)
     {
         StringValue val = (StringValue)b;
-        return new BooleanValue(str.compareTo(val.str) < 0);
+        return BooleanValue.fromBool(str.compareTo(val.str) < 0);
     }
 
     @Override
     public Value ltEqOp(Value b)
     {
         StringValue val = (StringValue)b;
-        return new BooleanValue(str.compareTo(val.str) <= 0);
+        return BooleanValue.fromBool(str.compareTo(val.str) <= 0);
     }
 
     @Override

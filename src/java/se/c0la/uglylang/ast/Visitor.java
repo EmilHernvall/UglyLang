@@ -23,6 +23,10 @@ public interface Visitor
     void visit(EndFunctionStatement node);
     void visit(IfStatement node);
     void visit(EndIfStatement node);
+    void visit(ElseIfStatement node);
+    void visit(EndElseIfStatement node);
+    void visit(ElseStatement node);
+    void visit(EndElseStatement node);
     void visit(UnpackStatement node);
     void visit(EndUnpackStatement node);
     void visit(WhileStatement node);

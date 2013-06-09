@@ -3,6 +3,7 @@ type TreeValue string;
 
 compound_type TreeNode #Node (key:TreeKey,
                               value:TreeValue,
+                              parent:TreeNode,
                               left:TreeNode,
                               right:TreeNode),
                        #Terminator;
@@ -10,7 +11,10 @@ compound_type TreeNode #Node (key:TreeKey,
 compound_type TreeLookup #Valid TreeValue,
                          #NotFound;
 
+type TreeTraverseFunc (void)(TreeKey, TreeValue, int);
+
 type Tree (root: TreeNode,
+           traverse: (void)(TreeTraverseFunc),
            add: (void)(TreeKey, TreeValue),
            get: (TreeLookup)(TreeKey),
            size: (int)());
@@ -22,31 +26,236 @@ TreeConstructor createTree =
     return (
         root: #Terminator,
 
-        add: (void)(TreeKey key, TreeValue value) {
-
-            (TreeNode)(TreeNode,TreeKey,TreeValue) hiddenAdd =
-            (TreeNode)(TreeNode node, TreeKey key, TreeValue value) {
-                unpack node as #Terminator {
-                    return (
-                            key: key,
-                            value: value,
-                            left: #Terminator,
-                            right: #Terminator
-                        );
-                }
-
+        traverse: (void)(TreeTraverseFunc func) {
+            (TreeNode)(TreeNode, int) hiddenTraverse =
+            (TreeNode)(TreeNode node, int depth) {
                 unpack node as #Node n {
-                    if (key >= n.key) {
-                        n.right = hiddenAdd(n.right, key, value);
-                    }
-                    if (key < n.key) {
-                        n.left = hiddenAdd(n.left, key, value);
-                    }
-                    return n;
+                    hiddenTraverse(n.right, depth+1);
+                    func(n.key, n.value, depth);
+                    hiddenTraverse(n.left, depth+1);
                 }
             };
 
-            root = hiddenAdd(root, key, value);
+            hiddenTraverse(root, 0);
+        },
+
+        add: (void)(TreeKey key, TreeValue value) {
+
+            (int)(TreeNode) subTreeHeight =
+            (int)(TreeNode node) {
+                unpack node as #Terminator {
+                    return 0;
+                }
+
+                unpack node as #Node n {
+                    int a = subTreeHeight(n.left);
+                    int b = subTreeHeight(n.right);
+                    if (a > b) {
+                        return 1 + a;
+                    }
+                    return 1 + b;
+                }
+            };
+
+            (int)(TreeNode) balance =
+            (int)(TreeNode node) {
+                unpack node as #Node n {
+                    return subTreeHeight(n.left) - subTreeHeight(n.right);
+                }
+
+                return 0;
+            };
+
+            (void)(TreeNode) rebalance  =
+            (void)(TreeNode node_to_rebalance) {
+                unpack node_to_rebalance as #Node A {
+                    TreeNode F = A.parent;
+
+                    if balance(node_to_rebalance) == 0-2 {
+
+                        /* Rebalance, case RRC */
+                        if balance(A.right) <= 0 {
+                            unpack A.right as #Node B {
+                            unpack B.right as #Node C {
+                                A.right = B.left;
+                                unpack A.right as #Node n {
+                                    n.parent = A;
+                                }
+
+                                B.left = A;
+                                A.parent = B;
+
+                                unpack F as #Terminator {
+                                    B.parent = #Terminator;
+                                    root = B;
+                                }
+
+                                unpack F as #Node n {
+                                    if n.right == A {
+                                        n.right = B;
+                                    } else {
+                                        n.left = B;
+                                    }
+                                    B.parent = n;
+                                }
+                            }
+                            }
+                        }
+
+                        /* Rebalance, case RLC */
+                        else {
+                            unpack A.right as #Node B {
+                            unpack B.left as #Node C {
+                                B.left = C.right;
+                                unpack B.left as #Node n {
+                                    n.parent = B;
+                                }
+
+                                A.right = C.left;
+                                unpack A.right as #Node n {
+                                    n.parent = A;
+                                }
+
+                                C.right = B;
+                                B.parent = C;
+                                C.left = A;
+                                A.parent = C;
+
+                                unpack F as #Terminator {
+                                    C.parent = #Terminator;
+                                    root = C;
+                                }
+
+                                unpack F as #Node n {
+                                    if n.right == A {
+                                        n.right = C;
+                                    } else {
+                                        n.left = C;
+                                    }
+                                    C.parent = F;
+                                }
+                            }
+                            }
+                        }
+                    }
+                    else {
+
+                        /* Rebalance, case LLC */
+                        if balance(A.left) >= 0 {
+                            unpack A.left as #Node B {
+                            unpack B.left as #Node C {
+                                A.left = B.right;
+                                unpack A.left as #Node n {
+                                    n.parent = A;
+                                }
+
+                                B.right = A;
+                                A.parent = B;
+
+                                unpack F as #Terminator {
+                                    B.parent = #Terminator;
+                                    root = B;
+                                }
+
+                                unpack F as #Node n {
+                                    if n.right == A {
+                                        n.right = B;
+                                    } else {
+                                        n.left = B;
+                                    }
+                                    B.parent = n;
+                                }
+                            }
+                            }
+                        }
+
+                        /* Rebalance, case LRC */
+                        else {
+                            unpack A.left as #Node B {
+                            unpack B.right as #Node C {
+                                A.left = C.right;
+                                unpack A.left as #Node n {
+                                    n.parent = A;
+                                }
+
+                                B.right = C.left;
+                                unpack B.right as #Node n {
+                                    n.parent = B;
+                                }
+
+                                C.left = B;
+                                B.parent = C;
+                                C.right = A;
+                                A.parent = C;
+
+                                unpack F as #Terminator {
+                                    print("no parent");
+                                    C.parent = #Terminator;
+                                    root = C;
+                                }
+
+                                unpack F as #Node n {
+                                    print("with parent");
+                                    if n.right == A {
+                                        n.right = C;
+                                    } else {
+                                        n.left = C;
+                                    }
+                                    C.parent = n;
+                                }
+                            }
+                            }
+                        }
+                    }
+
+                }
+            };
+
+            (TreeNode)(TreeNode,TreeNode) hiddenAdd =
+            (TreeNode)(TreeNode parent, TreeNode newNode) {
+                unpack parent as #Node p {
+                unpack newNode as #Node n {
+                    if (n.key >= p.key) {
+                        unpack p.right as #Node child {
+                            hiddenAdd(child, n);
+                        }
+                        unpack p.right as #Terminator {
+                            p.right = n;
+                            n.parent = p;
+                        }
+                    } else {
+                        unpack p.left as #Node child {
+                            hiddenAdd(child, n);
+                        }
+                        unpack p.left as #Terminator {
+                            p.left = n;
+                            n.parent = p;
+                        }
+                    }
+
+                    int b = balance(p);
+                    if b < 0-1 or b > 1 {
+                        rebalance(p);
+                    }
+                }
+                }
+            };
+
+            TreeNode newNode =
+                (
+                    key: key,
+                    value: value,
+                    parent: #Terminator,
+                    left: #Terminator,
+                    right: #Terminator
+                );
+
+            unpack root as #Node n {
+                hiddenAdd(n, newNode);
+            }
+            unpack root as #Terminator {
+                root = newNode;
+            }
         },
 
         get: (TreeLookup)(TreeKey key) {
@@ -56,8 +265,7 @@ TreeConstructor createTree =
                 unpack node as #Node n {
                     if (key > n.key) {
                         return hiddenGet(n.right, key);
-                    }
-                    if (key < n.key) {
+                    } elif (key < n.key) {
                         return hiddenGet(n.left, key);
                     }
                     return n.value;
@@ -103,16 +311,43 @@ TreeConstructor createTree =
 };
 
 Tree testTree = createTree();
-testTree.add("emil", "hernvall");
-testTree.add("daniel", "andersson");
-testTree.add("miki", "momen");
-testTree.add("hannes", "hernvall");
-testTree.add("erik", "ödmark");
-testTree.add("torbjörn", "hernvall");
+testTree.add("abraham", "lincoln");
+testTree.add("barak", "obama");
+testTree.add("benjamin", "franklin");
+testTree.add("bill", "clinton");
+testTree.add("franklin", "roosevelt");
+testTree.add("george", "washington");
+testTree.add("gerald", "ford");
+testTree.add("harry", "truman");
+testTree.add("jimmy", "carter");
+testTree.add("john", "adams");
+testTree.add("john f", "kennedy");
+testTree.add("lyndon", "johnson");
+testTree.add("richard", "nixon");
+testTree.add("ronald", "reagan");
+testTree.add("thomas", "jefferson");
 
 print("size: " + intToStr(testTree.size()));
+print("");
+/*dump(testTree.root);
+print("");*/
 
-lookupTest(testTree, "erik");
-lookupTest(testTree, "miki");
+print("inorder traversal:");
+testTree.traverse(
+    (void)(TreeKey key, TreeValue value, int depth) {
+        string pad = "";
+        int i = 0;
+        while i < depth {
+            pad = pad + "    ";
+            i = i + 1;
+        }
+
+        print(pad + key + ": " + value);
+    });
+
+print("");
+print("lookup test:");
+lookupTest(testTree, "george");
+lookupTest(testTree, "john");
+lookupTest(testTree, "thomas");
 lookupTest(testTree, "emil");
-lookupTest(testTree, "felicia");

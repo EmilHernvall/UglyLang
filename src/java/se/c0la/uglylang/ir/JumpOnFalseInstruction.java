@@ -4,16 +4,12 @@ import se.c0la.uglylang.Symbol;
 
 public class JumpOnFalseInstruction implements Instruction
 {
-    private String label;
     private int addr;
 
-    public JumpOnFalseInstruction(String label)
+    public JumpOnFalseInstruction(int addr)
     {
-        this.label = label;
-        this.addr = -1;
+        this.addr = addr;
     }
-
-    public String getLabel() { return label; }
 
     public void setAddr(int v) { this.addr = v; }
     public int getAddr() { return addr; }

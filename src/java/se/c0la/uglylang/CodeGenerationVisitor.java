@@ -79,7 +79,6 @@ public class CodeGenerationVisitor implements Visitor
     private Scope currentScope = null;
 
     private List<Instruction> instructions;
-    private Map<String, Integer> labels;
 
     private int scopeCounter = 0;
     private int maxSeq = 0;
@@ -89,7 +88,6 @@ public class CodeGenerationVisitor implements Visitor
     public CodeGenerationVisitor()
     {
         instructions = new ArrayList<Instruction>();
-        labels = new HashMap<String, Integer>();
 
         rootScope = new Scope(scopeCounter++);
 
@@ -252,7 +250,7 @@ public class CodeGenerationVisitor implements Visitor
             }
 
             JumpInstruction jump = (JumpInstruction)inst;
-            if (!jump.getLabel().equals(label)) {
+            if (!label.equals(jump.getLabel())) {
                 continue;
             }
 
@@ -263,8 +261,6 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(UnpackStatement node)
     {
-        String label = "EndUnpack_" + getCurrentAddr();
-
         Scope subScope = new Scope(scopeCounter++);
         subScope.setParentScope(currentScope);
         currentScope.addSubScope(subScope);
@@ -274,8 +270,6 @@ public class CodeGenerationVisitor implements Visitor
         CompoundType type = node.getType();
         Type subType = type.getSubType(node.getSubType());
 
-        instructions.add(new IsTypeInstruction(subType));
-        instructions.add(new JumpOnFalseInstruction(label));
 
         if (node.getDst() != null) {
             if (subType instanceof VoidType) {
@@ -285,10 +279,19 @@ public class CodeGenerationVisitor implements Visitor
             Symbol dstSym = new Symbol(subType, node.getDst());
             currentScope.addSymbol(dstSym);
 
-            Variable srcVar = node.getSrc();
-            Symbol srcSym = currentScope.findSymbol(srcVar.getName());
-            instructions.add(new CastInstruction(srcSym, dstSym));
+            //Variable srcVar = node.getSrc();
+            //Symbol srcSym = currentScope.findSymbol(srcVar.getName());
+            //instructions.add(new CastInstruction(srcSym, dstSym));
+
+            instructions.add(new DupInstruction());
+            instructions.add(new StoreInstruction(dstSym));
         }
+
+        instructions.add(new IsTypeInstruction(subType));
+
+        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
+        node.setJumpInstruction(jmpInst);
+        instructions.add(jmpInst);
 
         if (DEBUG) {
             System.out.printf("%d %s\n", getCurrentAddr(), node.toString());
@@ -300,54 +303,81 @@ public class CodeGenerationVisitor implements Visitor
     public void visit(EndUnpackStatement node)
     {
         if (DEBUG) {
-            System.out.printf("%d %s\n", getCurrentAddr(), node.getLabel());
+            System.out.printf("%d EndUnpack\n", getCurrentAddr());
         }
 
-        for (Instruction inst : instructions) {
-            if (inst.getOpCode() != OpCode.JUMPONFALSE) {
-                continue;
-            }
-
-            JumpOnFalseInstruction jumpOnFalse = (JumpOnFalseInstruction)inst;
-            if (!jumpOnFalse.getLabel().equals(node.getLabel())) {
-                continue;
-            }
-
-            jumpOnFalse.setAddr(getCurrentAddr());
-        }
-
+        JumpOnFalseInstruction jumpOnFalse = node.getJumpInstruction();
+        jumpOnFalse.setAddr(getCurrentAddr());
         currentScope = currentScope.getParentScope();
     }
 
     @Override
     public void visit(IfStatement node)
     {
-        String label = "EndIf_" + getCurrentAddr();
         if (DEBUG) {
-            System.out.printf("%d JumpOnFalse %s\n", getCurrentAddr(), label);
+            System.out.printf("%d If\n", getCurrentAddr());
         }
 
-        instructions.add(new JumpOnFalseInstruction(label));
+        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
+        node.setJumpInstruction(jmpInst);
+        instructions.add(jmpInst);
     }
 
     @Override
     public void visit(EndIfStatement node)
     {
-        labels.put(node.getLabel(), getCurrentAddr());
         if (DEBUG) {
-            System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
+            System.out.printf("%d EndIf\n", getCurrentAddr());
         }
 
-        for (Instruction inst : instructions) {
-            if (inst.getOpCode() != OpCode.JUMPONFALSE) {
-                continue;
-            }
+        JumpInstruction jmpInst = new JumpInstruction(0);
+        node.setJumpInstruction(jmpInst);
+        instructions.add(jmpInst);
+    }
 
-            JumpOnFalseInstruction jumpOnFalse = (JumpOnFalseInstruction)inst;
-            if (!jumpOnFalse.getLabel().equals(node.getLabel())) {
-                continue;
-            }
+    @Override
+    public void visit(ElseIfStatement node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d ElseIf\n", getCurrentAddr());
+        }
 
+        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
+        node.setJumpInstruction(jmpInst);
+        instructions.add(jmpInst);
+    }
+
+    @Override
+    public void visit(EndElseIfStatement node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d EndElseIf\n", getCurrentAddr());
+        }
+
+        JumpInstruction jmpInst = new JumpInstruction(0);
+        node.setJumpInstruction(jmpInst);
+        instructions.add(jmpInst);
+    }
+
+    @Override
+    public void visit(ElseStatement node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Else\n", getCurrentAddr());
+        }
+
+        JumpOnFalseInstruction jumpOnFalse = node.getJumpInstruction();
+        jumpOnFalse.setAddr(getCurrentAddr());
+    }
+
+    @Override
+    public void visit(EndElseStatement node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d EndElse\n", getCurrentAddr());
+        }
+
+        for (JumpInstruction jumpOnFalse : node.getJumps()) {
             jumpOnFalse.setAddr(getCurrentAddr());
         }
     }
@@ -355,37 +385,26 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(WhileStatement node)
     {
-        String label = "While_" + getCurrentAddr();
         if (DEBUG) {
-            System.out.printf("%d JumpOnFalse %s\n", getCurrentAddr(), label);
+            System.out.printf("%d While\n", getCurrentAddr());
         }
 
-        instructions.add(new JumpOnFalseInstruction(label));
+        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
+        node.setJumpInstruction(jmpInst);
+        instructions.add(jmpInst);
     }
 
     @Override
     public void visit(EndWhileStatement node)
     {
-        labels.put(node.getLabel(), getCurrentAddr());
         if (DEBUG) {
-            System.out.printf("%d JUMP %d\n", getCurrentAddr(), node.getCondAddr());
-            System.out.printf("%d LABEL :%s\n", getCurrentAddr(), node.getLabel());
+            System.out.printf("%d EndWhile %d\n", getCurrentAddr(), node.getCondAddr());
         }
 
         instructions.add(new JumpInstruction(node.getCondAddr()));
 
-        for (Instruction inst : instructions) {
-            if (inst.getOpCode() != OpCode.JUMPONFALSE) {
-                continue;
-            }
-
-            JumpOnFalseInstruction jumpOnFalse = (JumpOnFalseInstruction)inst;
-            if (!jumpOnFalse.getLabel().equals(node.getLabel())) {
-                continue;
-            }
-
-            jumpOnFalse.setAddr(getCurrentAddr());
-        }
+        JumpOnFalseInstruction jumpOnFalse = node.getJumpInstruction();
+        jumpOnFalse.setAddr(getCurrentAddr());
     }
 
     @Override

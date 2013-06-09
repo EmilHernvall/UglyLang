@@ -15,7 +15,7 @@ public class ObjectValue extends AbstractValue<ObjectType>
     public ObjectValue(ObjectType type)
     {
         this.type = type;
-        this.fieldMap = new HashMap<String, Value>();
+        this.fieldMap = new LinkedHashMap<String, Value>();
     }
 
     public Set<String> getFields() { return fieldMap.keySet(); }
@@ -29,6 +29,33 @@ public class ObjectValue extends AbstractValue<ObjectType>
     public void setField(String field, Value value)
     {
         fieldMap.put(field, value);
+    }
+
+    @Override
+    public Value equalOp(Value b)
+    {
+        /*System.out.println(System.identityHashCode(b));
+        ObjectValue val = (ObjectValue)b;
+        for (String fld : fieldMap.keySet()) {
+            Value fst = getField(fld);
+            Value snd = val.getField(fld);
+            if (snd == null) {
+                return BooleanValue.FALSE;
+            }
+            if (!fst.equalOp(snd).equals(BooleanValue.TRUE)) {
+                return BooleanValue.FALSE;
+            }
+        }
+
+        return BooleanValue.TRUE;*/
+
+        return BooleanValue.fromBool(this == b);
+    }
+
+    @Override
+    public Value notEqualOp(Value b)
+    {
+        return BooleanValue.negate(equalOp(b));
     }
 
     @Override

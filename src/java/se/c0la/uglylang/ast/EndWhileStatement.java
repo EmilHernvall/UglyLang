@@ -2,18 +2,20 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
+import se.c0la.uglylang.ir.JumpOnFalseInstruction;
+
 public class EndWhileStatement implements Node, Block
 {
-    private String lbl;
+    private JumpOnFalseInstruction jmpInst;
     private int condAddr;
 
-    public EndWhileStatement(String lbl, int condAddr)
+    public EndWhileStatement(JumpOnFalseInstruction jmpInst, int condAddr)
     {
-        this.lbl = lbl;
+        this.jmpInst = jmpInst;
         this.condAddr = condAddr;
     }
 
-    public String getLabel() { return lbl; }
+    public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
     public int getCondAddr() { return condAddr; }
 
     @Override

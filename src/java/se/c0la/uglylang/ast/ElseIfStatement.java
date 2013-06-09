@@ -4,14 +4,15 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
-public class WhileStatement implements Node, Block
+public class ElseIfStatement implements Node, Block
 {
     private Node cond;
     private List<Node> stmts;
 
     private JumpOnFalseInstruction jmpInst;
+    private EndElseIfStatement endElseIf;
 
-    public WhileStatement(Node cond, List<Node> stmts)
+    public ElseIfStatement(Node cond, List<Node> stmts)
     {
         this.cond = cond;
         this.stmts = stmts;
@@ -23,21 +24,24 @@ public class WhileStatement implements Node, Block
     }
 
     public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
+    public EndElseIfStatement getEndElseIfStmt() { return endElseIf; }
 
     @Override
     public void accept(Visitor visitor)
     {
-        int condAddr = visitor.getCurrentAddr();
+        jmpInst.setAddr(visitor.getCurrentAddr());
 
         cond.accept(visitor);
+
+        //String endIfLbl = "EndIf_" + visitor.getCurrentAddr();
 
         visitor.visit(this);
         for (Node node : stmts) {
             node.accept(visitor);
         }
 
-        Node endIf = new EndWhileStatement(jmpInst, condAddr);
-        endIf.accept(visitor);
+        endElseIf = new EndElseIfStatement();
+        endElseIf.accept(visitor);
     }
 
     @Override
@@ -45,7 +49,7 @@ public class WhileStatement implements Node, Block
     {
         StringBuilder buf = new StringBuilder();
 
-        buf.append("if ");
+        buf.append("else if ");
         buf.append(cond.toString());
 
         return buf.toString();

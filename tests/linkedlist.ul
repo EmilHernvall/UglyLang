@@ -4,18 +4,16 @@ compound_type LinkedList #Link (value:string, next:LinkedList),
 (void)(LinkedList, string) appendList =
     (void)(LinkedList list, string v) {
         unpack list as #Link current {
-            LinkedList after = current.next;
+            unpack current.next as #Link link {
+                appendList(link, v);
+            }
 
-            unpack after as #Terminator {
+            unpack current.next as #Terminator {
                 current.next =
                     (
                         value: v,
                         next: #Terminator
                     );
-            }
-
-            unpack after as #Link link {
-                appendList(link, v);
             }
         }
     };

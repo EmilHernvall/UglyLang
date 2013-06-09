@@ -4,11 +4,11 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpInstruction;
 
-public class EndIfStatement implements Node, Block
+public class EndElseIfStatement implements Node, Block
 {
     private JumpInstruction jmpInst;
 
-    public EndIfStatement()
+    public EndElseIfStatement()
     {
     }
 

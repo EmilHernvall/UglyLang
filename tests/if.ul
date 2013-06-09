@@ -1,0 +1,16 @@
+int a = 4;
+
+if a == 1 {
+    print("first");
+}
+elif a == 2 {
+    print("second");
+}
+elif a == 3 {
+    print("third");
+}
+else {
+    print("else");
+}
+
+print("done");

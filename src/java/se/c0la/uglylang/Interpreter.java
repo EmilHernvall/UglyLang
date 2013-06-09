@@ -97,32 +97,45 @@ public class Interpreter
     public String dumpValue(Value value)
     {
         Set<Value> seen = new HashSet<Value>();
-        return dumpValue(value, seen);
+        return dumpValue(value, seen, 0);
     }
 
-    public String dumpValue(Value value, Set<Value> seen)
+    public String pad(int depth)
+    {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < depth; i++) {
+            buf.append("    ");
+        }
+        return buf.toString();
+    }
+
+    public String dumpValue(Value value, Set<Value> seen, int depth)
     {
         StringBuilder buffer = new StringBuilder();
         if (value instanceof ObjectValue) {
             if (seen.contains(value)) {
-                return "** RECURSION **";
+                return String.format("%X", System.identityHashCode(value));
             }
 
             seen.add(value);
 
-            buffer.append("(");
+            buffer.append(String.format("%X", System.identityHashCode(value)));
+            buffer.append(" (\n");
             ObjectValue obj = (ObjectValue)value;
             String delim = "";
             for (String field : obj.getFields()) {
                 buffer.append(delim);
+                buffer.append(pad(depth+1));
                 buffer.append(field);
-                buffer.append(":");
+                buffer.append(": ");
 
                 Value sub = obj.getField(field);
-                buffer.append(dumpValue(sub, seen));
+                buffer.append(dumpValue(sub, seen, depth+1));
 
-                delim = ", ";
+                delim = ", \n";
             }
+            buffer.append("\n");
+            buffer.append(pad(depth));
             buffer.append(")");
         }
         else if (value instanceof ArrayValue) {
@@ -132,16 +145,20 @@ public class Interpreter
 
             seen.add(value);
 
-            buffer.append("[");
+            buffer.append(String.format("%X", System.identityHashCode(value)));
+            buffer.append(" [\n");
             ArrayValue arr = (ArrayValue)value;
             String delim = "";
             for (int i = 0; i < arr.getSize(); i++) {
                 Value sub = arr.get(i);
                 buffer.append(delim);
-                buffer.append(dumpValue(sub, seen));
+                buffer.append(pad(depth+1));
+                buffer.append(dumpValue(sub, seen, depth+1));
 
-                delim = ", ";
+                delim = ", \n";
             }
+            buffer.append("\n");
+            buffer.append(pad(depth));
             buffer.append("]");
         }
         else {
@@ -527,9 +544,9 @@ public class Interpreter
                     IsTypeInstruction istype = (IsTypeInstruction)inst;
                     Value val = stack.pop();
                     if (istype.getType().isCompatible(val.getType())) {
-                        stack.push(new BooleanValue(true));
+                        stack.push(BooleanValue.TRUE);
                     } else {
-                        stack.push(new BooleanValue(false));
+                        stack.push(BooleanValue.FALSE);
                     }
                     programCounter++;
                     continue;
@@ -540,6 +557,16 @@ public class Interpreter
                     Value first = stack.pop();
                     Value second = stack.pop();
                     Value newValue = first.equalOp(second);
+                    stack.push(newValue);
+                    programCounter++;
+                    continue;
+                }
+
+                case NOTEQUAL:
+                {
+                    Value first = stack.pop();
+                    Value second = stack.pop();
+                    Value newValue = first.notEqualOp(second);
                     stack.push(newValue);
                     programCounter++;
                     continue;
@@ -685,6 +712,7 @@ public class Interpreter
             try {
                 long start = System.currentTimeMillis();
                 interpreter.run(visitor.getInstructions());
+                System.out.println("pc: " + interpreter.programCounter);
                 System.out.println("Execution finished in " +
                         (System.currentTimeMillis() - start) + "ms");
             } catch (Exception e) {

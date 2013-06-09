@@ -3,17 +3,17 @@ package se.c0la.uglylang.ast;
 import java.util.*;
 
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
+import se.c0la.uglylang.ir.JumpInstruction;
 
-public class WhileStatement implements Node, Block
+public class ElseStatement implements Node, Block
 {
-    private Node cond;
     private List<Node> stmts;
 
     private JumpOnFalseInstruction jmpInst;
+    private List<JumpInstruction> jumps;
 
-    public WhileStatement(Node cond, List<Node> stmts)
+    public ElseStatement(List<Node> stmts)
     {
-        this.cond = cond;
         this.stmts = stmts;
     }
 
@@ -24,30 +24,26 @@ public class WhileStatement implements Node, Block
 
     public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
 
+    public void setJumps(List<JumpInstruction> jumps)
+    {
+        this.jumps = jumps;
+    }
+
     @Override
     public void accept(Visitor visitor)
     {
-        int condAddr = visitor.getCurrentAddr();
-
-        cond.accept(visitor);
-
         visitor.visit(this);
         for (Node node : stmts) {
             node.accept(visitor);
         }
 
-        Node endIf = new EndWhileStatement(jmpInst, condAddr);
-        endIf.accept(visitor);
+        Node endElse = new EndElseStatement(jumps);
+        endElse.accept(visitor);
     }
 
     @Override
     public String toString()
     {
-        StringBuilder buf = new StringBuilder();
-
-        buf.append("if ");
-        buf.append(cond.toString());
-
-        return buf.toString();
+        return "else";
     }
 }

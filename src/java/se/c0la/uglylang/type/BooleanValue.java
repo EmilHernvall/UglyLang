@@ -3,10 +3,30 @@ package se.c0la.uglylang.type;
 public class BooleanValue extends AbstractValue<BooleanType>
 {
     public final static BooleanType TYPE = new BooleanType();
+    public final static BooleanValue TRUE = new BooleanValue(true);
+    public final static BooleanValue FALSE = new BooleanValue(false);
 
     public boolean val;
 
-    public BooleanValue(boolean val)
+    public static BooleanValue negate(Value v)
+    {
+        if (v.equals(TRUE)) {
+            return FALSE;
+        } else {
+            return TRUE;
+        }
+    }
+
+    public static BooleanValue fromBool(boolean v)
+    {
+        if (v) {
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
+    private BooleanValue(boolean val)
     {
         this.val = val;
     }
