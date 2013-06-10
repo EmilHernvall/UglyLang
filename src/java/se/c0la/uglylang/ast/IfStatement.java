@@ -5,7 +5,7 @@ import java.util.*;
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 import se.c0la.uglylang.ir.JumpInstruction;
 
-public class IfStatement implements Node, Block
+public class IfStatement extends AbstractNode implements Node, Block
 {
     private Node cond;
     private List<Node> stmts;

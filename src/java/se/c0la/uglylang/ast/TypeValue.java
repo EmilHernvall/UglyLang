@@ -4,7 +4,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.CompoundType;
 import se.c0la.uglylang.type.TypeException;
 
-public class TypeValue implements Expression
+public class TypeValue extends AbstractNode implements Expression
 {
     private CompoundType type;
     private String name;

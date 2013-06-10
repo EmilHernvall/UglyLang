@@ -3,7 +3,7 @@ package se.c0la.uglylang.ast;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class TypeDeclNode implements Node
+public class TypeDeclNode extends AbstractNode implements Node
 {
     private Type type;
     private String name;

@@ -7,7 +7,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.ObjectType;
 import se.c0la.uglylang.type.TypeException;
 
-public class ObjectNode implements Expression
+public class ObjectNode extends AbstractNode implements Expression
 {
     private Map<String, Expression> values;
 

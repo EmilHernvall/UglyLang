@@ -4,7 +4,7 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpInstruction;
 
-public class EndIfStatement implements Node, Block
+public class EndIfStatement extends AbstractNode implements Node, Block
 {
     private JumpInstruction jmpInst;
 

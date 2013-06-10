@@ -6,7 +6,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.FunctionType;
 import se.c0la.uglylang.type.TypeException;
 
-public class FunctionCall implements Expression
+public class FunctionCall extends AbstractNode implements Expression
 {
     private Expression var;
     private List<Expression> params;

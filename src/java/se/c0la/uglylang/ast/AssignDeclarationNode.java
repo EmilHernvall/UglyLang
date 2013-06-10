@@ -3,7 +3,7 @@ package se.c0la.uglylang.ast;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class AssignDeclarationNode implements Node
+public class AssignDeclarationNode extends AbstractNode implements Node
 {
     private Declaration a;
     private Expression b;

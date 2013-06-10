@@ -4,7 +4,7 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
-public class WhileStatement implements Node, Block
+public class WhileStatement extends AbstractNode implements Node, Block
 {
     private Node cond;
     private List<Node> stmts;

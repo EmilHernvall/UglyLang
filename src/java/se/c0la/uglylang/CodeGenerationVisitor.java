@@ -273,7 +273,8 @@ public class CodeGenerationVisitor implements Visitor
 
         if (node.getDst() != null) {
             if (subType instanceof VoidType) {
-                throw new RuntimeException("Void types cannot be assigned to variable.");
+                throw new CodeGenerationException("Void types cannot be assigned " +
+                        "to variable.", node.getLine(), node.getColumn());
             }
 
             Symbol dstSym = new Symbol(subType, node.getDst());
@@ -509,7 +510,7 @@ public class CodeGenerationVisitor implements Visitor
             ArrayNode arrayNode = node.getArrayNode();
             type = arrayNode.inferType();
         } catch (TypeException e) {
-            throw new RuntimeException(e);
+            throw new CodeGenerationException(e, node.getLine(), node.getColumn());
         }
 
         ArrayAllocateInstruction allocInst = node.getAllocInst();
@@ -533,7 +534,7 @@ public class CodeGenerationVisitor implements Visitor
         try {
             exprType = node.getExprType();
         } catch (TypeException e) {
-            throw new RuntimeException(e);
+            throw new CodeGenerationException(e, node.getLine(), node.getColumn());
         }
 
         Symbol targetSym = node.getDeclaration().getSymbol();
@@ -544,8 +545,9 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         if (!targetSym.getType().isCompatible(exprType)) {
-            throw new RuntimeException("Type mismatch in assignment: " +
-                    targetSym.getType().getName() + " != " + exprType.getName());
+            throw new CodeGenerationException("Type mismatch in assignment: " +
+                    targetSym.getType().getName() + " != " + exprType.getName(),
+                    node.getLine(), node.getColumn());
         }
 
         instructions.add(new StoreInstruction(targetSym));
@@ -696,7 +698,8 @@ public class CodeGenerationVisitor implements Visitor
     {
         Symbol sym = currentScope.findSymbol(node.getName());
         if (sym == null) {
-            throw new RuntimeException("Symbol not found: " + node.getName());
+            throw new CodeGenerationException("Symbol not found: " + node.getName(),
+                    node.getLine(), node.getColumn());
         }
 
         node.setSymbol(sym);
@@ -742,12 +745,13 @@ public class CodeGenerationVisitor implements Visitor
         try {
             type = node.getType();
         } catch (TypeException e) {
-            throw new RuntimeException(e);
+            throw new CodeGenerationException(e, node.getLine(), node.getColumn());
         }
 
         if (!type.hasField(node.getKey())) {
-            throw new RuntimeException("Field " + node.getKey() + " was " +
-                    "not found in " + type.getName() + ".");
+            throw new CodeGenerationException("Field " + node.getKey() + " was " +
+                    "not found in " + type.getName() + ".",
+                    node.getLine(), node.getColumn());
         }
 
         if (DEBUG) {
@@ -779,7 +783,7 @@ public class CodeGenerationVisitor implements Visitor
         try {
             type = node.getVariable().inferType();
         } catch (TypeException e) {
-            throw new RuntimeException(e);
+            throw new CodeGenerationException(e, node.getLine(), node.getColumn());
         }
 
         if (DEBUG) {
@@ -794,7 +798,8 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         if (!(type instanceof ArrayType)) {
-            throw new RuntimeException("Only arrays can be indexed.");
+            throw new CodeGenerationException("Only arrays can be indexed.",
+                    node.getLine(), node.getColumn());
         }
 
         if (flags.contains(Flag.ASSIGN) && node.getSeq() == maxSeq) {
@@ -852,12 +857,13 @@ public class CodeGenerationVisitor implements Visitor
             expectedType = node.inferExpectedType();
         }
         catch (TypeException e) {
-            throw new RuntimeException(e);
+            throw new CodeGenerationException(e, node.getLine(), node.getColumn());
         }
 
         if (!expectedType.isCompatible(actualType)) {
-            throw new RuntimeException("Type mismatch for function call: " +
-                actualType.getName() + " != " + expectedType.getName());
+            throw new CodeGenerationException("Type mismatch for function call: " +
+                actualType.getName() + " != " + expectedType.getName(),
+                node.getLine(), node.getColumn());
         }
 
         if (DEBUG) {

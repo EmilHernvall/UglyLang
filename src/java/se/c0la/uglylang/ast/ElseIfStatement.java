@@ -4,7 +4,7 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
-public class ElseIfStatement implements Node, Block
+public class ElseIfStatement extends AbstractNode implements Node, Block
 {
     private Node cond;
     private List<Node> stmts;

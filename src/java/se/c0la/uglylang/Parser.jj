@@ -210,27 +210,30 @@ Type Type() :
 
 Node TypeDeclaration() :
 {
-    Token t ;
+    Token t, begin ;
     Type type ;
     Node n, n2 ;
 }
 {
-    <TYPEDECL>
+    begin = <TYPEDECL>
     (<WHITESPACE>)*
     t = <IDENT>
     (<WHITESPACE>)*
     type = Type()
     <STMTBREAK>
     (<WHITESPACE>)*
-    { types.put(t.image, type); }
-    { n = new TypeDeclNode(type, t.image); }
-    { return n; }
+    {
+    types.put(t.image, type);
+    n = new TypeDeclNode(type, t.image);
+    n.setPosition(begin.beginLine, begin.beginColumn);
+    return n;
+    }
 }
 
 Node CompoundTypeDeclaration() :
 {
     String name ;
-    Token t ;
+    Token t, begin ;
     Type type = null ;
     CompoundType compoundType ;
     Node n, n2 ;
@@ -241,7 +244,7 @@ Node CompoundTypeDeclaration() :
     subTypes = new HashMap<String, Type>();
     }
 
-    <COMPOUNDTYPEDECL>
+    begin = <COMPOUNDTYPEDECL>
     (<WHITESPACE>)*
     t = <IDENT>
     {
@@ -286,6 +289,7 @@ Node CompoundTypeDeclaration() :
     (<WHITESPACE>)*
     {
     n = new TypeDeclNode(compoundType, name);
+    n.setPosition(begin.beginLine, begin.beginColumn);
     return n;
     }
 }
@@ -316,19 +320,25 @@ Node Statement() :
             n = WhileStatement()
         |
         LOOKAHEAD( <RETURNSTMT> )
-            <RETURNSTMT>
+            t = <RETURNSTMT>
             (<WHITESPACE>)+
             expr = Expression()
             <STMTBREAK>
             (<WHITESPACE>)*
-            { n = new ReturnStatement(expr); }
+            {
+            n = new ReturnStatement(expr);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
         LOOKAHEAD( Declaration() <ASSIGN> )
             d = Declaration()
-            <ASSIGN>
+            t = <ASSIGN>
             (<WHITESPACE>)*
             expr = Expression()
-            { n = new AssignDeclarationNode(d, expr); }
+            {
+            n = new AssignDeclarationNode(d, expr);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
             <STMTBREAK>
             (<WHITESPACE>)*
         |
@@ -342,7 +352,7 @@ Node Statement() :
 
 Node UnpackStatement() :
 {
-    Token t ;
+    Token t, begin ;
     Expression src ;
     String dst = null ;
     Node n ;
@@ -351,7 +361,7 @@ Node UnpackStatement() :
 }
 {
     { stmts = new ArrayList<Node>(); }
-    <UNPACK>
+    begin = <UNPACK>
     (<WHITESPACE>)*
 
     src = Expression()
@@ -383,19 +393,21 @@ Node UnpackStatement() :
          if (type == null) {
             throw new ParseException(subType + " not found.");
          }
-         return new UnpackStatement(src, dst, type, subType, stmts);
+         n = new UnpackStatement(src, dst, type, subType, stmts);
+         n.setPosition(begin.beginLine, begin.beginColumn);
+         return n;
      }
 }
 
 ElseIfStatement ElseIfStatement() :
 {
-    Token t ;
+    Token t, begin ;
     Node n, n2 ;
     List<Node> stmts;
 }
 {
     { stmts = new ArrayList<Node>(); }
-    <ELSEIFSTMT>
+    begin = <ELSEIFSTMT>
     (<WHITESPACE>)*
     n = Expression()
     <LCLAUSE>
@@ -407,18 +419,22 @@ ElseIfStatement ElseIfStatement() :
     <RCLAUSE>
     (<WHITESPACE>)*
 
-     { return new ElseIfStatement(n, stmts); }
+     {
+     ElseIfStatement stmt = new ElseIfStatement(n, stmts);
+     stmt.setPosition(begin.beginLine, begin.beginColumn);
+     return stmt;
+     }
 }
 
 ElseStatement ElseStatement() :
 {
-    Token t ;
+    Token t, begin ;
     Node n, n2 ;
     List<Node> stmts;
 }
 {
     { stmts = new ArrayList<Node>(); }
-    <ELSESTMT>
+    begin = <ELSESTMT>
     (<WHITESPACE>)*
     <LCLAUSE>
     (<WHITESPACE>)*
@@ -429,12 +445,16 @@ ElseStatement ElseStatement() :
     <RCLAUSE>
     (<WHITESPACE>)*
 
-     { return new ElseStatement(stmts); }
+     {
+     ElseStatement stmt =  new ElseStatement(stmts);
+     stmt.setPosition(begin.beginLine, begin.beginColumn);
+     return stmt;
+     }
 }
 
 Node IfStatement() :
 {
-    Token t ;
+    Token t, begin ;
     Node n, n2 ;
     ElseIfStatement elseIfStmt = null ;
     List<ElseIfStatement> elseIfList ;
@@ -444,7 +464,7 @@ Node IfStatement() :
 {
     { stmts = new ArrayList<Node>(); }
     { elseIfList = new ArrayList<ElseIfStatement>(); }
-    <IFSTMT>
+    begin = <IFSTMT>
     (<WHITESPACE>)*
     n = Expression()
     <LCLAUSE>
@@ -461,18 +481,22 @@ Node IfStatement() :
     )*
     [ elseStmt = ElseStatement() ]
 
-     { return new IfStatement(n, stmts, elseIfList, elseStmt); }
+     {
+     n = new IfStatement(n, stmts, elseIfList, elseStmt);
+     n.setPosition(begin.beginLine, begin.beginColumn);
+     return n;
+     }
 }
 
 Node WhileStatement() :
 {
-    Token t ;
+    Token t, begin ;
     Node n, n2 ;
     List<Node> stmts;
 }
 {
     { stmts = new ArrayList<Node>(); }
-    <WHILESTMT>
+    begin = <WHILESTMT>
     (<WHITESPACE>)*
     n = Expression()
     <LCLAUSE>
@@ -484,7 +508,11 @@ Node WhileStatement() :
     <RCLAUSE>
     (<WHITESPACE>)*
 
-     { return new WhileStatement(n, stmts); }
+    {
+    n = new WhileStatement(n, stmts);
+    n.setPosition(begin.beginLine, begin.beginColumn);
+    return n;
+    }
 }
 
 Declaration Declaration() :
@@ -502,18 +530,21 @@ Declaration Declaration() :
     { d = new Declaration(type, name); }
     (<WHITESPACE>)*
 
-    { return d; }
+    {
+    d.setPosition(t.beginLine, t.beginColumn);
+    return d;
+    }
 }
 
 ObjectNode Object() :
 {
     Map<String, Expression> nodes ;
-    Token t ;
+    Token t, begin ;
     Expression n ;
 }
 {
     { nodes = new LinkedHashMap<String, Expression>(); }
-    <LPAR>
+    begin = <LPAR>
     (<WHITESPACE>)*
     t = <IDENT>
     <KEYVALUESEP>
@@ -532,17 +563,22 @@ ObjectNode Object() :
     <RPAR>
     (<WHITESPACE>)*
 
-    { return new ObjectNode(nodes); }
+    {
+    ObjectNode obj = new ObjectNode(nodes);
+    obj.setPosition(begin.beginLine, begin.beginColumn);
+    return obj;
+    }
 }
 
 ArrayNode Array() :
 {
+    Token begin ;
     List<Expression> nodes ;
     Expression n ;
 }
 {
     { nodes = new ArrayList<Expression>(); }
-    <LBRACKET>
+    begin = <LBRACKET>
     (<WHITESPACE>)*
     n = Expression()
     { nodes.add(n); }
@@ -555,12 +591,16 @@ ArrayNode Array() :
     <RBRACKET>
     (<WHITESPACE>)*
 
-    { return new ArrayNode(nodes); }
+    {
+    ArrayNode stmt = new ArrayNode(nodes);
+    stmt.setPosition(begin.beginLine, begin.beginColumn);
+    return stmt;
+    }
 }
 
 FunctionDecl Function() :
 {
-    Token t ;
+    Token t, begin ;
     Type type ;
     Node n ;
     Declaration d ;
@@ -571,7 +611,7 @@ FunctionDecl Function() :
 {
     { params = new ArrayList<Declaration>(); }
     { statements = new ArrayList<Node>(); }
-    <LPAR>
+    begin = <LPAR>
     type = Type()
     <RPAR>
     <LPAR>
@@ -596,7 +636,11 @@ FunctionDecl Function() :
     <RCLAUSE>
     (<WHITESPACE>)*
 
-    { return new FunctionDecl(type, params, statements); }
+    {
+    f = new FunctionDecl(type, params, statements);
+    f.setPosition(begin.beginLine, begin.beginColumn);
+    return f;
+    }
 }
 
 Expression Expression() :
@@ -607,10 +651,13 @@ Expression Expression() :
 {
     n = Expression2()
     (
-            <ASSIGN>
+            t = <ASSIGN>
             (<WHITESPACE>)*
             n2 = Expression2()
-            { n = new AssignNode(n, n2); }
+            {
+            n = new AssignNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
     )*
 
     { return n; }
@@ -624,20 +671,29 @@ Expression Expression2() :
 {
     n = Expression3()
     (
-            <AND>
+            t = <AND>
             (<WHITESPACE>)*
             n2 = Expression3()
-            { n = new AndNode(n, n2); }
+            {
+            n = new AndNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <OR>
+            t = <OR>
             (<WHITESPACE>)*
             n2 = Expression3()
-            { n = new OrNode(n, n2); }
+            {
+            n = new OrNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <XOR>
+            t = <XOR>
             (<WHITESPACE>)*
             n2 = Expression3()
-            { n = new XorNode(n, n2); }
+            {
+            n = new XorNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
     )*
 
     { return n; }
@@ -651,35 +707,53 @@ Expression Expression3() :
 {
     n = Expression4()
     (
-            <EQ>
+            t = <EQ>
             (<WHITESPACE>)*
             n2 = Expression4()
-            { n = new EqualNode(n, n2); }
+            {
+            n = new EqualNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <NOTEQ>
+            t = <NOTEQ>
             (<WHITESPACE>)*
             n2 = Expression4()
-            { n = new NotEqualNode(n, n2); }
+            {
+            n = new NotEqualNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <LT>
+            t = <LT>
             (<WHITESPACE>)*
             n2 = Expression4()
-            { n = new LtNode(n, n2); }
+            {
+            n = new LtNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <GT>
+            t = <GT>
             (<WHITESPACE>)*
             n2 = Expression4()
-            { n = new GtNode(n, n2); }
+            {
+            n = new GtNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <LTEQ>
+            t = <LTEQ>
             (<WHITESPACE>)*
             n2 = Expression4()
-            { n = new LtEqNode(n, n2); }
+            {
+            n = new LtEqNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
-            <GTEQ>
+            t = <GTEQ>
             (<WHITESPACE>)*
             n2 = Expression4()
-            { n = new GtEqNode(n, n2); }
+            {
+            n = new GtEqNode(n, n2);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
     )*
 
     { return n; }
@@ -694,15 +768,21 @@ Expression Expression4() :
     (
         n = Expression5()
         (
-                <ADD>
+                t = <ADD>
                 (<WHITESPACE>)*
                 n2 = Expression5()
-                { n = new AddNode(n, n2); }
+                {
+                n = new AddNode(n, n2);
+                n.setPosition(t.beginLine, t.beginColumn);
+                }
             |
-                <SUB>
+                t = <SUB>
                 (<WHITESPACE>)*
                 n2 = Expression5()
-                { n = new SubNode(n, n2); }
+                {
+                n = new SubNode(n, n2);
+                n.setPosition(t.beginLine, t.beginColumn);
+                }
         )*
     )
 
@@ -718,20 +798,29 @@ Expression Expression5() :
     (
         n = Expression6()
         (
-                <MUL>
+                t = <MUL>
                 (<WHITESPACE>)*
                 n2 = Expression6()
-                { n = new MulNode(n, n2); }
+                {
+                n = new MulNode(n, n2);
+                n.setPosition(t.beginLine, t.beginColumn);
+                }
             |
-                <DIV>
+                t = <DIV>
                 (<WHITESPACE>)*
                 n2 = Expression6()
-                { n = new DivNode(n, n2); }
+                {
+                n = new DivNode(n, n2);
+                n.setPosition(t.beginLine, t.beginColumn);
+                }
             |
-                <MOD>
+                t = <MOD>
                 (<WHITESPACE>)*
                 n2 = Expression6()
-                { n = new ModNode(n, n2); }
+                {
+                n = new ModNode(n, n2);
+                n.setPosition(t.beginLine, t.beginColumn);
+                }
         )*
     )
 
@@ -776,11 +865,17 @@ Expression Expression6() :
         |
             t = <IDENT>
             (<WHITESPACE>)*
-            { n = new Variable(t.image, seq++); }
+            {
+            n = new Variable(t.image, seq++);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
             t = <NUMBER>
             (<WHITESPACE>)*
-            { n = new IntegerConstant(t.image); }
+            {
+            n = new IntegerConstant(t.image);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         |
             t = <TYPENAME>
             (<WHITESPACE>)*
@@ -790,11 +885,15 @@ Expression Expression6() :
                 throw new ParseException(t.image + " not found.");
             }
             n = new TypeValue(type, t.image);
+            n.setPosition(t.beginLine, t.beginColumn);
             }
         |
             t = <STRING>
             (<WHITESPACE>)*
-            { n = new StringConstant(t.image.substring(1, t.image.length()-1)); }
+            {
+            n = new StringConstant(t.image.substring(1, t.image.length()-1));
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
     )
 
     (
@@ -802,19 +901,25 @@ Expression Expression6() :
             <SUBSCRIPT>
             t = <IDENT>
             (<WHITESPACE>)*
-            { n = new SubscriptNode(n, t.image, seq++); }
+            {
+            n = new SubscriptNode(n, t.image, seq++);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         )
         |
         (
-            <LBRACKET>
+            t = <LBRACKET>
             n2 = Expression()
             <RBRACKET>
             (<WHITESPACE>)*
-            { n = new IndexNode(n, n2, seq++); }
+            {
+            n = new IndexNode(n, n2, seq++);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         )
         |
         (
-            <LPAR>
+            t = <LPAR>
             (<WHITESPACE>)*
             { params = new ArrayList<Expression>(); }
 
@@ -830,7 +935,10 @@ Expression Expression6() :
             ]
             <RPAR>
             (<WHITESPACE>)*
-            { n = new FunctionCall(n, params); }
+            {
+            n = new FunctionCall(n, params);
+            n.setPosition(t.beginLine, t.beginColumn);
+            }
         )
     )*
 

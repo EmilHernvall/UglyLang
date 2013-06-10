@@ -5,7 +5,7 @@ import java.util.*;
 import se.c0la.uglylang.type.CompoundType;
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
-public class UnpackStatement implements Node, Block
+public class UnpackStatement extends AbstractNode implements Node, Block
 {
     private Expression src;
     private String dst;

@@ -4,7 +4,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.ObjectType;
 import se.c0la.uglylang.type.TypeException;
 
-public class SubscriptNode implements Expression
+public class SubscriptNode extends AbstractNode implements Expression
 {
     private Expression var;
     private String key;

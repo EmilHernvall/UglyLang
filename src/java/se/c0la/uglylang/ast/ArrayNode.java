@@ -7,7 +7,7 @@ import se.c0la.uglylang.type.ArrayType;
 import se.c0la.uglylang.type.TypeException;
 import se.c0la.uglylang.ir.ArrayAllocateInstruction;
 
-public class ArrayNode implements Expression
+public class ArrayNode extends AbstractNode implements Expression
 {
     private List<Expression> values;
     private ArrayAllocateInstruction inst;

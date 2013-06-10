@@ -5,7 +5,7 @@ import java.util.List;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class ObjectSetNode implements Node
+public class ObjectSetNode extends AbstractNode implements Node
 {
     private String field;
     private Type type;

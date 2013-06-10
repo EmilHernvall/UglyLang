@@ -3,7 +3,7 @@ package se.c0la.uglylang.ast;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class DivNode implements Expression
+public class DivNode extends AbstractNode implements Expression
 {
     private Expression a;
     private Expression b;

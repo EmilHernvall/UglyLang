@@ -5,7 +5,7 @@ import java.util.*;
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 import se.c0la.uglylang.ir.JumpInstruction;
 
-public class ElseStatement implements Node, Block
+public class ElseStatement extends AbstractNode implements Node, Block
 {
     private List<Node> stmts;
 

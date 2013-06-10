@@ -6,7 +6,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.ArrayType;
 import se.c0la.uglylang.type.TypeException;
 
-public class IndexNode implements Expression
+public class IndexNode extends AbstractNode implements Expression
 {
     private Expression var;
     private Expression index;

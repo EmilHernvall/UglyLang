@@ -2,7 +2,7 @@ package se.c0la.uglylang.ast;
 
 import java.util.List;
 
-public class ArraySetNode implements Node
+public class ArraySetNode extends AbstractNode implements Node
 {
     private int idx;
 

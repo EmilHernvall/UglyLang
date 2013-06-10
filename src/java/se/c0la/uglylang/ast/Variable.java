@@ -4,7 +4,7 @@ import se.c0la.uglylang.Symbol;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.TypeException;
 
-public class Variable implements Expression
+public class Variable extends AbstractNode implements Expression
 {
     private String name = null;
     private Symbol symbol = null;

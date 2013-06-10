@@ -4,7 +4,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.StringType;
 import se.c0la.uglylang.type.TypeException;
 
-public class StringConstant implements Expression
+public class StringConstant extends AbstractNode implements Expression
 {
     private String value;
 

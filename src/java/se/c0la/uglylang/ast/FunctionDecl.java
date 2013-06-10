@@ -7,7 +7,7 @@ import se.c0la.uglylang.type.FunctionType;
 import se.c0la.uglylang.type.TypeException;
 import se.c0la.uglylang.Symbol;
 
-public class FunctionDecl implements Expression, Block
+public class FunctionDecl extends AbstractNode implements Expression, Block
 {
     private Type returnType;
     private List<Declaration> params;

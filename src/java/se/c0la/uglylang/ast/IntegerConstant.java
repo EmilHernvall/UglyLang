@@ -4,7 +4,7 @@ import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.IntegerType;
 import se.c0la.uglylang.type.TypeException;
 
-public class IntegerConstant implements Expression
+public class IntegerConstant extends AbstractNode implements Expression
 {
     private int value;
 

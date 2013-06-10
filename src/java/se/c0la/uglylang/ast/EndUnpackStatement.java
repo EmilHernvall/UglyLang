@@ -4,7 +4,7 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
-public class EndUnpackStatement implements Node, Block
+public class EndUnpackStatement extends AbstractNode implements Node, Block
 {
     private JumpOnFalseInstruction jmpInst;
 

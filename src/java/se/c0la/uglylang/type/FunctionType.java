@@ -15,6 +15,7 @@ public class FunctionType extends AbstractType
     }
 
     public Type getReturnType() { return returnType; }
+
     public List<Type> getParameters() { return parameters; }
 
     @Override

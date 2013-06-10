@@ -4,7 +4,7 @@ import java.util.*;
 
 import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
-public class EndWhileStatement implements Node, Block
+public class EndWhileStatement extends AbstractNode implements Node, Block
 {
     private JumpOnFalseInstruction jmpInst;
     private int condAddr;

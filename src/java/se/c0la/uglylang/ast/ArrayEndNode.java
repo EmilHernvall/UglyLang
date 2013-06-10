@@ -7,7 +7,7 @@ import se.c0la.uglylang.type.ArrayType;
 import se.c0la.uglylang.type.TypeException;
 import se.c0la.uglylang.ir.ArrayAllocateInstruction;
 
-public class ArrayEndNode implements Node
+public class ArrayEndNode extends AbstractNode implements Node
 {
     private ArrayNode node;
     private ArrayAllocateInstruction inst;

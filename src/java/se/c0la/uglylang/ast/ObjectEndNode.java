@@ -5,7 +5,7 @@ import java.util.List;
 import se.c0la.uglylang.type.Type;
 import se.c0la.uglylang.type.ObjectType;
 
-public class ObjectEndNode implements Node
+public class ObjectEndNode extends AbstractNode implements Node
 {
     private ObjectType type;
 

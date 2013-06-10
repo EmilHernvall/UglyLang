@@ -731,9 +731,19 @@ public class Interpreter
             return;
         }
 
-        // generate instructions
-        for (Node node : nodes) {
-            node.accept(visitor);
+        try {
+            // generate instructions
+            for (Node node : nodes) {
+                node.accept(visitor);
+            }
+        }
+        catch (CodeGenerationException e) {
+            System.out.printf("Error at line %d, col %d: ",
+                    e.getLine(), e.getColumn());
+
+            System.out.println(e.getMessage());
+
+            return;
         }
 
         if ("run".equals(mode)) {
