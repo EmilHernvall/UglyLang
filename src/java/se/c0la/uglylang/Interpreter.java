@@ -299,7 +299,8 @@ public class Interpreter
                     }
 
                     objectReg = (ObjectValue)stack[--stackPointer];
-                    ReturnAddressValue retAddr = (ReturnAddressValue)stack[--stackPointer];
+                    ReturnAddressValue retAddr =
+                        (ReturnAddressValue)stack[--stackPointer];
                     programCounter = retAddr.getAddr();
 
                     if (!load.isVoidFunc()) {
@@ -712,22 +713,26 @@ public class Interpreter
             nodes = parser.parse();
         }
         catch (ParseException e) {
-            Token t = e.currentToken;
-            System.out.printf("Parse error at line %d, col %d. ",
-                    t.beginLine, t.beginColumn);
+            if (e.currentToken != null) {
+                Token t = e.currentToken;
+                System.out.printf("Parse error at line %d, col %d. ",
+                        t.beginLine, t.beginColumn);
 
-            System.out.print("Found " + e.tokenImage[t.kind] + ". ");
+                System.out.print("Found " + e.tokenImage[t.kind] + ". ");
 
-            System.out.print("Expected: ");
-            String delim = "";
-            for (int[] seq : e.expectedTokenSequences) {
-                System.out.print(delim);
-                for (int token : seq) {
-                    System.out.print(e.tokenImage[token]);
+                System.out.print("Expected: ");
+                String delim = "";
+                for (int[] seq : e.expectedTokenSequences) {
+                    System.out.print(delim);
+                    for (int token : seq) {
+                        System.out.print(e.tokenImage[token]);
+                    }
+                    delim = ", ";
                 }
-                delim = ", ";
+                System.out.println();
+            } else {
+                System.out.println(e.getMessage());
             }
-            System.out.println();
             return;
         }
 

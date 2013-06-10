@@ -1,0 +1,59 @@
+type Person (name:string,
+             age:int,
+             length:int,
+             weight:int,
+             bmi:(int)(),
+             printInfo:(void)());
+
+// Type with compare method, since common types can't reference themselves
+type ComparablePerson (name:string,
+             age:int,
+             length:int,
+             weight:int,
+             bmi:(int)(),
+             printInfo:(void)(),
+             compare:(void)(Person));
+
+type PersonConstructor (ComparablePerson)(string, int, int, int);
+
+PersonConstructor newPerson =
+(ComparablePerson)(string name, int age, int weight, int length) {
+    return (
+        name: name,
+        age: age,
+        weight: weight,
+        length: length,
+        bmi: (int)() {
+            return 100 * 100 * weight / (length * length);
+        },
+        printInfo: (void)() {
+            print("Name: " + name);
+            print("Age: " + age.str + " years");
+            print("Weight: " + weight.str + " kg");
+            print("Length: " + length.str + " cm");
+            print("Bmi: " + bmi().str);
+        },
+        compare: (void)(Person p) {
+            if (bmi() > p.bmi()) {
+                print(name + " is fatter than " + p.name);
+            } else {
+                print(p.name + " is fatter than " + name);
+            }
+        }
+    );
+};
+
+ComparablePerson emil = newPerson("Emil", 26, 95, 188);
+emil.printInfo();
+
+print("");
+
+Person hannes = newPerson("Hannes", 23, 88, 184);
+hannes.printInfo();
+
+print("");
+
+emil.compare(hannes);
+
+// Won't work:
+// hannes.compare(emil);

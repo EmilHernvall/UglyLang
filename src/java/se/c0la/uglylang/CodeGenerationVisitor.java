@@ -270,7 +270,6 @@ public class CodeGenerationVisitor implements Visitor
         CompoundType type = node.getType();
         Type subType = type.getSubType(node.getSubType());
 
-
         if (node.getDst() != null) {
             if (subType instanceof VoidType) {
                 throw new CodeGenerationException("Void types cannot be assigned " +
@@ -872,7 +871,11 @@ public class CodeGenerationVisitor implements Visitor
                     actualType.getName(), expectedType.getName());
         }
 
-        if (node.isSubscriptCall()) {
+        if (node.isSubscriptCall() || node.isObjectCall()) {
+            if (node.isObjectCall()) {
+                instructions.add(new LoadObjectRegInstruction());
+                instructions.add(new SwapInstruction());
+            }
             instructions.add(new CallCtxInstruction());
         } else {
             instructions.add(new CallInstruction());

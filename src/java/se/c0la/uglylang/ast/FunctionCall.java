@@ -24,6 +24,15 @@ public class FunctionCall extends AbstractNode implements Expression
         return var instanceof SubscriptNode;
     }
 
+    public boolean isObjectCall()
+    {
+        if (var instanceof Variable) {
+            return ((Variable)var).getSymbol().isObjectField();
+        }
+
+        return false;
+    }
+
     public FunctionType inferActualType()
     throws TypeException
     {
