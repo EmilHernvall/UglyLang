@@ -54,7 +54,9 @@ public class Interpreter
     }
 
     private int programCounter;
-    private Stack<Value> stack;
+    //private Stack<Value> stack;
+    private Value[] stack;
+    private int stackPointer;
     private Scope scope;
 
     private ObjectValue objectReg = ObjectValue.EMPTY;
@@ -68,6 +70,9 @@ public class Interpreter
     {
         System.out.println("Dumping stack:");
         for (Value value : stack) {
+            if (value == null) {
+                continue;
+            }
             System.out.println(value);
         }
         System.out.println();
@@ -171,7 +176,9 @@ public class Interpreter
     public void run(List<Instruction> instructions)
     {
         programCounter = 0;
-        stack = new Stack<Value>();
+        //stack = new Stack<Value>();
+        stack = new Value[4096];
+        stackPointer = 0;
         int instrCount = 0;
         while (true) {
             instrCount++;
@@ -191,7 +198,7 @@ public class Interpreter
                 {
                     int retAddr = programCounter+1;
 
-                    Value value = stack.pop();
+                    Value value = stack[--stackPointer];
 
                     if (value instanceof FunctionValue) {
                         scope = new Scope(scope);
@@ -206,11 +213,11 @@ public class Interpreter
                             String name = names.get(i);
                             Symbol sym = symbolMap.get(name);
 
-                            Value arg = stack.pop();
+                            Value arg = stack[--stackPointer];
                             scope.set(sym, arg);
                         }
 
-                        stack.push(new ReturnAddressValue(retAddr));
+                        stack[stackPointer++] = (new ReturnAddressValue(retAddr));
                     }
                     else if (value instanceof NativeFunctionValue) {
                         NativeFunctionValue funcValue = (NativeFunctionValue)value;
@@ -220,12 +227,12 @@ public class Interpreter
 
                         Value[] args = new Value[params.size()];
                         for (int i = 0; i < params.size(); i++) {
-                            args[i] = stack.pop();
+                            args[i] = stack[--stackPointer];
                         }
 
                         Value ret = func.execute(args);
                         if (ret != null) {
-                            stack.push(ret);
+                            stack[stackPointer++] = (ret);
                         }
 
                         programCounter++;
@@ -239,8 +246,8 @@ public class Interpreter
                     int retAddr = programCounter+1;
                     ObjectValue currentCtx = objectReg;
 
-                    FunctionValue func = (FunctionValue)stack.pop();
-                    objectReg = (ObjectValue)stack.pop();
+                    FunctionValue func = (FunctionValue)stack[--stackPointer];
+                    objectReg = (ObjectValue)stack[--stackPointer];
 
                     programCounter = func.getAddr();
 
@@ -254,12 +261,12 @@ public class Interpreter
                         String name = names.get(i);
                         Symbol sym = symbolMap.get(name);
 
-                        Value arg = stack.pop();
+                        Value arg = stack[--stackPointer];
                         scope.set(sym, arg);
                     }
 
-                    stack.push(new ReturnAddressValue(retAddr));
-                    stack.push(currentCtx);
+                    stack[stackPointer++] = (new ReturnAddressValue(retAddr));
+                    stack[stackPointer++] = (currentCtx);
 
                     continue;
                 }
@@ -269,14 +276,14 @@ public class Interpreter
                     ReturnInstruction load = (ReturnInstruction)inst;
                     Value retVal = null;
                     if (!load.isVoidFunc()) {
-                        retVal = stack.pop();
+                        retVal = stack[--stackPointer];
                     }
 
-                    ReturnAddressValue retAddr = (ReturnAddressValue)stack.pop();
+                    ReturnAddressValue retAddr = (ReturnAddressValue)stack[--stackPointer];
                     programCounter = retAddr.getAddr();
 
                     if (!load.isVoidFunc()) {
-                        stack.push(retVal);
+                        stack[stackPointer++] = (retVal);
                     }
 
                     scope = scope.getParentScope();
@@ -288,15 +295,15 @@ public class Interpreter
                     ReturnCtxInstruction load = (ReturnCtxInstruction)inst;
                     Value retVal = null;
                     if (!load.isVoidFunc()) {
-                        retVal = stack.pop();
+                        retVal = stack[--stackPointer];
                     }
 
-                    objectReg = (ObjectValue)stack.pop();
-                    ReturnAddressValue retAddr = (ReturnAddressValue)stack.pop();
+                    objectReg = (ObjectValue)stack[--stackPointer];
+                    ReturnAddressValue retAddr = (ReturnAddressValue)stack[--stackPointer];
                     programCounter = retAddr.getAddr();
 
                     if (!load.isVoidFunc()) {
-                        stack.push(retVal);
+                        stack[stackPointer++] = (retVal);
                     }
 
                     scope = scope.getParentScope();
@@ -311,14 +318,14 @@ public class Interpreter
                         throw new RuntimeException(load.getSymbol().getName() +
                                 " is not defined.");
                     }
-                    stack.push(value);
+                    stack[stackPointer++] = (value);
                     programCounter++;
                     continue;
                 }
 
                 case LOAD_OBJECTREG:
                 {
-                    stack.push(objectReg);
+                    stack[stackPointer++] = (objectReg);
                     programCounter++;
                     continue;
                 }
@@ -326,7 +333,7 @@ public class Interpreter
                 case STORE:
                 {
                     StoreInstruction store = (StoreInstruction)inst;
-                    Value value = stack.pop();
+                    Value value = stack[--stackPointer];
                     scope.set(store.getSymbol(), value);
                     programCounter++;
                     continue;
@@ -334,7 +341,7 @@ public class Interpreter
 
                 case STORE_OBJECTREG:
                 {
-                    objectReg = (ObjectValue)stack.pop();
+                    objectReg = (ObjectValue)stack[--stackPointer];
                     programCounter++;
                     continue;
                 }
@@ -342,7 +349,7 @@ public class Interpreter
                 case PUSH:
                 {
                     PushInstruction push = (PushInstruction)inst;
-                    stack.push(push.getValue());
+                    stack[stackPointer++] = (push.getValue());
                     programCounter++;
                     continue;
                 }
@@ -358,19 +365,19 @@ public class Interpreter
 
                 case SWAP:
                 {
-                    Value a = stack.pop();
-                    Value b = stack.pop();
-                    stack.push(a);
-                    stack.push(b);
+                    Value a = stack[--stackPointer];
+                    Value b = stack[--stackPointer];
+                    stack[stackPointer++] = (a);
+                    stack[stackPointer++] = (b);
                     programCounter++;
                     continue;
                 }
 
                 case DUP:
                 {
-                    Value a = stack.pop();
-                    stack.push(a);
-                    stack.push(a);
+                    Value a = stack[--stackPointer];
+                    stack[stackPointer++] = (a);
+                    stack[stackPointer++] = (a);
                     programCounter++;
                     continue;
                 }
@@ -387,7 +394,7 @@ public class Interpreter
                     JumpOnFalseInstruction jumpOnFalse =
                         (JumpOnFalseInstruction)inst;
 
-                    Value value = stack.pop();
+                    Value value = stack[--stackPointer];
                     BooleanValue b = (BooleanValue)value;
                     if (b.getBoolean()) {
                         programCounter++;
@@ -402,8 +409,8 @@ public class Interpreter
                     ArrayAllocateInstruction alloc =
                         (ArrayAllocateInstruction)inst;
 
-                    IntegerValue size = (IntegerValue)stack.pop();
-                    stack.push(new ArrayValue(alloc.getType(), size.getInt()));
+                    IntegerValue size = (IntegerValue)stack[--stackPointer];
+                    stack[stackPointer++] = (new ArrayValue(alloc.getType(), size.getInt()));
                     programCounter++;
                     continue;
                 }
@@ -411,13 +418,13 @@ public class Interpreter
                 case ARRAY_SET:
                 {
                     try {
-                        IntegerValue index = (IntegerValue)stack.pop();
-                        Value value = stack.pop();
-                        ArrayValue arr = (ArrayValue)stack.pop();
+                        IntegerValue index = (IntegerValue)stack[--stackPointer];
+                        Value value = stack[--stackPointer];
+                        ArrayValue arr = (ArrayValue)stack[--stackPointer];
 
                         arr.set(index.getInt(), value);
 
-                        stack.push(arr);
+                        stack[stackPointer++] = (arr);
 
                         programCounter++;
                     }
@@ -430,9 +437,9 @@ public class Interpreter
                 case ARRAY_SET2:
                 {
                     try {
-                        IntegerValue index = (IntegerValue)stack.pop();
-                        ArrayValue arr = (ArrayValue)stack.pop();
-                        Value value = stack.pop();
+                        IntegerValue index = (IntegerValue)stack[--stackPointer];
+                        ArrayValue arr = (ArrayValue)stack[--stackPointer];
+                        Value value = stack[--stackPointer];
 
                         arr.set(index.getInt(), value);
 
@@ -446,10 +453,10 @@ public class Interpreter
 
                 case ARRAY_GET:
                 {
-                    IntegerValue index = (IntegerValue)stack.pop();
-                    ArrayValue arr = (ArrayValue)stack.pop();
+                    IntegerValue index = (IntegerValue)stack[--stackPointer];
+                    ArrayValue arr = (ArrayValue)stack[--stackPointer];
 
-                    stack.push(arr.get(index.getInt()));
+                    stack[stackPointer++] = (arr.get(index.getInt()));
 
                     programCounter++;
                     continue;
@@ -461,7 +468,7 @@ public class Interpreter
                         (ObjectAllocateInstruction)inst;
 
                     Value value = new ObjectValue(allocInst.getType());
-                    stack.push(value);
+                    stack[stackPointer++] = (value);
                     programCounter++;
                     continue;
                 }
@@ -470,9 +477,9 @@ public class Interpreter
                 {
                     ObjectGetInstruction getInst = (ObjectGetInstruction)inst;
 
-                    Value obj = stack.pop();
+                    Value obj = stack[--stackPointer];
                     Value value = obj.getField(getInst.getField());
-                    stack.push(value);
+                    stack[stackPointer++] = (value);
                     programCounter++;
                     continue;
                 }
@@ -482,8 +489,8 @@ public class Interpreter
                     ObjectSetInstruction getInst =
                         (ObjectSetInstruction)inst;
 
-                    Value value =  stack.pop();
-                    ObjectValue obj = (ObjectValue)stack.pop();
+                    Value value =  stack[--stackPointer];
+                    ObjectValue obj = (ObjectValue)stack[--stackPointer];
                     obj.setField(getInst.getField(), value);
                     programCounter++;
                     continue;
@@ -491,50 +498,50 @@ public class Interpreter
 
                 case ADD:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.addOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case SUB:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.subOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case MUL:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.mulOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case DIV:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.divOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case MOD:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.modOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
@@ -542,11 +549,11 @@ public class Interpreter
                 case ISTYPE:
                 {
                     IsTypeInstruction istype = (IsTypeInstruction)inst;
-                    Value val = stack.pop();
+                    Value val = stack[--stackPointer];
                     if (istype.getType().isCompatible(val.getType())) {
-                        stack.push(BooleanValue.TRUE);
+                        stack[stackPointer++] = (BooleanValue.TRUE);
                     } else {
-                        stack.push(BooleanValue.FALSE);
+                        stack[stackPointer++] = (BooleanValue.FALSE);
                     }
                     programCounter++;
                     continue;
@@ -554,90 +561,90 @@ public class Interpreter
 
                 case EQUAL:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.equalOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case NOTEQUAL:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.notEqualOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case LT:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.ltOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case LTEQ:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.ltEqOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case GT:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.gtOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case GTEQ:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.gtEqOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case AND:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.andOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case OR:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.orOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
 
                 case XOR:
                 {
-                    Value first = stack.pop();
-                    Value second = stack.pop();
+                    Value first = stack[--stackPointer];
+                    Value second = stack[--stackPointer];
                     Value newValue = first.xorOp(second);
-                    stack.push(newValue);
+                    stack[stackPointer++] = (newValue);
                     programCounter++;
                     continue;
                 }
@@ -700,7 +707,29 @@ public class Interpreter
         }
 
         // parse
-        List<Node> nodes = parser.parse();
+        List<Node> nodes;
+        try {
+            nodes = parser.parse();
+        }
+        catch (ParseException e) {
+            Token t = e.currentToken;
+            System.out.printf("Parse error at line %d, col %d. ",
+                    t.beginLine, t.beginColumn);
+
+            System.out.print("Found " + e.tokenImage[t.kind] + ". ");
+
+            System.out.print("Expected: ");
+            String delim = "";
+            for (int[] seq : e.expectedTokenSequences) {
+                System.out.print(delim);
+                for (int token : seq) {
+                    System.out.print(e.tokenImage[token]);
+                }
+                delim = ", ";
+            }
+            System.out.println();
+            return;
+        }
 
         // generate instructions
         for (Node node : nodes) {
@@ -710,11 +739,11 @@ public class Interpreter
         if ("run".equals(mode)) {
             // execute
             try {
-                long start = System.currentTimeMillis();
+                long start = System.nanoTime();
                 interpreter.run(visitor.getInstructions());
-                System.out.println("pc: " + interpreter.programCounter);
+                //System.out.println("pc: " + interpreter.programCounter);
                 System.out.println("Execution finished in " +
-                        (System.currentTimeMillis() - start) + "ms");
+                        (System.nanoTime() - start)/1000l + "us");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println();

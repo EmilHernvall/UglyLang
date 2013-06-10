@@ -29,6 +29,29 @@ Statements:
  * while
  * unpack
 
+Planned Standard Library:
+
+ * IO
+     * File
+     * Network
+     * HTTP
+ * Data structures
+     * List
+         * Array
+         * CopyOnWriteArray
+         * LinkedList
+    * Set
+         * AVLTree
+         * Hashtable
+    * Map
+         * AVLTree
+         * Hashtable
+    * MultiMap
+         * Hashtable
+ * Date and Time
+ * Regex
+ * SQL
+
 Operators
 ---------
 

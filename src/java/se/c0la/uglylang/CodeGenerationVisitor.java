@@ -519,36 +519,6 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(AssignNode node)
     {
-        /*Type exprType;
-        try {
-            exprType = node.inferType();
-        } catch (TypeException e) {
-            throw new RuntimeException(e);
-        }
-
-        Symbol targetSym = currentScope.getTargetSymbol();
-        if (DEBUG) {
-            System.out.printf("%d Assigning to %s to %s of type %s\n",
-                    getCurrentAddr(), exprType.getName(),
-                    targetSym.getName(), targetSym.getType().getName());
-        }
-
-        if (!targetSym.getType().isCompatible(exprType)) {
-            throw new RuntimeException("Type mismatch in assignment: " +
-                    targetSym.getType().getName() + " != " + exprType.getName());
-        }
-
-        if (targetSym.isObjectField()) {
-            Scope scope = currentScope.findSymbolScope(targetSym);
-            Symbol objSym =
-                currentScope.findSymbol("_obj" + scope.getScopeId());
-            instructions.add(new LoadInstruction(objSym));
-            instructions.add(new SwapInstruction());
-            instructions.add(new ObjectSetInstruction(targetSym.getName()));
-        } else {
-            instructions.add(new StoreInstruction(targetSym));
-        }*/
-
         if (DEBUG) {
             System.out.printf("%d Assign\n", getCurrentAddr());
         }
