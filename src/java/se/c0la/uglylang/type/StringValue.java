@@ -14,6 +14,17 @@ public class StringValue extends AbstractValue<StringType>
     public String getString() { return str; }
 
     @Override
+    public Value getField(String field)
+    {
+        if ("compare".equals(field)) {
+            return new NativeFunctionValue(StringType.Compare.TYPE,
+                                           new StringType.Compare(this));
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Value addOp(Value b)
     {
         StringValue val = (StringValue)b;

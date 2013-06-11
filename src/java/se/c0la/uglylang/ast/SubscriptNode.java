@@ -24,12 +24,7 @@ public class SubscriptNode extends AbstractNode implements Expression
     public Type getType()
     throws TypeException
     {
-        Type exprType = var.inferType();
-        /*if (!(exprType instanceof ObjectType)) {
-            throw new RuntimeException("Only objects can be subscripted.");
-        }*/
-
-        return exprType;
+        return var.inferType();
     }
 
     @Override

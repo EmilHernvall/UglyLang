@@ -53,7 +53,7 @@ hannes.printInfo();
 
 print("");
 
-emil.compare(hannes);
-
 // Won't work:
 // hannes.compare(emil);
+
+print(emil.name.compare("foo").str);

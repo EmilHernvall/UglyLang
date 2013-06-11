@@ -215,7 +215,9 @@ TreeConstructor createTree =
             (TreeNode)(TreeNode parent, TreeNode newNode) {
                 unpack parent as #Node p {
                 unpack newNode as #Node n {
-                    if (n.key >= p.key) {
+                    TreeKey fst = n.key;
+                    TreeKey snd = p.key;
+                    if fst.compare(snd) > 0 {
                         unpack p.right as #Node child {
                             hiddenAdd(child, n);
                         }
@@ -263,9 +265,10 @@ TreeConstructor createTree =
             (TreeLookup)(TreeNode,TreeKey) hiddenGet =
             (TreeLookup)(TreeNode node, TreeKey key) {
                 unpack node as #Node n {
-                    if (key > n.key) {
+                    int cmp = key.compare(n.key);
+                    if (cmp > 0) {
                         return hiddenGet(n.right, key);
-                    } elif (key < n.key) {
+                    } elif (cmp < 0) {
                         return hiddenGet(n.left, key);
                     }
                     return n.value;
@@ -351,3 +354,10 @@ lookupTest(testTree, "george");
 lookupTest(testTree, "john");
 lookupTest(testTree, "thomas");
 lookupTest(testTree, "emil");
+
+//type Comparable (compare:(int)(string));
+//Comparable a = "foo";
+//string b = "bar";
+//if a.compare(b) > 0 {
+//    print("yes");
+//}

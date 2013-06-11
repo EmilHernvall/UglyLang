@@ -69,7 +69,8 @@ public class Interpreter
     public void dumpStack()
     {
         System.out.println("Dumping stack:");
-        for (Value value : stack) {
+        for (int i = 0; i < stackPointer; i++) {
+            Value value = stack[i];
             if (value == null) {
                 continue;
             }
@@ -246,27 +247,53 @@ public class Interpreter
                     int retAddr = programCounter+1;
                     ObjectValue currentCtx = objectReg;
 
-                    FunctionValue func = (FunctionValue)stack[--stackPointer];
-                    objectReg = (ObjectValue)stack[--stackPointer];
+                    Value value = stack[--stackPointer];
+                    if (value instanceof FunctionValue) {
+                        FunctionValue func = (FunctionValue)value;
+                        objectReg = (ObjectValue)stack[--stackPointer];
 
-                    programCounter = func.getAddr();
+                        programCounter = func.getAddr();
 
-                    scope = new Scope(scope);
+                        scope = new Scope(scope);
 
-                    // put arguments in values map
-                    Map<String, Symbol> symbolMap = func.getSymbolMap();
-                    List<String> names = new ArrayList<String>(symbolMap.keySet());
+                        // put arguments in values map
+                        Map<String, Symbol> symbolMap = func.getSymbolMap();
+                        List<String> names = new ArrayList<String>(symbolMap.keySet());
 
-                    for (int i = names.size()-1; i >= 0; i--) {
-                        String name = names.get(i);
-                        Symbol sym = symbolMap.get(name);
+                        for (int i = names.size()-1; i >= 0; i--) {
+                            String name = names.get(i);
+                            Symbol sym = symbolMap.get(name);
 
-                        Value arg = stack[--stackPointer];
-                        scope.set(sym, arg);
+                            Value arg = stack[--stackPointer];
+                            scope.set(sym, arg);
+                        }
+
+                        stack[stackPointer++] = (new ReturnAddressValue(retAddr));
+                        stack[stackPointer++] = (currentCtx);
                     }
+                    else if (value instanceof NativeFunctionValue) {
+                        NativeFunctionValue funcValue = (NativeFunctionValue)value;
 
-                    stack[stackPointer++] = (new ReturnAddressValue(retAddr));
-                    stack[stackPointer++] = (currentCtx);
+                        // skip object value
+                        // (ObjectValue)stack[--stackPointer];
+                        stackPointer--;
+
+                        NativeFunction func = funcValue.getFunction();
+                        FunctionType funcType = funcValue.getType();
+                        List<Type> params = funcType.getParameters();
+
+                        Value[] args = new Value[params.size()];
+                        for (int i = 0; i < params.size(); i++) {
+                            args[i] = stack[--stackPointer];
+                        }
+
+                        Value ret = func.execute(args);
+                        if (ret != null) {
+                            stack[stackPointer++] = (ret);
+                        }
+
+                        programCounter++;
+                    }
 
                     continue;
                 }

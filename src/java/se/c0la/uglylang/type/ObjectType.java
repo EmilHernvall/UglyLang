@@ -39,33 +39,17 @@ public class ObjectType extends AbstractType
     @Override
     public boolean isCompatible(Type other, Set<Type> seenTypes)
     {
-        if (!(other instanceof ObjectType)) {
-            return false;
-        }
-
         if (other == this) {
             return true;
         }
 
-        ObjectType otherObj = (ObjectType)other;
         for (String field : parameters.keySet()) {
             Type type = parameters.get(field);
-            Type otherType = otherObj.parameters.get(field);
-            if (otherType == null) {
+            if (!other.hasField(field)) {
                 return false;
             }
 
-            if ("self".equals(type.getName())) {
-                System.out.println("encountered self");
-                System.out.println("\tthis: " + this.getName());
-                System.out.println("\ttype: " + type.getName());
-                System.out.println("\totherType: " + otherType.getName());
-                type = this;
-            }
-            /*if ("self".equals(otherType.getName())) {
-                otherType = this;
-            }*/
-
+            Type otherType = other.getField(field);
             if (!type.isCompatible(otherType, seenTypes)) {
                 System.out.println("mismatch");
                 System.out.println("\ttype: " + type.getName());

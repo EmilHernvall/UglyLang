@@ -57,6 +57,17 @@ public class CodeGenerationVisitor implements Visitor
             return null;
         }
 
+        public Symbol findSymbolInCurrent(String name)
+        {
+            for (Symbol symbol : symbols) {
+                if (name.equals(symbol.getName())) {
+                    return symbol;
+                }
+            }
+
+            return null;
+        }
+
         public Symbol findSymbol(String name)
         {
             for (Symbol symbol : symbols) {
@@ -202,7 +213,13 @@ public class CodeGenerationVisitor implements Visitor
                     getCurrentAddr(), node.getType().getName(), node.getName());
         }
 
-        Symbol sym = new Symbol(node.getType(), node.getName());
+        Symbol sym = currentScope.findSymbolInCurrent(node.getName());
+        if (sym != null) {
+            throw new CodeGenerationException(node.getName() + " is already declared.",
+                node.getLine(), node.getColumn());
+        }
+
+        sym = new Symbol(node.getType(), node.getName());
         node.setSymbol(sym);
         currentScope.addSymbol(sym);
     }
@@ -773,6 +790,8 @@ public class CodeGenerationVisitor implements Visitor
         } else {
             instructions.add(new ObjectGetInstruction(node.getKey()));
         }
+
+        removeFlag(Visitor.Flag.CALL);
     }
 
     @Override
