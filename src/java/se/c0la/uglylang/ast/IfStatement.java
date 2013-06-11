@@ -2,9 +2,6 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.ir.JumpOnFalseInstruction;
-import se.c0la.uglylang.ir.JumpInstruction;
-
 public class IfStatement extends AbstractNode implements Node, Block
 {
     private Node cond;
@@ -12,7 +9,8 @@ public class IfStatement extends AbstractNode implements Node, Block
     private List<ElseIfStatement> elseIfList;
     private ElseStatement elseStmt;
 
-    private JumpOnFalseInstruction jmpInst;
+    private String nextLbl;
+    private String endLbl;
 
     public IfStatement(Node cond,
                        List<Node> stmts,
@@ -25,10 +23,10 @@ public class IfStatement extends AbstractNode implements Node, Block
         this.elseStmt = elseStmt;
     }
 
-    public void setJumpInstruction(JumpOnFalseInstruction jmpInst)
-    {
-        this.jmpInst = jmpInst;
-    }
+    public void setNextLbl(String v) { this.nextLbl = v; }
+    public String getNextLbl() { return nextLbl; }
+
+    public void setEndLbl(String v) { this.endLbl = v; }
 
     @Override
     public void accept(Visitor visitor)
@@ -40,26 +38,19 @@ public class IfStatement extends AbstractNode implements Node, Block
             node.accept(visitor);
         }
 
-        List<JumpInstruction> jumps = new ArrayList<JumpInstruction>();
-
-        EndIfStatement endIf = new EndIfStatement();
+        EndIfStatement endIf = new EndIfStatement(nextLbl, endLbl);
         endIf.accept(visitor);
-        jumps.add(endIf.getJumpInstruction());
 
         for (ElseIfStatement elseIfStmt : elseIfList) {
-            elseIfStmt.setJumpInstruction(jmpInst);
+            elseIfStmt.setEndLbl(endLbl);
             elseIfStmt.accept(visitor);
-            EndElseIfStatement endElseIfStmt = elseIfStmt.getEndElseIfStmt();
-            jumps.add(endElseIfStmt.getJumpInstruction());
-            jmpInst = elseIfStmt.getJumpInstruction();
         }
 
         if (elseStmt == null) {
             elseStmt = new ElseStatement(new ArrayList<Node>());
         }
 
-        elseStmt.setJumpInstruction(jmpInst);
-        elseStmt.setJumps(jumps);
+        elseStmt.setEndLbl(endLbl);
         elseStmt.accept(visitor);
     }
 

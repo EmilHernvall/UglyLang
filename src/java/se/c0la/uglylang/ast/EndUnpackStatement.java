@@ -2,18 +2,16 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.ir.JumpOnFalseInstruction;
-
 public class EndUnpackStatement extends AbstractNode implements Node, Block
 {
-    private JumpOnFalseInstruction jmpInst;
+    private String lbl;
 
-    public EndUnpackStatement(JumpOnFalseInstruction jmpInst)
+    public EndUnpackStatement(String lbl)
     {
-        this.jmpInst = jmpInst;
+        this.lbl = lbl;
     }
 
-    public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
+    public String getLbl() { return lbl; }
 
     @Override
     public void accept(Visitor visitor)

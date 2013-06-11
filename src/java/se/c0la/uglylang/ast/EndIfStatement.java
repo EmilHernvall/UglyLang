@@ -2,22 +2,19 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.ir.JumpInstruction;
-
 public class EndIfStatement extends AbstractNode implements Node, Block
 {
-    private JumpInstruction jmpInst;
+    private String nextLbl;
+    private String endLbl;
 
-    public EndIfStatement()
+    public EndIfStatement(String nextLbl, String endLbl)
     {
+        this.nextLbl = nextLbl;
+        this.endLbl = endLbl;
     }
 
-    public void setJumpInstruction(JumpInstruction jmpInst)
-    {
-        this.jmpInst = jmpInst;
-    }
-
-    public JumpInstruction getJumpInstruction() { return jmpInst; }
+    public String getNextLbl() { return nextLbl; }
+    public String getEndLbl() { return endLbl; }
 
     @Override
     public void accept(Visitor visitor)

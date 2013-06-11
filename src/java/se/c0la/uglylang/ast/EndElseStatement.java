@@ -2,18 +2,16 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.ir.JumpInstruction;
-
 public class EndElseStatement extends AbstractNode implements Node, Block
 {
-    private List<JumpInstruction> jumps;
+    private String endLbl;
 
-    public EndElseStatement(List<JumpInstruction> jumps)
+    public EndElseStatement(String endLbl)
     {
-        this.jumps = jumps;
+        this.endLbl = endLbl;
     }
 
-    public List<JumpInstruction> getJumps() { return jumps; }
+    public String getEndLbl() { return endLbl; }
 
     @Override
     public void accept(Visitor visitor)

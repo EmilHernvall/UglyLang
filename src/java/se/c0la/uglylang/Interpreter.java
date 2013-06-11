@@ -741,6 +741,8 @@ public class Interpreter
             for (Node node : nodes) {
                 node.accept(visitor);
             }
+
+            visitor.setLabels();
         }
         catch (CodeGenerationException e) {
             System.out.printf("Error at line %d, col %d: ",

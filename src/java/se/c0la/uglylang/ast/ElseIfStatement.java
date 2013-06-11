@@ -2,15 +2,15 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.ir.JumpOnFalseInstruction;
-
 public class ElseIfStatement extends AbstractNode implements Node, Block
 {
     private Node cond;
     private List<Node> stmts;
 
-    private JumpOnFalseInstruction jmpInst;
     private EndElseIfStatement endElseIf;
+
+    private String nextLbl;
+    private String endLbl;
 
     public ElseIfStatement(Node cond, List<Node> stmts)
     {
@@ -18,29 +18,22 @@ public class ElseIfStatement extends AbstractNode implements Node, Block
         this.stmts = stmts;
     }
 
-    public void setJumpInstruction(JumpOnFalseInstruction jmpInst)
-    {
-        this.jmpInst = jmpInst;
-    }
+    public void setNextLbl(String v) { this.nextLbl = v; }
+    public String getNextLbl() { return nextLbl; }
 
-    public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
-    public EndElseIfStatement getEndElseIfStmt() { return endElseIf; }
+    public void setEndLbl(String v) { this.endLbl = v; }
 
     @Override
     public void accept(Visitor visitor)
     {
-        jmpInst.setAddr(visitor.getCurrentAddr());
-
         cond.accept(visitor);
-
-        //String endIfLbl = "EndIf_" + visitor.getCurrentAddr();
 
         visitor.visit(this);
         for (Node node : stmts) {
             node.accept(visitor);
         }
 
-        endElseIf = new EndElseIfStatement();
+        endElseIf = new EndElseIfStatement(nextLbl, endLbl);
         endElseIf.accept(visitor);
     }
 

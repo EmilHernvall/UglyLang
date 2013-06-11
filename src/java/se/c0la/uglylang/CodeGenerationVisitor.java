@@ -85,15 +85,17 @@ public class CodeGenerationVisitor implements Visitor
 
     private Set<Flag> flags;
 
+    private Map<String, Integer> labels;
+    private int lblCounter = 0;
+
     public CodeGenerationVisitor()
     {
         instructions = new ArrayList<Instruction>();
-
         rootScope = new Scope(scopeCounter++);
-
-        flags = EnumSet.noneOf(Flag.class);
-
         currentScope = rootScope;
+        flags = EnumSet.noneOf(Flag.class);
+        labels = new HashMap<String, Integer>();
+        lblCounter = 0;
     }
 
     public void setDebug(boolean v) { DEBUG = v; }
@@ -124,6 +126,32 @@ public class CodeGenerationVisitor implements Visitor
         int i = 0;
         for (Instruction inst : instructions) {
             System.out.printf("%d %s\n", i++, inst.toString());
+        }
+    }
+
+    public void setLabels()
+    {
+        for (Instruction inst : instructions) {
+            if (inst instanceof JumpInstruction) {
+                JumpInstruction jump = (JumpInstruction)inst;
+                String lbl = jump.getLabel();
+                Integer addr = labels.get(lbl);
+                if (addr != null) {
+                    jump.setAddr(addr);
+                } else {
+                    //throw new RuntimeException(lbl + " not found!");
+                }
+            }
+            else if (inst instanceof JumpOnFalseInstruction) {
+                JumpOnFalseInstruction jump = (JumpOnFalseInstruction)inst;
+                String lbl = jump.getLabel();
+                Integer addr = labels.get(lbl);
+                if (addr != null) {
+                    jump.setAddr(addr);
+                } else {
+                    //throw new RuntimeException(lbl + " not found!");
+                }
+            }
         }
     }
 
@@ -244,23 +272,14 @@ public class CodeGenerationVisitor implements Visitor
         instructions.add(new PushInstruction(value));
 
         String label = "func" + node.getFuncAddr();
-        for (Instruction inst : instructions) {
-            if (inst.getOpCode() != OpCode.JUMP) {
-                continue;
-            }
-
-            JumpInstruction jump = (JumpInstruction)inst;
-            if (!label.equals(jump.getLabel())) {
-                continue;
-            }
-
-            jump.setAddr(addr);
-        }
+        labels.put(label, addr);
     }
 
     @Override
     public void visit(UnpackStatement node)
     {
+        node.setLbl("unpack" + getCurrentAddr());
+
         Scope subScope = new Scope(scopeCounter++);
         subScope.setParentScope(currentScope);
         currentScope.addSubScope(subScope);
@@ -279,19 +298,12 @@ public class CodeGenerationVisitor implements Visitor
             Symbol dstSym = new Symbol(subType, node.getDst());
             currentScope.addSymbol(dstSym);
 
-            //Variable srcVar = node.getSrc();
-            //Symbol srcSym = currentScope.findSymbol(srcVar.getName());
-            //instructions.add(new CastInstruction(srcSym, dstSym));
-
             instructions.add(new DupInstruction());
             instructions.add(new StoreInstruction(dstSym));
         }
 
         instructions.add(new IsTypeInstruction(subType));
-
-        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
-        node.setJumpInstruction(jmpInst);
-        instructions.add(jmpInst);
+        instructions.add(new JumpOnFalseInstruction(node.getLbl()));
 
         if (DEBUG) {
             System.out.printf("%d %s\n", getCurrentAddr(), node.toString());
@@ -306,8 +318,7 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d EndUnpack\n", getCurrentAddr());
         }
 
-        JumpOnFalseInstruction jumpOnFalse = node.getJumpInstruction();
-        jumpOnFalse.setAddr(getCurrentAddr());
+        labels.put(node.getLbl(), getCurrentAddr());
         currentScope = currentScope.getParentScope();
     }
 
@@ -318,21 +329,24 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d If\n", getCurrentAddr());
         }
 
-        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
-        node.setJumpInstruction(jmpInst);
-        instructions.add(jmpInst);
+        node.setEndLbl("endif" + getCurrentAddr());
+        node.setNextLbl("lbl" + lblCounter++);
+
+        // jump to next else if or else
+        instructions.add(new JumpOnFalseInstruction(node.getNextLbl()));
     }
 
     @Override
     public void visit(EndIfStatement node)
     {
         if (DEBUG) {
-            System.out.printf("%d EndIf\n", getCurrentAddr());
+            System.out.printf("%d EndIf %s\n", getCurrentAddr(), node.getNextLbl());
         }
 
-        JumpInstruction jmpInst = new JumpInstruction(0);
-        node.setJumpInstruction(jmpInst);
-        instructions.add(jmpInst);
+        // jump to end
+        instructions.add(new JumpInstruction(node.getEndLbl()));
+
+        labels.put(node.getNextLbl(), getCurrentAddr());
     }
 
     @Override
@@ -342,9 +356,10 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d ElseIf\n", getCurrentAddr());
         }
 
-        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
-        node.setJumpInstruction(jmpInst);
-        instructions.add(jmpInst);
+        node.setNextLbl("lbl" + lblCounter++);
+
+        // jump to next else if
+        instructions.add(new JumpOnFalseInstruction(node.getNextLbl()));
     }
 
     @Override
@@ -354,9 +369,10 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d EndElseIf\n", getCurrentAddr());
         }
 
-        JumpInstruction jmpInst = new JumpInstruction(0);
-        node.setJumpInstruction(jmpInst);
-        instructions.add(jmpInst);
+        // jump to end
+        instructions.add(new JumpInstruction(node.getEndLbl()));
+
+        labels.put(node.getNextLbl(), getCurrentAddr());
     }
 
     @Override
@@ -365,9 +381,6 @@ public class CodeGenerationVisitor implements Visitor
         if (DEBUG) {
             System.out.printf("%d Else\n", getCurrentAddr());
         }
-
-        JumpOnFalseInstruction jumpOnFalse = node.getJumpInstruction();
-        jumpOnFalse.setAddr(getCurrentAddr());
     }
 
     @Override
@@ -377,9 +390,7 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d EndElse\n", getCurrentAddr());
         }
 
-        for (JumpInstruction jumpOnFalse : node.getJumps()) {
-            jumpOnFalse.setAddr(getCurrentAddr());
-        }
+        labels.put(node.getEndLbl(), getCurrentAddr());
     }
 
     @Override
@@ -389,9 +400,9 @@ public class CodeGenerationVisitor implements Visitor
             System.out.printf("%d While\n", getCurrentAddr());
         }
 
-        JumpOnFalseInstruction jmpInst = new JumpOnFalseInstruction(0);
-        node.setJumpInstruction(jmpInst);
-        instructions.add(jmpInst);
+        node.setLbl("while" + getCurrentAddr());
+
+        instructions.add(new JumpOnFalseInstruction(node.getLbl()));
     }
 
     @Override
@@ -402,9 +413,7 @@ public class CodeGenerationVisitor implements Visitor
         }
 
         instructions.add(new JumpInstruction(node.getCondAddr()));
-
-        JumpOnFalseInstruction jumpOnFalse = node.getJumpInstruction();
-        jumpOnFalse.setAddr(getCurrentAddr());
+        labels.put(node.getLbl(), getCurrentAddr());
     }
 
     @Override
@@ -441,11 +450,6 @@ public class CodeGenerationVisitor implements Visitor
         Symbol sym = new Symbol(node.getType(), node.getField(), true);
         currentScope.addSymbol(sym);
 
-        //instructions.add(new StoreInstruction(sym));
-
-        //Symbol objSym =
-        //    currentScope.findSymbol("_obj" + currentScope.getScopeId());
-        //instructions.add(new LoadInstruction(objSym));
         instructions.add(new LoadObjectRegInstruction());
         instructions.add(new SwapInstruction());
         instructions.add(new ObjectSetInstruction(node.getField()));
@@ -725,10 +729,6 @@ public class CodeGenerationVisitor implements Visitor
             }
         } else {
             if (sym.isObjectField()) {
-                //Scope scope = currentScope.findSymbolScope(sym);
-                //Symbol objSym =
-                //    currentScope.findSymbol("_obj" + scope.getScopeId());
-                //instructions.add(new LoadInstruction(objSym));
                 instructions.add(new LoadObjectRegInstruction());
                 instructions.add(new ObjectGetInstruction(sym.getName()));
             } else {

@@ -3,7 +3,6 @@ package se.c0la.uglylang.ast;
 import java.util.*;
 
 import se.c0la.uglylang.type.CompoundType;
-import se.c0la.uglylang.ir.JumpOnFalseInstruction;
 
 public class UnpackStatement extends AbstractNode implements Node, Block
 {
@@ -13,7 +12,7 @@ public class UnpackStatement extends AbstractNode implements Node, Block
     private String subType;
     private List<Node> stmts;
 
-    private JumpOnFalseInstruction jmpInst;
+    private String lbl;
 
     public UnpackStatement(Expression src,
                            String dst,
@@ -33,12 +32,8 @@ public class UnpackStatement extends AbstractNode implements Node, Block
     public Expression getSrc() { return src; }
     public String getDst() { return dst; }
 
-    public void setJumpInstruction(JumpOnFalseInstruction jmpInst)
-    {
-        this.jmpInst = jmpInst;
-    }
-
-    public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
+    public void setLbl(String lbl) { this.lbl = lbl; }
+    public String getLbl() { return lbl; }
 
     @Override
     public void accept(Visitor visitor)
@@ -51,7 +46,7 @@ public class UnpackStatement extends AbstractNode implements Node, Block
             node.accept(visitor);
         }
 
-        Node endUnpack = new EndUnpackStatement(jmpInst);
+        Node endUnpack = new EndUnpackStatement(lbl);
         endUnpack.accept(visitor);
     }
 

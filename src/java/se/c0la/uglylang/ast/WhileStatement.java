@@ -2,14 +2,12 @@ package se.c0la.uglylang.ast;
 
 import java.util.*;
 
-import se.c0la.uglylang.ir.JumpOnFalseInstruction;
-
 public class WhileStatement extends AbstractNode implements Node, Block
 {
     private Node cond;
     private List<Node> stmts;
 
-    private JumpOnFalseInstruction jmpInst;
+    private String lbl;
 
     public WhileStatement(Node cond, List<Node> stmts)
     {
@@ -17,12 +15,8 @@ public class WhileStatement extends AbstractNode implements Node, Block
         this.stmts = stmts;
     }
 
-    public void setJumpInstruction(JumpOnFalseInstruction jmpInst)
-    {
-        this.jmpInst = jmpInst;
-    }
-
-    public JumpOnFalseInstruction getJumpInstruction() { return jmpInst; }
+    public void setLbl(String v) { this.lbl = v; }
+    public String getLbl() { return lbl; }
 
     @Override
     public void accept(Visitor visitor)
@@ -36,7 +30,7 @@ public class WhileStatement extends AbstractNode implements Node, Block
             node.accept(visitor);
         }
 
-        Node endIf = new EndWhileStatement(jmpInst, condAddr);
+        Node endIf = new EndWhileStatement(lbl, condAddr);
         endIf.accept(visitor);
     }
 

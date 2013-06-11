@@ -30,6 +30,6 @@ public class JumpInstruction implements Instruction
     @Override
     public String toString()
     {
-        return getOpCode().toString() + " " + addr;
+        return getOpCode().toString() + " " + label + " " + addr;
     }
 }
