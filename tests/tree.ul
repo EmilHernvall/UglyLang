@@ -189,13 +189,11 @@ TreeConstructor createTree =
                                 A.parent = C;
 
                                 unpack F as #Terminator {
-                                    print("no parent");
                                     C.parent = #Terminator;
                                     root = C;
                                 }
 
                                 unpack F as #Node n {
-                                    print("with parent");
                                     if n.right == A {
                                         n.right = C;
                                     } else {
@@ -215,9 +213,7 @@ TreeConstructor createTree =
             (TreeNode)(TreeNode parent, TreeNode newNode) {
                 unpack parent as #Node p {
                 unpack newNode as #Node n {
-                    TreeKey fst = n.key;
-                    TreeKey snd = p.key;
-                    if fst.compare(snd) > 0 {
+                    if n.key.compare(p.key) > 0 {
                         unpack p.right as #Node child {
                             hiddenAdd(child, n);
                         }
@@ -330,7 +326,7 @@ testTree.add("richard", "nixon");
 testTree.add("ronald", "reagan");
 testTree.add("thomas", "jefferson");
 
-print("size: " + intToStr(testTree.size()));
+print("size: " + testTree.size().str);
 print("");
 //dump(testTree.root);
 //print("");

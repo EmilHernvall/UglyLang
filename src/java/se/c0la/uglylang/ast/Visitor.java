@@ -16,6 +16,8 @@ public interface Visitor
     int getCurrentAddr();
 
     // language constructs
+    void visit(ImportNode node);
+    void visit(ExportNode node);
     void visit(Declaration node);
     void visit(TypeDeclNode node);
     void visit(FunctionDecl node);

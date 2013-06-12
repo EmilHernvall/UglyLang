@@ -99,6 +99,9 @@ public class CodeGenerationVisitor implements Visitor
     private Map<String, Integer> labels;
     private int lblCounter = 0;
 
+    private Map<String, Module> imports;
+    private Map<String, Symbol> exports;
+
     public CodeGenerationVisitor()
     {
         instructions = new ArrayList<Instruction>();
@@ -107,6 +110,8 @@ public class CodeGenerationVisitor implements Visitor
         flags = EnumSet.noneOf(Flag.class);
         labels = new HashMap<String, Integer>();
         lblCounter = 0;
+        imports = new HashMap<String, Module>();
+        exports = new HashMap<String, Symbol>();
     }
 
     public void setDebug(boolean v) { DEBUG = v; }
@@ -121,6 +126,16 @@ public class CodeGenerationVisitor implements Visitor
     public List<Instruction> getInstructions()
     {
         return instructions;
+    }
+
+    public void setImports(Map<String, Module> imports)
+    {
+        this.imports = imports;
+    }
+
+    public Map<String, Symbol> getExports()
+    {
+        return exports;
     }
 
     public void dump()
@@ -194,6 +209,44 @@ public class CodeGenerationVisitor implements Visitor
     public int getCurrentAddr()
     {
         return instructions.size();
+    }
+
+    @Override
+    public void visit(ImportNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Import name=%s\n",
+                    getCurrentAddr(), node.getName());
+        }
+
+        Symbol sym = currentScope.findSymbolInCurrent(node.getName());
+        if (sym != null) {
+            throw new CodeGenerationException(node.getName() + " is already declared.",
+                node.getLine(), node.getColumn());
+        }
+
+        Module module = imports.get(node.getName());
+        if (module == null) {
+            throw new CodeGenerationException(node.getName() + " was not found.",
+                node.getLine(), node.getColumn());
+        }
+
+        Type type = module.getType();
+
+        sym = new Symbol(type, node.getName());
+        currentScope.addSymbol(sym);
+    }
+
+    @Override
+    public void visit(ExportNode node)
+    {
+        if (DEBUG) {
+            System.out.printf("%d Export name=%s\n",
+                    getCurrentAddr(), node.getName());
+        }
+
+        Symbol sym = currentScope.findSymbol(node.getName());
+        exports.put(node.getName(), sym);
     }
 
     @Override

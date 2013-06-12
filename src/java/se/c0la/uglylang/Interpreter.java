@@ -90,11 +90,6 @@ public class Interpreter
         System.out.println();
     }
 
-    public void registerNativeFunction(Symbol symbol, NativeFunction func)
-    {
-        scope.set(symbol, new NativeFunctionValue(func.getType(), func));
-    }
-
     public String dumpObjectReg()
     {
         return dumpValue(objectReg);
@@ -174,8 +169,15 @@ public class Interpreter
         return buffer.toString();
     }
 
-    public void run(List<Instruction> instructions)
+    public void run(Module module)
     {
+        for (Map.Entry<Symbol, Value> entry :
+                module.getPredefinedSymbols().entrySet()) {
+            scope.set(entry.getKey(), entry.getValue());
+        }
+
+        List<Instruction> instructions = module.getInstructions();
+
         programCounter = 0;
         //stack = new Stack<Value>();
         stack = new Value[4096];
@@ -679,124 +681,6 @@ public class Interpreter
             }
 
             break;
-        }
-    }
-
-    public static void main(String[] args)
-    throws Exception
-    {
-        String mode = "run";
-        if (args.length == 1 && args[0].equals("-parse")) {
-            mode = "parse";
-        }
-
-        Parser parser = new Parser(System.in);
-        CodeGenerationVisitor visitor = new CodeGenerationVisitor();
-        if ("parse".equals(mode)) {
-            visitor.setDebug(true);
-        }
-        Interpreter interpreter = new Interpreter();
-
-        // register native functions
-        {
-            NativeFunction func = new PrintFunction();
-            Symbol sym = visitor.registerNativeFunction(func);
-            interpreter.registerNativeFunction(sym, func);
-        }
-
-        {
-            NativeFunction func = new DumpFunction(interpreter);
-            Symbol sym = visitor.registerNativeFunction(func);
-            interpreter.registerNativeFunction(sym, func);
-        }
-
-        {
-            NativeFunction func = new DumpStackFunction(interpreter);
-            Symbol sym = visitor.registerNativeFunction(func);
-            interpreter.registerNativeFunction(sym, func);
-        }
-
-        {
-            NativeFunction func = new DumpObjectRegFunction(interpreter);
-            Symbol sym = visitor.registerNativeFunction(func);
-            interpreter.registerNativeFunction(sym, func);
-        }
-
-        {
-            NativeFunction func = new DumpScopeFunction(interpreter);
-            Symbol sym = visitor.registerNativeFunction(func);
-            interpreter.registerNativeFunction(sym, func);
-        }
-
-        {
-            NativeFunction func = new IntToStrFunction();
-            Symbol sym = visitor.registerNativeFunction(func);
-            interpreter.registerNativeFunction(sym, func);
-        }
-
-        // parse
-        List<Node> nodes;
-        try {
-            nodes = parser.parse();
-        }
-        catch (ParseException e) {
-            if (e.currentToken != null) {
-                Token t = e.currentToken;
-                System.out.printf("Parse error at line %d, col %d. ",
-                        t.beginLine, t.beginColumn);
-
-                System.out.print("Found " + e.tokenImage[t.kind] + ". ");
-
-                System.out.print("Expected: ");
-                String delim = "";
-                for (int[] seq : e.expectedTokenSequences) {
-                    System.out.print(delim);
-                    for (int token : seq) {
-                        System.out.print(e.tokenImage[token]);
-                    }
-                    delim = ", ";
-                }
-                System.out.println();
-            } else {
-                System.out.println(e.getMessage());
-            }
-            return;
-        }
-
-        try {
-            // generate instructions
-            for (Node node : nodes) {
-                node.accept(visitor);
-            }
-
-            visitor.setLabels();
-        }
-        catch (CodeGenerationException e) {
-            System.out.printf("Error at line %d, col %d: ",
-                    e.getLine(), e.getColumn());
-
-            System.out.println(e.getMessage());
-
-            return;
-        }
-
-        if ("run".equals(mode)) {
-            // execute
-            try {
-                long start = System.nanoTime();
-                interpreter.run(visitor.getInstructions());
-                //System.out.println("pc: " + interpreter.programCounter);
-                System.out.println("Execution finished in " +
-                        (System.nanoTime() - start)/1000l + "us");
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println();
-                System.out.println("pc: " + interpreter.programCounter);
-                interpreter.dumpStack();
-            }
-        }
-        else if ("parse".equals(mode)) {
-            visitor.dump();
         }
     }
 }

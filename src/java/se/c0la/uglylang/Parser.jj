@@ -13,8 +13,37 @@ import se.c0la.uglylang.type.*;
 
 public class Parser
 {
+    public enum Pass {
+        FIRST,
+        SECOND;
+    };
+
     private Map<String, Type> types = null;
     private Map<String, CompoundType> subTypeLookup = null;
+    private List<String> imports;
+    private Map<String, Module> deps;
+
+    private Pass pass = Pass.FIRST;
+
+    public void setPass(Pass pass)
+    {
+        this.pass = pass;
+    }
+
+    public Map<String, Type> getTypes()
+    {
+        return types;
+    }
+
+    public List<String> getImports()
+    {
+        return imports;
+    }
+
+    public void setDependencies(Map<String, Module> deps)
+    {
+        this.deps = deps;
+    }
 }
 PARSER_END(Parser)
 
@@ -41,6 +70,8 @@ TOKEN : { < #nl : "\n" | "\r" "\n" | "\r" | "\u000C" > }
 TOKEN : { < #wc: "\u0009" | "\n" | "\u000C" | "\r" | "\u0020" > }
 TOKEN : { < #w : (<wc>)* > }
 
+TOKEN : { < IMPORT : "import" > }
+TOKEN : { < EXPORT : "export" > }
 TOKEN : { < UNPACK : "unpack" > }
 TOKEN : { < AS : "as" > }
 TOKEN : { < TYPEDECL : "type" > }
@@ -91,7 +122,7 @@ TOKEN : { < WHITESPACE : (<wc>)+ > }
 
 List<Node> parse() :
 {
-    Token t ;
+    Token t, begin ;
     Node n ;
     List<Node> nodes ;
 }
@@ -106,11 +137,52 @@ List<Node> parse() :
         types.put("void", new VoidType());
 
         subTypeLookup = new HashMap<String, CompoundType>();
+
+        imports = new ArrayList<String>();
     }
     (<WHITESPACE>)*
     (
-        n = Statement()
-        { nodes.add(n); }
+        LOOKAHEAD( <TYPEDECL> )
+            n = TypeDeclaration()
+            { nodes.add(n); }
+        |
+        LOOKAHEAD( <COMPOUNDTYPEDECL> )
+            n = CompoundTypeDeclaration()
+            { nodes.add(n); }
+        |
+        LOOKAHEAD( <IMPORT> )
+            begin = <IMPORT>
+            (<WHITESPACE>)*
+            t = <IDENT>
+            <STMTBREAK>
+            (<WHITESPACE>)*
+            {
+                n = new ImportNode(t.image);
+                n.setPosition(begin.beginLine, begin.beginColumn);
+                nodes.add(n);
+                if (pass == Pass.FIRST) {
+                    imports.add(t.image);
+                } else {
+                    // copy types from dependency
+                    Module mod = deps.get(t.image);
+                    types.putAll(mod.getTypes());
+                }
+            }
+        |
+        LOOKAHEAD( <EXPORT> )
+            begin = <EXPORT>
+            (<WHITESPACE>)*
+            t = <IDENT>
+            <STMTBREAK>
+            (<WHITESPACE>)*
+            {
+            n = new ExportNode(t.image);
+            n.setPosition(begin.beginLine, begin.beginColumn);
+            nodes.add(n);
+            }
+        |
+            n = Statement()
+            { nodes.add(n); }
     )*
 
     { return nodes; }
@@ -192,7 +264,7 @@ Type Type() :
             t = <IDENT>
             {
                 type = types.get(t.image);
-                if (type == null) {
+                if (type == null && pass == Pass.SECOND) {
                     throw new ParseException("Type " + t.image + " not found.");
                 }
             }
@@ -296,7 +368,7 @@ Node CompoundTypeDeclaration() :
 
 Node Statement() :
 {
-    Token t ;
+    Token t, begin ;
     Node n, n2 ;
     Expression expr, expr2 ;
     Variable var ;
@@ -304,12 +376,6 @@ Node Statement() :
 }
 {
     (
-        LOOKAHEAD( <TYPEDECL> )
-            n = TypeDeclaration()
-        |
-        LOOKAHEAD( <COMPOUNDTYPEDECL> )
-            n = CompoundTypeDeclaration()
-        |
         LOOKAHEAD( <IFSTMT> )
             n = IfStatement()
         |
@@ -390,7 +456,7 @@ Node UnpackStatement() :
 
      {
          CompoundType type = subTypeLookup.get(subType);
-         if (type == null) {
+         if (type == null && pass == Pass.SECOND) {
             throw new ParseException(subType + " not found.");
          }
          n = new UnpackStatement(src, dst, type, subType, stmts);
@@ -649,11 +715,11 @@ Expression Expression() :
     Expression n, n2 ;
 }
 {
-    n = Expression2()
+    n = ExpressionLogic()
     (
             t = <ASSIGN>
             (<WHITESPACE>)*
-            n2 = Expression2()
+            n2 = ExpressionLogic()
             {
             n = new AssignNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -663,17 +729,17 @@ Expression Expression() :
     { return n; }
 }
 
-Expression Expression2() :
+Expression ExpressionLogic() :
 {
     Token t ;
     Expression n, n2 ;
 }
 {
-    n = Expression3()
+    n = ExpressionCmp()
     (
             t = <AND>
             (<WHITESPACE>)*
-            n2 = Expression3()
+            n2 = ExpressionCmp()
             {
             n = new AndNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -681,7 +747,7 @@ Expression Expression2() :
         |
             t = <OR>
             (<WHITESPACE>)*
-            n2 = Expression3()
+            n2 = ExpressionCmp()
             {
             n = new OrNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -689,7 +755,7 @@ Expression Expression2() :
         |
             t = <XOR>
             (<WHITESPACE>)*
-            n2 = Expression3()
+            n2 = ExpressionCmp()
             {
             n = new XorNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -699,17 +765,17 @@ Expression Expression2() :
     { return n; }
 }
 
-Expression Expression3() :
+Expression ExpressionCmp() :
 {
     Token t ;
     Expression n, n2 ;
 }
 {
-    n = Expression4()
+    n = ExpressionArithmetic()
     (
             t = <EQ>
             (<WHITESPACE>)*
-            n2 = Expression4()
+            n2 = ExpressionArithmetic()
             {
             n = new EqualNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -717,7 +783,7 @@ Expression Expression3() :
         |
             t = <NOTEQ>
             (<WHITESPACE>)*
-            n2 = Expression4()
+            n2 = ExpressionArithmetic()
             {
             n = new NotEqualNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -725,7 +791,7 @@ Expression Expression3() :
         |
             t = <LT>
             (<WHITESPACE>)*
-            n2 = Expression4()
+            n2 = ExpressionArithmetic()
             {
             n = new LtNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -733,7 +799,7 @@ Expression Expression3() :
         |
             t = <GT>
             (<WHITESPACE>)*
-            n2 = Expression4()
+            n2 = ExpressionArithmetic()
             {
             n = new GtNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -741,7 +807,7 @@ Expression Expression3() :
         |
             t = <LTEQ>
             (<WHITESPACE>)*
-            n2 = Expression4()
+            n2 = ExpressionArithmetic()
             {
             n = new LtEqNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -749,7 +815,7 @@ Expression Expression3() :
         |
             t = <GTEQ>
             (<WHITESPACE>)*
-            n2 = Expression4()
+            n2 = ExpressionArithmetic()
             {
             n = new GtEqNode(n, n2);
             n.setPosition(t.beginLine, t.beginColumn);
@@ -759,18 +825,18 @@ Expression Expression3() :
     { return n; }
 }
 
-Expression Expression4() :
+Expression ExpressionArithmetic() :
 {
     Token t ;
     Expression n, n2 ;
 }
 {
     (
-        n = Expression5()
+        n = ExpressionArithmetic2()
         (
                 t = <ADD>
                 (<WHITESPACE>)*
-                n2 = Expression5()
+                n2 = ExpressionArithmetic2()
                 {
                 n = new AddNode(n, n2);
                 n.setPosition(t.beginLine, t.beginColumn);
@@ -778,7 +844,7 @@ Expression Expression4() :
             |
                 t = <SUB>
                 (<WHITESPACE>)*
-                n2 = Expression5()
+                n2 = ExpressionArithmetic2()
                 {
                 n = new SubNode(n, n2);
                 n.setPosition(t.beginLine, t.beginColumn);
@@ -789,18 +855,18 @@ Expression Expression4() :
     { return n; }
 }
 
-Expression Expression5() :
+Expression ExpressionArithmetic2() :
 {
     Token t ;
     Expression n, n2 ;
 }
 {
     (
-        n = Expression6()
+        n = ExpressionOperands()
         (
                 t = <MUL>
                 (<WHITESPACE>)*
-                n2 = Expression6()
+                n2 = ExpressionOperands()
                 {
                 n = new MulNode(n, n2);
                 n.setPosition(t.beginLine, t.beginColumn);
@@ -808,7 +874,7 @@ Expression Expression5() :
             |
                 t = <DIV>
                 (<WHITESPACE>)*
-                n2 = Expression6()
+                n2 = ExpressionOperands()
                 {
                 n = new DivNode(n, n2);
                 n.setPosition(t.beginLine, t.beginColumn);
@@ -816,7 +882,7 @@ Expression Expression5() :
             |
                 t = <MOD>
                 (<WHITESPACE>)*
-                n2 = Expression6()
+                n2 = ExpressionOperands()
                 {
                 n = new ModNode(n, n2);
                 n.setPosition(t.beginLine, t.beginColumn);
@@ -827,7 +893,7 @@ Expression Expression5() :
     { return n; }
 }
 
-Expression Expression6() :
+Expression ExpressionOperands() :
 {
     Token t, t2 ;
     Expression n, n2 ;
@@ -881,7 +947,7 @@ Expression Expression6() :
             (<WHITESPACE>)*
             {
             CompoundType type = subTypeLookup.get(t.image);
-            if (type == null) {
+            if (type == null && pass == Pass.SECOND) {
                 throw new ParseException(t.image + " not found.");
             }
             n = new TypeValue(type, t.image);
