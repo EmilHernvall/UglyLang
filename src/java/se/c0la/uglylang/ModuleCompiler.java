@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import se.c0la.uglylang.ast.Node;
 import se.c0la.uglylang.type.Value;
 import se.c0la.uglylang.type.NativeFunctionValue;
+import se.c0la.uglylang.type.ModuleValue;
 import se.c0la.uglylang.nativefunc.NativeFunction;
 import se.c0la.uglylang.nativefunc.PrintFunction;
 import se.c0la.uglylang.nativefunc.IntToStrFunction;
@@ -70,6 +71,9 @@ public class ModuleCompiler
     public Module compile(String moduleName)
     throws IOException, ParseException, CodeGenerationException
     {
+        Module module = new Module();
+        module.setName(moduleName);
+
         Parser parser;
 
         // initial pass to find types and imports/exports
@@ -85,6 +89,8 @@ public class ModuleCompiler
             deps.put(dep, depMod);
         }
 
+        module.setDependencies(deps);
+
         if (debug) {
             System.out.println("Compiling module " + moduleName);
         }
@@ -95,8 +101,10 @@ public class ModuleCompiler
         parser.setPass(Parser.Pass.SECOND);
         List<Node> nodes = parser.parse();
 
+        module.setTypes(parser.getTypes());
+
         // generate instructions
-        CodeGenerationVisitor visitor = new CodeGenerationVisitor();
+        CodeGenerationVisitor visitor = new CodeGenerationVisitor(module);
         visitor.setDebug(debug);
         visitor.setImports(deps);
         Map<Symbol, Value> predef = new HashMap<Symbol, Value>();
@@ -112,13 +120,15 @@ public class ModuleCompiler
         // iterate over all instructions and resolve labels to addresses in jumps
         visitor.setLabels();
 
-        Map<String, Symbol> exports = visitor.getExports();
-
-        Module module = new Module();
-        module.setName(moduleName);
         module.setInstructions(visitor.getInstructions());
-        module.setTypes(parser.getTypes());
-        module.setDependencies(deps);
+
+        // add dependent modules to predefined values
+        Map<String, Symbol> exports = visitor.getExports();
+        for (Map.Entry<String, Symbol> entry : exports.entrySet()) {
+            Module mod = deps.get(entry.getKey());
+            predef.put(entry.getValue(), new ModuleValue(mod));
+        }
+
         module.setExports(exports);
         module.setPredefinedSymbols(predef);
 

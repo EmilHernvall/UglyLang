@@ -102,8 +102,12 @@ public class CodeGenerationVisitor implements Visitor
     private Map<String, Module> imports;
     private Map<String, Symbol> exports;
 
-    public CodeGenerationVisitor()
+    private Module module;
+
+    public CodeGenerationVisitor(Module module)
     {
+        this.module = module;
+
         instructions = new ArrayList<Instruction>();
         rootScope = new Scope(scopeCounter++);
         currentScope = rootScope;
@@ -335,8 +339,10 @@ public class CodeGenerationVisitor implements Visitor
         currentScope = currentScope.getParentScope();
 
         // push function prototype and adress onto stack
-        FunctionValue value = new FunctionValue(node.getType(), node.getFuncAddr()+1,
-                node.getSymbolMap());
+        FunctionValue value = new FunctionValue(module,
+                                                node.getType(),
+                                                node.getFuncAddr()+1,
+                                                node.getSymbolMap());
         int addr = getCurrentAddr();
 
         instructions.add(new PushInstruction(value));

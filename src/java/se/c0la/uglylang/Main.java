@@ -104,18 +104,5 @@ public class Main
             }
             return;
         }
-
-        // execute
-        Interpreter interpreter = new Interpreter();
-        try {
-            long start = System.nanoTime();
-            interpreter.run(module);
-            //System.out.println("pc: " + interpreter.programCounter);
-            System.out.println("Execution finished in " +
-                    (System.nanoTime() - start)/1000l + "us");
-        } catch (Exception e) {
-            e.printStackTrace();
-            interpreter.dumpStack();
-        }
     }
 }

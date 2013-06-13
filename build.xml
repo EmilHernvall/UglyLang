@@ -1,119 +1,119 @@
 <project name="UglyLang" default="compile" basedir=".">
-	
+
     <property name="javacc" value="/opt/javacc-5.0" />
-	<property name="src" value="src" />
-	<property name="testsrc" value="src/test" />
-	<property name="build" value="build" />
-	<property name="lib" value="lib" />
-	<property name="reports" value="reports" />
-	<property name="build.compiler" value="modern" />
-	
-	<target name="init">
-		<tstamp />
-		<mkdir dir="${build}" />
-		<mkdir dir="${build}/bin" />
-		<mkdir dir="${build}/src" />
-		<mkdir dir="${reports}" />
-		<mkdir dir="${reports}/raw" />
-		<mkdir dir="${reports}/html" />
-	</target>
-	
-	<target name="codegeneration" depends="init">
-		<copy todir="${build}/src">
-			<fileset dir="${src}/java" />
-		</copy>
-		<javacc
-            target="${src}/java/se/c0la/uglylang/Parser.jj"
-            outputdirectory="${build}/src/se/c0la/uglylang"
-			javacchome="${javacc}"
-			static="false"
-		/>
-	</target>
-	
-	<target name="compile" depends="codegeneration">
-		
-		<javac 
-			srcdir="${build}/src" 
-			destdir="${build}/bin"
-			debug="on"
+    <property name="src" value="src" />
+    <property name="testsrc" value="src/test" />
+    <property name="build" value="build" />
+    <property name="lib" value="lib" />
+    <property name="reports" value="reports" />
+    <property name="build.compiler" value="modern" />
+
+    <target name="init">
+        <tstamp />
+        <mkdir dir="${build}" />
+        <mkdir dir="${reports}" />
+        <mkdir dir="${reports}/raw" />
+        <mkdir dir="${reports}/html" />
+    </target>
+
+    <target name="codegeneration" depends="init">
+        <copy todir="${build}/src">
+            <fileset dir="${src}/java" />
+        </copy>
+        <javacc
+            target="${src}/grammar/Parser.jj"
+            outputdirectory="${src}/java/se/c0la/uglylang"
+            javacchome="${javacc}"
+            static="false"
+            />
+    </target>
+
+    <target name="compile" depends="codegeneration">
+
+        <javac
+            srcdir="${src}/java"
+            destdir="${build}"
+            debug="on"
             includeantruntime="no"
-			debuglevel="lines,vars,source">
-			
-			<compilerarg value="-Xlint:unchecked"/>
-			
-			<classpath>
-				<pathelement path="${build}/bin"/>
-				<fileset dir="${lib}">
-					<include name="**/*.jar"/>
-				</fileset>
-			</classpath>
-			
-		</javac>
-			
-	</target>
-	
-	<target name="clean" depends="init">
-		<delete dir="${build}"/>
-		<delete dir="${reports}"/>
-	</target>
-	
-	<target name="compile-tests" depends="compile">
-		<javac 
-			srcdir="${src}/test" 
-			destdir="${build}/bin"
-			debug="on"
-			debuglevel="lines,vars,source">
-			
-			<compilerarg value="-Xlint:unchecked"/>
-			
-			<classpath>
-				<pathelement path="${build}"/>
-				<fileset dir="${lib}">
-					<include name="**/*.jar"/>
-				</fileset>
-			</classpath>
-			
-		</javac>
-	</target>
-	
-	<target name="run-tests" depends="compile-tests">
-	
-		<junit printsummary="yes" haltonfailure="no" showoutput="yes" >
-			<classpath>
-				<pathelement path="${instrumented}"/>
-				<pathelement path="${build}/bin"/>
-				<fileset dir="${lib}">
-					<include name="**/*.jar"/>
-				</fileset>
-			</classpath>                   
+            debuglevel="lines,vars,source">
 
-			<batchtest fork="yes" todir="${reports}/raw/">
-				<formatter type="xml"/>
-				<fileset dir="${src}/test">
-					<include name="**/*Test*.java"/>
-				</fileset>
-			</batchtest>
-		</junit> 
-	</target>
-	
-	<target name="test" depends="run-tests">
-		<junitreport todir="${reports}">
-			<fileset dir="${reports}/raw/">
-				<include name="TEST-*.xml"/>
-			</fileset>
-			<report format="frames" todir="${reports}/html/"/>
-		</junitreport>
-	</target>
-	
-	<target name="jar" depends="compile">
+            <compilerarg value="-Xlint:unchecked"/>
 
-		<jar destfile="uglylang.jar">
-			<fileset dir="${build}/src"/>
-			<fileset dir="${build}/bin"/>
-            
-			<manifest>
-				<attribute name="Main-Class" value="se.c0la.uglylang.Interpreter" />
-			</manifest>
-		</jar>
-	</target>
+            <classpath>
+                <pathelement path="${build}/bin"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+
+        </javac>
+
+    </target>
+
+    <target name="clean" depends="init">
+        <delete dir="${build}"/>
+        <delete dir="${reports}"/>
+    </target>
+
+    <target name="compile-tests" depends="compile">
+        <javac
+            srcdir="${src}/test"
+            destdir="${build}/bin"
+            debug="on"
+            debuglevel="lines,vars,source">
+
+            <compilerarg value="-Xlint:unchecked"/>
+
+            <classpath>
+                <pathelement path="${build}"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+
+        </javac>
+    </target>
+
+    <target name="run-tests" depends="compile-tests">
+
+        <junit printsummary="yes" haltonfailure="no" showoutput="yes" >
+            <classpath>
+                <pathelement path="${instrumented}"/>
+                <pathelement path="${build}/bin"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+
+            <batchtest fork="yes" todir="${reports}/raw/">
+                <formatter type="xml"/>
+                <fileset dir="${src}/test">
+                    <include name="**/*Test*.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="test" depends="run-tests">
+        <junitreport todir="${reports}">
+            <fileset dir="${reports}/raw/">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports}/html/"/>
+        </junitreport>
+    </target>
+
+    <target name="jar" depends="compile">
+
+        <jar destfile="uglylang.jar">
+            <fileset dir="${src}"/>
+            <fileset dir="${build}"/>
+
+            <manifest>
+                <attribute name="Main-Class" value="se.c0la.uglylang.Main" />
+            </manifest>
+        </jar>
+
+    </target>
+
 </project>

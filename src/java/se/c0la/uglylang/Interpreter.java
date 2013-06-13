@@ -9,7 +9,7 @@ import se.c0la.uglylang.nativefunc.*;
 
 public class Interpreter
 {
-    private static class Scope
+    public static class Scope
     {
         private Scope parent;
         private Map<Symbol, Value> values;
@@ -53,6 +53,9 @@ public class Interpreter
         }
     }
 
+    private ExecutionEnvironment env;
+    private Module module;
+
     private int programCounter;
     //private Stack<Value> stack;
     private Value[] stack;
@@ -61,9 +64,26 @@ public class Interpreter
 
     private ObjectValue objectReg = ObjectValue.EMPTY;
 
-    public Interpreter()
+    public Interpreter(ExecutionEnvironment env, Module module)
     {
+        this.env = env;
+        this.module = module;
+
         scope = new Scope(null);
+
+        for (Map.Entry<Symbol, Value> entry :
+                module.getPredefinedSymbols().entrySet()) {
+            scope.set(entry.getKey(), entry.getValue());
+        }
+
+        this.programCounter = 0;
+        this.stack = new Value[4096];
+        this.stackPointer = 0;
+    }
+
+    public Scope getScope()
+    {
+        return scope;
     }
 
     public void dumpStack()
@@ -169,19 +189,10 @@ public class Interpreter
         return buffer.toString();
     }
 
-    public void run(Module module)
+    public void run()
     {
-        for (Map.Entry<Symbol, Value> entry :
-                module.getPredefinedSymbols().entrySet()) {
-            scope.set(entry.getKey(), entry.getValue());
-        }
-
         List<Instruction> instructions = module.getInstructions();
 
-        programCounter = 0;
-        //stack = new Stack<Value>();
-        stack = new Value[4096];
-        stackPointer = 0;
         int instrCount = 0;
         while (true) {
             instrCount++;
@@ -206,21 +217,46 @@ public class Interpreter
                     if (value instanceof FunctionValue) {
                         scope = new Scope(scope);
                         FunctionValue func = (FunctionValue)value;
-                        programCounter = func.getAddr();
+                        Map<String, Symbol> symbolMap = func.getSymbolMap();
+                        int argCount = symbolMap.size();
 
                         // put arguments in values map
-                        Map<String, Symbol> symbolMap = func.getSymbolMap();
-                        List<String> names = new ArrayList<String>(symbolMap.keySet());
+                        List<String> names = new ArrayList<String>();
+                        names.addAll(symbolMap.keySet());
 
-                        for (int i = names.size()-1; i >= 0; i--) {
-                            String name = names.get(i);
-                            Symbol sym = symbolMap.get(name);
+                        // call to other module
+                        if (func.getModule() != module) {
+                            Value[] args = new Value[argCount];
+                            for (int i = argCount - 1; i >= 0; i--) {
+                                String name = names.get(i);
+                                Symbol sym = symbolMap.get(name);
 
-                            Value arg = stack[--stackPointer];
-                            scope.set(sym, arg);
+                                Value arg = stack[--stackPointer];
+                                args[argCount-i] = arg;
+                            }
+
+                            Value res = env.call(func, args);
+                            stack[stackPointer++] = (res);
+                            programCounter++;
                         }
 
-                        stack[stackPointer++] = (new ReturnAddressValue(retAddr));
+                        // normal call
+                        else {
+                            // jump
+                            programCounter = func.getAddr();
+
+                            // pop args from stack and set symbols
+                            for (int i = argCount - 1; i >= 0; i--) {
+                                String name = names.get(i);
+                                Symbol sym = symbolMap.get(name);
+
+                                Value arg = stack[--stackPointer];
+                                scope.set(sym, arg);
+                            }
+
+                            // ad return addres to stack
+                            stack[stackPointer++] = (new ReturnAddressValue(retAddr));
+                        }
                     }
                     else if (value instanceof NativeFunctionValue) {
                         NativeFunctionValue funcValue = (NativeFunctionValue)value;
