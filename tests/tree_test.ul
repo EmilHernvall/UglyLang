@@ -1,0 +1,62 @@
+import tree;
+
+(void)(Tree,TreeKey) lookupTest =
+(void)(Tree tree, TreeKey key) {
+    TreeLookup result = tree.get(key);
+    unpack result as #Valid value {
+        print(key + ": " + value);
+    }
+    unpack result as #NotFound {
+        print(key + ": Not Found");
+    }
+};
+
+Tree testTree = tree.createTree();
+testTree.add("abraham", "lincoln");
+testTree.add("barak", "obama");
+testTree.add("benjamin", "franklin");
+testTree.add("bill", "clinton");
+testTree.add("franklin", "roosevelt");
+testTree.add("george", "washington");
+testTree.add("gerald", "ford");
+testTree.add("harry", "truman");
+testTree.add("jimmy", "carter");
+testTree.add("john", "adams");
+testTree.add("john f", "kennedy");
+testTree.add("lyndon", "johnson");
+testTree.add("richard", "nixon");
+testTree.add("ronald", "reagan");
+testTree.add("thomas", "jefferson");
+
+print("size: " + testTree.size().str);
+print("");
+//dump(testTree.root);
+//print("");
+
+print("inorder traversal:");
+testTree.traverse(
+    (void)(TreeKey key, TreeValue value, int depth) {
+        string pad = "";
+        int i = 0;
+        while i < depth {
+            pad = pad + "    ";
+            i = i + 1;
+        }
+
+        print(pad + key + ": " + value);
+    });
+
+print("");
+print("lookup test:");
+lookupTest(testTree, "george");
+lookupTest(testTree, "john");
+lookupTest(testTree, "thomas");
+lookupTest(testTree, "emil");
+
+//type Comparable (compare:(int)(string));
+//Comparable a = "foo";
+//string b = "bar";
+//if a.compare(b) > 0 {
+//    print("yes");
+//}
+

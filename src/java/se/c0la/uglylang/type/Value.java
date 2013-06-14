@@ -1,8 +1,12 @@
 package se.c0la.uglylang.type;
 
+import se.c0la.uglylang.ExecutionEnvironment;
+
 public interface Value<E extends Type>
 {
     public E getType();
+
+    public void setExecutionEnvironment(ExecutionEnvironment env);
 
     public Value getField(String field);
 

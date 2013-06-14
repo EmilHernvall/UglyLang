@@ -33,6 +33,12 @@ public class FunctionCall extends AbstractNode implements Expression
         return false;
     }
 
+    public Type inferVarType()
+    throws TypeException
+    {
+        return var.inferType();
+    }
+
     public FunctionType inferActualType()
     throws TypeException
     {

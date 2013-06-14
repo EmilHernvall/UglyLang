@@ -18,6 +18,9 @@ import se.c0la.uglylang.type.ModuleValue;
 import se.c0la.uglylang.nativefunc.NativeFunction;
 import se.c0la.uglylang.nativefunc.PrintFunction;
 import se.c0la.uglylang.nativefunc.IntToStrFunction;
+import se.c0la.uglylang.nativefunc.DumpFunction;
+import se.c0la.uglylang.nativefunc.DumpStackFunction;
+import se.c0la.uglylang.nativefunc.DumpScopeFunction;
 
 public class ModuleCompiler
 {
@@ -33,6 +36,9 @@ public class ModuleCompiler
         functions = new ArrayList<NativeFunction>();
         functions.add(new PrintFunction());
         functions.add(new IntToStrFunction());
+        functions.add(new DumpFunction());
+        functions.add(new DumpStackFunction());
+        functions.add(new DumpScopeFunction());
     }
 
     public void setDebug(boolean debug)
@@ -102,6 +108,7 @@ public class ModuleCompiler
         List<Node> nodes = parser.parse();
 
         module.setTypes(parser.getTypes());
+        module.setCompoundTypes(parser.getCompoundTypes());
 
         // generate instructions
         CodeGenerationVisitor visitor = new CodeGenerationVisitor(module);
@@ -121,13 +128,14 @@ public class ModuleCompiler
         visitor.setLabels();
 
         module.setInstructions(visitor.getInstructions());
+        module.setImports(visitor.getImports());
 
         // add dependent modules to predefined values
         Map<String, Symbol> exports = visitor.getExports();
-        for (Map.Entry<String, Symbol> entry : exports.entrySet()) {
+        /*for (Map.Entry<String, Symbol> entry : exports.entrySet()) {
             Module mod = deps.get(entry.getKey());
             predef.put(entry.getValue(), new ModuleValue(mod));
-        }
+        }*/
 
         module.setExports(exports);
         module.setPredefinedSymbols(predef);

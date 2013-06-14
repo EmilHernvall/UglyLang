@@ -4,6 +4,12 @@ import java.util.Set;
 
 public final class VoidType extends AbstractType
 {
+    public final static VoidType TYPE = new VoidType();
+
+    private VoidType()
+    {
+    }
+
     @Override
     public boolean isCompatible(Type other, Set<Type> seenTypes)
     {

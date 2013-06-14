@@ -35,6 +35,11 @@ public class Parser
         return types;
     }
 
+    public Map<String, CompoundType> getCompoundTypes()
+    {
+        return subTypeLookup;
+    }
+
     public List<String> getImports()
     {
         return imports;
@@ -134,7 +139,7 @@ List<Node> parse() :
         types.put("int", new IntegerType());
         types.put("string", new StringType());
         types.put("bool", new BooleanType());
-        types.put("void", new VoidType());
+        types.put("void", VoidType.TYPE);
 
         subTypeLookup = new HashMap<String, CompoundType>();
 
@@ -166,6 +171,7 @@ List<Node> parse() :
                     // copy types from dependency
                     Module mod = deps.get(t.image);
                     types.putAll(mod.getTypes());
+                    subTypeLookup.putAll(mod.getCompoundTypes());
                 }
             }
         |

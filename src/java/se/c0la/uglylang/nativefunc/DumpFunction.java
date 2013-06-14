@@ -14,7 +14,12 @@ public class DumpFunction implements NativeFunction
 {
     private Interpreter interpreter;
 
-    public DumpFunction(Interpreter interpreter)
+    public DumpFunction()
+    {
+    }
+
+    @Override
+    public void setInterpreter(Interpreter interpreter)
     {
         this.interpreter = interpreter;
     }
@@ -28,7 +33,7 @@ public class DumpFunction implements NativeFunction
         List<Type> params = new ArrayList<Type>();
         params.add(new WildcardType());
 
-        return new FunctionType(new VoidType(), params);
+        return new FunctionType(VoidType.TYPE, params);
     }
 
     @Override

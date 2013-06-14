@@ -11,10 +11,16 @@ import se.c0la.uglylang.type.IntegerType;
 import se.c0la.uglylang.type.IntegerValue;
 import se.c0la.uglylang.type.VoidType;
 import se.c0la.uglylang.type.FunctionType;
+import se.c0la.uglylang.Interpreter;
 
 public class IntToStrFunction implements NativeFunction
 {
     public IntToStrFunction()
+    {
+    }
+
+    @Override
+    public void setInterpreter(Interpreter interpreter)
     {
     }
 

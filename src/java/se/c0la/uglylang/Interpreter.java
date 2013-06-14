@@ -73,7 +73,12 @@ public class Interpreter
 
         for (Map.Entry<Symbol, Value> entry :
                 module.getPredefinedSymbols().entrySet()) {
-            scope.set(entry.getKey(), entry.getValue());
+            Symbol sym = entry.getKey();
+            Value value = entry.getValue();
+            if (value instanceof NativeFunctionValue) {
+                ((NativeFunctionValue)value).getFunction().setInterpreter(this);
+            }
+            scope.set(sym, value);
         }
 
         this.programCounter = 0;
@@ -189,6 +194,80 @@ public class Interpreter
         return buffer.toString();
     }
 
+    public Value call(FunctionValue func, Value[] args)
+    {
+        scope = new Scope(scope);
+
+        int retAddr = programCounter;
+        programCounter = func.getAddr();
+
+        Map<String, Symbol> symbolMap = func.getSymbolMap();
+
+        // put arguments in values map
+        List<String> names = new ArrayList<String>();
+        names.addAll(symbolMap.keySet());
+
+        // pop args from stack and set symbols
+        for (int i = 0; i < args.length; i++) {
+            String name = names.get(i);
+            Symbol sym = symbolMap.get(name);
+            Value arg = args[i];
+            scope.set(sym, arg);
+        }
+
+        // ad return addres to stack
+        stack[stackPointer++] = (new ReturnAddressValue(retAddr, true));
+
+        run();
+
+        Value ret = null;
+        Type returnType = func.getType().getReturnType();
+        if (returnType != VoidType.TYPE) {
+            ret = stack[--stackPointer];
+        }
+
+        return ret;
+    }
+
+    public Value callCtx(ObjectValue newCtx, FunctionValue func, Value[] args)
+    {
+        scope = new Scope(scope);
+
+        int retAddr = programCounter;
+        ObjectValue currentCtx = objectReg;
+
+        programCounter = func.getAddr();
+        objectReg = newCtx;
+
+        Map<String, Symbol> symbolMap = func.getSymbolMap();
+
+        // put arguments in values map
+        List<String> names = new ArrayList<String>();
+        names.addAll(symbolMap.keySet());
+
+        // pop args from stack and set symbols
+        for (int i = 0; i < args.length; i++) {
+            String name = names.get(i);
+            Symbol sym = symbolMap.get(name);
+            Value arg = args[i];
+            scope.set(sym, arg);
+        }
+
+        // ad return addres to stack
+        stack[stackPointer++] = (new ReturnAddressValue(retAddr, true));
+        stack[stackPointer++] = (currentCtx);
+
+        run();
+
+        Value ret = null;
+        Type returnType = func.getType().getReturnType();
+        if (returnType != VoidType.TYPE) {
+            ret = stack[--stackPointer];
+        }
+
+        return ret;
+    }
+
     public void run()
     {
         List<Instruction> instructions = module.getInstructions();
@@ -198,9 +277,9 @@ public class Interpreter
             instrCount++;
 
             if (programCounter >= instructions.size()) {
-                System.out.println();
-                System.out.println("Execution halted after " + instrCount +
-                        " instructions.");
+                //System.out.println();
+                //System.out.println("Execution halted after " + instrCount +
+                //        " instructions.");
                 return;
             }
 
@@ -215,7 +294,6 @@ public class Interpreter
                     Value value = stack[--stackPointer];
 
                     if (value instanceof FunctionValue) {
-                        scope = new Scope(scope);
                         FunctionValue func = (FunctionValue)value;
                         Map<String, Symbol> symbolMap = func.getSymbolMap();
                         int argCount = symbolMap.size();
@@ -232,16 +310,20 @@ public class Interpreter
                                 Symbol sym = symbolMap.get(name);
 
                                 Value arg = stack[--stackPointer];
-                                args[argCount-i] = arg;
+                                args[i] = arg;
                             }
 
                             Value res = env.call(func, args);
-                            stack[stackPointer++] = (res);
+                            if (res != null) {
+                                stack[stackPointer++] = (res);
+                            }
                             programCounter++;
                         }
 
                         // normal call
                         else {
+                            scope = new Scope(scope);
+
                             // jump
                             programCounter = func.getAddr();
 
@@ -255,7 +337,8 @@ public class Interpreter
                             }
 
                             // ad return addres to stack
-                            stack[stackPointer++] = (new ReturnAddressValue(retAddr));
+                            stack[stackPointer++] =
+                                (new ReturnAddressValue(retAddr, false));
                         }
                     }
                     else if (value instanceof NativeFunctionValue) {
@@ -288,26 +371,50 @@ public class Interpreter
                     Value value = stack[--stackPointer];
                     if (value instanceof FunctionValue) {
                         FunctionValue func = (FunctionValue)value;
-                        objectReg = (ObjectValue)stack[--stackPointer];
-
-                        programCounter = func.getAddr();
-
-                        scope = new Scope(scope);
+                        Map<String, Symbol> symbolMap = func.getSymbolMap();
+                        int argCount = symbolMap.size();
 
                         // put arguments in values map
-                        Map<String, Symbol> symbolMap = func.getSymbolMap();
-                        List<String> names = new ArrayList<String>(symbolMap.keySet());
+                        List<String> names = new ArrayList<String>();
+                        names.addAll(symbolMap.keySet());
 
-                        for (int i = names.size()-1; i >= 0; i--) {
-                            String name = names.get(i);
-                            Symbol sym = symbolMap.get(name);
+                        if (func.getModule() != module) {
+                            Value obj = stack[--stackPointer];
 
-                            Value arg = stack[--stackPointer];
-                            scope.set(sym, arg);
+                            Value[] args = new Value[argCount];
+                            for (int i = argCount - 1; i >= 0; i--) {
+                                String name = names.get(i);
+                                Symbol sym = symbolMap.get(name);
+
+                                Value arg = stack[--stackPointer];
+                                args[i] = arg;
+                            }
+
+                            Value res = env.callCtx(obj, func, args);
+                            if (res != null) {
+                                stack[stackPointer++] = (res);
+                            }
+                            programCounter++;
                         }
+                        else {
+                            scope = new Scope(scope);
 
-                        stack[stackPointer++] = (new ReturnAddressValue(retAddr));
-                        stack[stackPointer++] = (currentCtx);
+                            objectReg = (ObjectValue)stack[--stackPointer];
+
+                            programCounter = func.getAddr();
+
+                            for (int i = argCount-1; i >= 0; i--) {
+                                String name = names.get(i);
+                                Symbol sym = symbolMap.get(name);
+
+                                Value arg = stack[--stackPointer];
+                                scope.set(sym, arg);
+                            }
+
+                            stack[stackPointer++] =
+                                (new ReturnAddressValue(retAddr, false));
+                            stack[stackPointer++] = (currentCtx);
+                        }
                     }
                     else if (value instanceof NativeFunctionValue) {
                         NativeFunctionValue funcValue = (NativeFunctionValue)value;
@@ -338,28 +445,33 @@ public class Interpreter
 
                 case RETURN:
                 {
-                    ReturnInstruction load = (ReturnInstruction)inst;
+                    ReturnInstruction ret = (ReturnInstruction)inst;
                     Value retVal = null;
-                    if (!load.isVoidFunc()) {
+                    if (!ret.isVoidFunc()) {
                         retVal = stack[--stackPointer];
                     }
 
                     ReturnAddressValue retAddr = (ReturnAddressValue)stack[--stackPointer];
                     programCounter = retAddr.getAddr();
 
-                    if (!load.isVoidFunc()) {
+                    if (!ret.isVoidFunc()) {
                         stack[stackPointer++] = (retVal);
                     }
 
                     scope = scope.getParentScope();
+
+                    if (retAddr.getExitModule()) {
+                        break;
+                    }
+
                     continue;
                 }
 
                 case RETURN_CTX:
                 {
-                    ReturnCtxInstruction load = (ReturnCtxInstruction)inst;
+                    ReturnCtxInstruction ret = (ReturnCtxInstruction)inst;
                     Value retVal = null;
-                    if (!load.isVoidFunc()) {
+                    if (!ret.isVoidFunc()) {
                         retVal = stack[--stackPointer];
                     }
 
@@ -368,11 +480,16 @@ public class Interpreter
                         (ReturnAddressValue)stack[--stackPointer];
                     programCounter = retAddr.getAddr();
 
-                    if (!load.isVoidFunc()) {
+                    if (!ret.isVoidFunc()) {
                         stack[stackPointer++] = (retVal);
                     }
 
                     scope = scope.getParentScope();
+
+                    if (retAddr.getExitModule()) {
+                        break;
+                    }
+
                     continue;
                 }
 

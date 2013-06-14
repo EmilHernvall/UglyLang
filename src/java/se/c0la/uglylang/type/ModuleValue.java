@@ -20,6 +20,6 @@ public class ModuleValue extends AbstractValue<ModuleType>
     @Override
     public Value getField(String field)
     {
-        return null;
+        return env.getValue(module, field);
     }
 }

@@ -104,5 +104,8 @@ public class Main
             }
             return;
         }
+
+        ExecutionEnvironment env = new ExecutionEnvironment();
+        env.run(module);
     }
 }

@@ -1,8 +1,18 @@
 package se.c0la.uglylang.type;
 
+import se.c0la.uglylang.ExecutionEnvironment;
+
 public abstract class AbstractValue<E extends Type> implements Value<E>
 {
+    protected ExecutionEnvironment env;
+
     public abstract E getType();
+
+    @Override
+    public void setExecutionEnvironment(ExecutionEnvironment env)
+    {
+        this.env = env;
+    }
 
     @Override
     public Value getField(String field)

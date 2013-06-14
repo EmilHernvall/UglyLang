@@ -100,6 +100,7 @@ public class CodeGenerationVisitor implements Visitor
     private int lblCounter = 0;
 
     private Map<String, Module> imports;
+    private Map<Module, Symbol> importSymbols;
     private Map<String, Symbol> exports;
 
     private Module module;
@@ -115,6 +116,7 @@ public class CodeGenerationVisitor implements Visitor
         labels = new HashMap<String, Integer>();
         lblCounter = 0;
         imports = new HashMap<String, Module>();
+        importSymbols = new HashMap<Module, Symbol>();
         exports = new HashMap<String, Symbol>();
     }
 
@@ -140,6 +142,11 @@ public class CodeGenerationVisitor implements Visitor
     public Map<String, Symbol> getExports()
     {
         return exports;
+    }
+
+    public Map<Module, Symbol> getImports()
+    {
+        return importSymbols;
     }
 
     public void dump()
@@ -239,6 +246,8 @@ public class CodeGenerationVisitor implements Visitor
 
         sym = new Symbol(type, node.getName());
         currentScope.addSymbol(sym);
+
+        importSymbols.put(module, sym);
     }
 
     @Override
@@ -343,6 +352,7 @@ public class CodeGenerationVisitor implements Visitor
                                                 node.getType(),
                                                 node.getFuncAddr()+1,
                                                 node.getSymbolMap());
+
         int addr = getCurrentAddr();
 
         instructions.add(new PushInstruction(value));
@@ -928,10 +938,11 @@ public class CodeGenerationVisitor implements Visitor
     @Override
     public void visit(FunctionCall node)
     {
-        Type actualType = null, expectedType = null;
+        Type actualType = null, expectedType = null, varType = null;
         try {
             actualType = node.inferActualType();
             expectedType = node.inferExpectedType();
+            varType = node.inferVarType();
         }
         catch (TypeException e) {
             throw new CodeGenerationException(e, node.getLine(), node.getColumn());

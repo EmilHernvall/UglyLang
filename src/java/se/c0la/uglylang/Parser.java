@@ -29,6 +29,11 @@ public class Parser implements ParserConstants {
         return types;
     }
 
+    public Map<String, CompoundType> getCompoundTypes()
+    {
+        return subTypeLookup;
+    }
+
     public List<String> getImports()
     {
         return imports;
@@ -54,7 +59,7 @@ public class Parser implements ParserConstants {
         types.put("int", new IntegerType());
         types.put("string", new StringType());
         types.put("bool", new BooleanType());
-        types.put("void", new VoidType());
+        types.put("void", VoidType.TYPE);
 
         subTypeLookup = new HashMap<String, CompoundType>();
 
@@ -137,6 +142,7 @@ public class Parser implements ParserConstants {
                     // copy types from dependency
                     Module mod = deps.get(t.image);
                     types.putAll(mod.getTypes());
+                    subTypeLookup.putAll(mod.getCompoundTypes());
                 }
       } else if (jj_2_4(2147483647)) {
         begin = jj_consume_token(EXPORT);
@@ -2161,31 +2167,6 @@ public class Parser implements ParserConstants {
     finally { jj_save(13, xla); }
   }
 
-  private boolean jj_3_6() {
-    if (jj_3R_105()) return true;
-    return false;
-  }
-
-  private boolean jj_3_5() {
-    if (jj_3R_104()) return true;
-    return false;
-  }
-
-  private boolean jj_3_11() {
-    if (jj_3R_106()) return true;
-    if (jj_scan_token(ASSIGN)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_105() {
-    if (jj_scan_token(LPAR)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_109()) jj_scanpos = xsp;
-    if (jj_scan_token(RPAR)) return true;
-    return false;
-  }
-
   private boolean jj_3R_112() {
     if (jj_scan_token(IDENT)) return true;
     return false;
@@ -2223,11 +2204,6 @@ public class Parser implements ParserConstants {
     return false;
   }
 
-  private boolean jj_3_3() {
-    if (jj_scan_token(IMPORT)) return true;
-    return false;
-  }
-
   private boolean jj_3_10() {
     if (jj_scan_token(RETURNSTMT)) return true;
     return false;
@@ -2246,6 +2222,11 @@ public class Parser implements ParserConstants {
 
   private boolean jj_3R_110() {
     if (jj_3R_104()) return true;
+    return false;
+  }
+
+  private boolean jj_3_3() {
+    if (jj_scan_token(IMPORT)) return true;
     return false;
   }
 
@@ -2280,11 +2261,6 @@ public class Parser implements ParserConstants {
     return false;
   }
 
-  private boolean jj_3_8() {
-    if (jj_scan_token(UNPACK)) return true;
-    return false;
-  }
-
   private boolean jj_3_12() {
     if (jj_scan_token(LPAR)) return true;
     Token xsp;
@@ -2303,6 +2279,11 @@ public class Parser implements ParserConstants {
       if (jj_scan_token(64)) { jj_scanpos = xsp; break; }
     }
     if (jj_scan_token(LPAR)) return true;
+    return false;
+  }
+
+  private boolean jj_3_8() {
+    if (jj_scan_token(UNPACK)) return true;
     return false;
   }
 
@@ -2384,6 +2365,31 @@ public class Parser implements ParserConstants {
   private boolean jj_3R_113() {
     if (jj_scan_token(LBRACKET)) return true;
     if (jj_scan_token(RBRACKET)) return true;
+    return false;
+  }
+
+  private boolean jj_3_6() {
+    if (jj_3R_105()) return true;
+    return false;
+  }
+
+  private boolean jj_3_5() {
+    if (jj_3R_104()) return true;
+    return false;
+  }
+
+  private boolean jj_3_11() {
+    if (jj_3R_106()) return true;
+    if (jj_scan_token(ASSIGN)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_105() {
+    if (jj_scan_token(LPAR)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_109()) jj_scanpos = xsp;
+    if (jj_scan_token(RPAR)) return true;
     return false;
   }
 

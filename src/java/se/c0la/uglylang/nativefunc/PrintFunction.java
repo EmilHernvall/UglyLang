@@ -9,10 +9,16 @@ import se.c0la.uglylang.type.StringType;
 import se.c0la.uglylang.type.StringValue;
 import se.c0la.uglylang.type.VoidType;
 import se.c0la.uglylang.type.FunctionType;
+import se.c0la.uglylang.Interpreter;
 
 public class PrintFunction implements NativeFunction
 {
     public PrintFunction()
+    {
+    }
+
+    @Override
+    public void setInterpreter(Interpreter interpreter)
     {
     }
 
@@ -25,7 +31,7 @@ public class PrintFunction implements NativeFunction
         List<Type> params = new ArrayList<Type>();
         params.add(new StringType());
 
-        return new FunctionType(new VoidType(), params);
+        return new FunctionType(VoidType.TYPE, params);
     }
 
     @Override

@@ -14,7 +14,12 @@ public class DumpObjectRegFunction implements NativeFunction
 {
     private Interpreter interpreter;
 
-    public DumpObjectRegFunction(Interpreter interpreter)
+    public DumpObjectRegFunction()
+    {
+    }
+
+    @Override
+    public void setInterpreter(Interpreter interpreter)
     {
         this.interpreter = interpreter;
     }
@@ -26,7 +31,7 @@ public class DumpObjectRegFunction implements NativeFunction
     public FunctionType getType()
     {
         List<Type> params = new ArrayList<Type>();
-        return new FunctionType(new VoidType(), params);
+        return new FunctionType(VoidType.TYPE, params);
     }
 
     @Override
