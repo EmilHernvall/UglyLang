@@ -36,7 +36,7 @@ Planned Standard Library:
      * Network
      * HTTP
  * Data structures
-     * List
+    * List
          * Array
          * CopyOnWriteArray
          * LinkedList
